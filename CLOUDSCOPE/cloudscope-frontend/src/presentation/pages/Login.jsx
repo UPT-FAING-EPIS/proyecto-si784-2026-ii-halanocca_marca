@@ -6,6 +6,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CloudScopeLogo, AwsLogo, AzureLogo, GcpLogo, TerraformLogo } from '../components/icons/CloudIcons.jsx';
 
 // ─── Mock Auth (reemplazar por llamada real al backend en VPS) ────────────────
 const MOCK_USERS = [
@@ -113,15 +114,14 @@ export default function Login() {
 
         {/* Logo */}
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-16">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-base shadow-2xl"
-              style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)', boxShadow: '0 0 20px rgba(245,158,11,0.4)' }}
-            >
-              <span style={{ color: '#080d18' }}>CS</span>
-            </div>
-            <span className="font-black text-xl" style={{ color: '#f8fafc' }}>
+          <div className="flex items-center gap-3 mb-12">
+            <CloudScopeLogo className="w-10 h-10 shadow-2xl" />
+            <span className="font-black text-2xl" style={{ color: '#f8fafc' }}>
               Cloud<span style={{ color: '#f59e0b' }}>Scope</span>
+            </span>
+            <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ml-1"
+              style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)' }}>
+              Studio
             </span>
           </div>
 
@@ -130,18 +130,38 @@ export default function Login() {
             <span style={{ color: '#f59e0b' }}>infrastructure</span><br />
             with confidence
           </h1>
-          <p className="text-lg leading-relaxed" style={{ color: '#64748b' }}>
-            Diseña, audita y exporta arquitecturas AWS con validación de seguridad en tiempo real y estimación de costos FinOps.
+          <p className="text-lg leading-relaxed mb-6" style={{ color: '#64748b' }}>
+            Diseña, audita y exporta arquitecturas multi-cloud (AWS, Azure, GCP) con validación de seguridad CIS Benchmarks en tiempo real y FinOps.
           </p>
+
+          {/* Logos oficiales proveedores en banner */}
+          <div className="flex items-center gap-3 p-3 rounded-2xl w-fit"
+            style={{ background: '#0b1120', border: '1px solid #1e293b' }}>
+            <span className="text-xs text-slate-500 font-semibold">Plataformas soportadas:</span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 px-2 py-1 rounded bg-slate-900 border border-slate-800 text-[11px] font-bold text-amber-400">
+                <AwsLogo className="w-3.5 h-3.5" /> AWS
+              </div>
+              <div className="flex items-center gap-1 px-2 py-1 rounded bg-slate-900 border border-slate-800 text-[11px] font-bold text-sky-400">
+                <AzureLogo className="w-3.5 h-3.5" /> Azure
+              </div>
+              <div className="flex items-center gap-1 px-2 py-1 rounded bg-slate-900 border border-slate-800 text-[11px] font-bold text-rose-400">
+                <GcpLogo className="w-3.5 h-3.5" /> GCP
+              </div>
+              <div className="flex items-center gap-1 px-2 py-1 rounded bg-slate-900 border border-slate-800 text-[11px] font-bold text-purple-400">
+                <TerraformLogo className="w-3.5 h-3.5" /> IaC
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Features bullets */}
         <div className="relative z-10 space-y-4">
           {[
-            { icon: '⬡', text: 'Lienzo interactivo basado en grafos' },
-            { icon: '🛡️', text: 'Auditoría CIS Benchmarks en tiempo real' },
-            { icon: '💰', text: 'Estimación FinOps dinámica (AWS Pricing)' },
-            { icon: '📦', text: 'Exportación automática a Terraform HCL' },
+            { icon: '⬡', text: 'Lienzo interactivo multi-cloud basado en grafos (ReactFlow)' },
+            { icon: '🛡️', text: 'Auditoría CIS Benchmarks y Blast Radius en tiempo real' },
+            { icon: '💰', text: 'Estimación FinOps dinámica y análisis What-If comparativo' },
+            { icon: '📦', text: 'Exportación automática a Terraform HCL multi-proveedor' },
           ].map(({ icon, text }) => (
             <div key={text} className="flex items-center gap-3">
               <span className="text-lg">{icon}</span>
@@ -159,12 +179,29 @@ export default function Login() {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
 
+          {/* Barra de Navegación Atrás / Adelante */}
+          <div className="flex items-center justify-between mb-8 pb-3 border-b border-slate-800/80">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
+              title="Volver a la página anterior (Atrás)"
+            >
+              <span>←</span>
+              <span>Atrás</span>
+            </button>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="text-xs text-amber-400/80 hover:text-amber-300 font-semibold flex items-center gap-1 transition-colors"
+              title="Ir al Dashboard de proyectos"
+            >
+              <span>Dashboard</span>
+              <span>→</span>
+            </button>
+          </div>
+
           {/* Logo móvil */}
           <div className="flex lg:hidden items-center gap-2 mb-10 justify-center">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black"
-              style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)' }}>
-              <span style={{ color: '#080d18' }}>CS</span>
-            </div>
+            <CloudScopeLogo className="w-8 h-8" />
             <span className="font-black text-xl" style={{ color: '#f8fafc' }}>
               Cloud<span style={{ color: '#f59e0b' }}>Scope</span>
             </span>

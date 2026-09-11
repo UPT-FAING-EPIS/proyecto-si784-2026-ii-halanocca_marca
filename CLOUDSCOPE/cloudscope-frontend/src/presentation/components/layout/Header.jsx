@@ -1,11 +1,8 @@
-/**
- * Header – Sprint 2: Agrega botones de Save, Dashboard y blast radius status.
- */
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatUSD } from '../../../application/use-cases/calculateCost.js';
 import { ARCHITECTURE_PRESETS } from '../../../domain/models/ArchitecturePresets.js';
+import { CloudScopeLogo, AwsLogo, AzureLogo, GcpLogo } from '../icons/CloudIcons.jsx';
 
 export default function Header({
   costBreakdown,
@@ -17,6 +14,10 @@ export default function Header({
   onClearBlast,
   onLoadPreset,
   onClearCanvas,
+  onUndo,
+  onRedo,
+  canUndo = false,
+  canRedo = false,
 }) {
   const navigate = useNavigate();
   const [exported, setExported] = useState(false);
@@ -67,7 +68,7 @@ export default function Header({
 
   return (
     <header
-      className="flex items-center justify-between px-4 z-40 shrink-0 gap-3"
+      className="flex items-center justify-between px-3 md:px-4 z-40 shrink-0 gap-2"
       style={{
         height: '52px',
         background: '#0a0f1e',
@@ -75,37 +76,94 @@ export default function Header({
         boxShadow: '0 1px 0 rgba(255,255,255,0.04)',
       }}
     >
-      {/* Logo + nav */}
-      <div className="flex items-center gap-3">
+      {/* ── Izquierda: Botón Atrás + Logo + Breadcrumb + Deshacer/Rehacer ── */}
+      <div className="flex items-center gap-2">
+        {/* Botón Navegación Atrás (Volver a Proyectos) */}
         <button
           onClick={() => navigate('/dashboard')}
-          className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-300 hover:text-white transition-all"
+          style={{ background: '#1e293b', border: '1px solid #334155' }}
+          title="Volver a lista de proyectos (Atrás)"
+        >
+          <span>←</span>
+          <span className="hidden sm:inline">Proyectos</span>
+        </button>
+
+        {/* Botones de Historial del Navegador (Atrás / Adelante) */}
+        <div className="hidden lg:flex items-center rounded-lg p-0.5" style={{ background: '#111827', border: '1px solid #1e293b' }}>
+          <button
+            onClick={() => navigate(-1)}
+            className="w-6 h-6 flex items-center justify-center rounded text-[11px] text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            title="Página anterior (Atrás en navegador)"
+          >
+            ‹
+          </button>
+          <button
+            onClick={() => navigate(1)}
+            className="w-6 h-6 flex items-center justify-center rounded text-[11px] text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            title="Página siguiente (Adelante en navegador)"
+          >
+            ›
+          </button>
+        </div>
+
+        {/* Separador */}
+        <div className="w-px h-4 bg-slate-800 hidden sm:block" />
+
+        {/* Logo oficial CloudScope */}
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="flex items-center gap-2 hover:opacity-90 transition-opacity"
           title="Ir al Dashboard"
         >
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs shadow-lg shrink-0"
-            style={{
-              background: 'linear-gradient(135deg, #f59e0b, #f97316)',
-              boxShadow: '0 0 10px rgba(245,158,11,0.3)',
-            }}
-          >
-            <span style={{ color: '#0a0f1e' }}>CS</span>
-          </div>
-          <span className="font-black text-base tracking-tight hidden sm:block" style={{ color: '#f8fafc' }}>
+          <CloudScopeLogo className="w-6 h-6 shrink-0" />
+          <span className="font-black text-sm tracking-tight hidden md:block" style={{ color: '#f8fafc' }}>
             Cloud<span style={{ color: '#f59e0b' }}>Scope</span>
           </span>
         </button>
 
-        <span className="text-slate-700">›</span>
-        <span className="text-xs font-semibold" style={{ color: '#475569' }}>Editor</span>
+        {/* Controles de Historial del Lienzo: Atrás (Deshacer) / Adelante (Rehacer) */}
+        <div className="flex items-center gap-1 ml-1">
+          <button
+            onClick={onUndo}
+            disabled={!canUndo}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-all"
+            style={{
+              background: canUndo ? '#1e293b' : 'rgba(30,41,59,0.4)',
+              color: canUndo ? '#cbd5e1' : '#475569',
+              border: '1px solid #334155',
+              cursor: canUndo ? 'pointer' : 'not-allowed',
+            }}
+            title="Atrás en cambios / Deshacer (Ctrl+Z)"
+          >
+            <span>↩</span>
+            <span className="hidden xl:inline text-[10px]">Atrás</span>
+          </button>
+
+          <button
+            onClick={onRedo}
+            disabled={!canRedo}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-all"
+            style={{
+              background: canRedo ? '#1e293b' : 'rgba(30,41,59,0.4)',
+              color: canRedo ? '#cbd5e1' : '#475569',
+              border: '1px solid #334155',
+              cursor: canRedo ? 'pointer' : 'not-allowed',
+            }}
+            title="Adelante en cambios / Rehacer (Ctrl+Y)"
+          >
+            <span className="hidden xl:inline text-[10px]">Adelante</span>
+            <span>↪</span>
+          </button>
+        </div>
 
         {/* Indicador de Blast Radius activo */}
         {blastActive && (
-          <div className="flex items-center gap-2 ml-2 px-2.5 py-1 rounded-lg text-[11px] font-semibold"
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-semibold"
             style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}>
             <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
-            Blast Radius activo
-            <button onClick={onClearBlast} className="ml-1 font-bold opacity-60 hover:opacity-100">✕</button>
+            <span className="hidden sm:inline">Blast Radius activo</span>
+            <button onClick={onClearBlast} className="ml-0.5 font-bold opacity-70 hover:opacity-100" title="Detener simulación">✕</button>
           </div>
         )}
       </div>
@@ -181,9 +239,12 @@ export default function Header({
                   className="w-full text-left p-2.5 rounded-xl transition-colors hover:bg-slate-800/80 border border-transparent hover:border-slate-700/50 flex flex-col gap-1"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-slate-200">{p.name}</span>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      {p.provider === 'aws' ? <AwsLogo className="w-3.5 h-3.5 shrink-0" /> : p.provider === 'azure' ? <AzureLogo className="w-3.5 h-3.5 shrink-0" /> : <GcpLogo className="w-3.5 h-3.5 shrink-0" />}
+                      <span className="text-[11px] font-bold text-slate-200 truncate">{p.name}</span>
+                    </div>
                     <span
-                      className="text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider"
+                      className="text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0"
                       style={{ color: p.color, background: `${p.color}20` }}
                     >
                       {p.badge ?? p.provider}

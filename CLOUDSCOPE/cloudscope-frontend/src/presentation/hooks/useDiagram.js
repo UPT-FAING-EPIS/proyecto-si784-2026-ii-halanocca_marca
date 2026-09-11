@@ -88,6 +88,56 @@ export function useDiagram() {
   const [edges, setEdges] = useState(INITIAL_EDGES);
   const [selectedNode, setSelectedNode] = useState(null);
 
+  // ─── Historial para Deshacer / Rehacer (Atrás / Adelante) ──────────────────
+  const [historyPast, setHistoryPast] = useState([]);
+  const [historyFuture, setHistoryFuture] = useState([]);
+
+  const pushToHistory = useCallback((currentNodes, currentEdges) => {
+    setHistoryPast((prev) => {
+      const next = [...prev, { nodes: currentNodes, edges: currentEdges }];
+      if (next.length > 30) next.shift(); // límite de 30 pasos
+      return next;
+    });
+    setHistoryFuture([]); // limpiar futuro al haber nueva acción
+  }, []);
+
+  const undo = useCallback(() => {
+    setHistoryPast((prevPast) => {
+      if (prevPast.length === 0) return prevPast;
+      const previous = prevPast[prevPast.length - 1];
+      const newPast = prevPast.slice(0, prevPast.length - 1);
+
+      setHistoryFuture((prevFuture) => [{ nodes, edges }, ...prevFuture]);
+      setNodes(previous.nodes);
+      setEdges(previous.edges);
+      setSelectedNode((curr) => {
+        if (!curr) return null;
+        return previous.nodes.find((n) => n.id === curr.id) ?? null;
+      });
+      return newPast;
+    });
+  }, [nodes, edges]);
+
+  const redo = useCallback(() => {
+    setHistoryFuture((prevFuture) => {
+      if (prevFuture.length === 0) return prevFuture;
+      const next = prevFuture[0];
+      const newFuture = prevFuture.slice(1);
+
+      setHistoryPast((prevPast) => [...prevPast, { nodes, edges }]);
+      setNodes(next.nodes);
+      setEdges(next.edges);
+      setSelectedNode((curr) => {
+        if (!curr) return null;
+        return next.nodes.find((n) => n.id === curr.id) ?? null;
+      });
+      return newFuture;
+    });
+  }, [nodes, edges]);
+
+  const canUndo = historyPast.length > 0;
+  const canRedo = historyFuture.length > 0;
+
   // ─── ReactFlow handlers ────────────────────────────────────────────────────
   const onNodesChange = useCallback(
     (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
@@ -100,14 +150,20 @@ export function useDiagram() {
   );
 
   const onConnect = useCallback(
-    (params) => setEdges((eds) =>
-      addEdge({
-        ...params,
-        animated: false,
-        style: { stroke: '#475569', strokeWidth: 1.5 },
-      }, eds)
-    ),
-    []
+    (params) => {
+      setNodes((currNodes) => {
+        setEdges((currEdges) => {
+          pushToHistory(currNodes, currEdges);
+          return addEdge({
+            ...params,
+            animated: false,
+            style: { stroke: '#475569', strokeWidth: 1.5 },
+          }, currEdges);
+        });
+        return currNodes;
+      });
+    },
+    [pushToHistory]
   );
 
   const onNodeClick = useCallback((_event, node) => {
@@ -120,8 +176,14 @@ export function useDiagram() {
 
   // ─── Drag & Drop: solo exponer addNode para que Editor.jsx lo llame ─────────
   const addNode = useCallback((newNode) => {
-    setNodes((nds) => nds.concat(newNode));
-  }, []);
+    setNodes((currNodes) => {
+      setEdges((currEdges) => {
+        pushToHistory(currNodes, currEdges);
+        return currEdges;
+      });
+      return currNodes.concat(newNode);
+    });
+  }, [pushToHistory]);
 
   const onDragOver = useCallback((event) => {
     event.preventDefault();
@@ -166,10 +228,15 @@ export function useDiagram() {
   }, []);
 
   const deleteNode = useCallback((nodeId) => {
-    setNodes((nds) => nds.filter((n) => n.id !== nodeId));
-    setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
+    setNodes((currNodes) => {
+      setEdges((currEdges) => {
+        pushToHistory(currNodes, currEdges);
+        return currEdges.filter((e) => e.source !== nodeId && e.target !== nodeId);
+      });
+      return currNodes.filter((n) => n.id !== nodeId);
+    });
     setSelectedNode((prev) => prev?.id === nodeId ? null : prev);
-  }, []);
+  }, [pushToHistory]);
 
   // ─── Costo y auditoría (calculados en tiempo real) ────────────────────────
   const costBreakdown = useMemo(() => calculateCost(nodes), [nodes]);
@@ -186,16 +253,26 @@ export function useDiagram() {
 
   // ─── Cargar o limpiar diagrama ───────────────────────────────────────────
   const loadDiagram = useCallback((newNodes, newEdges) => {
-    setNodes(newNodes ?? []);
-    setEdges(newEdges ?? []);
+    setNodes((currNodes) => {
+      setEdges((currEdges) => {
+        pushToHistory(currNodes, currEdges);
+        return newEdges ?? [];
+      });
+      return newNodes ?? [];
+    });
     setSelectedNode(null);
-  }, []);
+  }, [pushToHistory]);
 
   const clearDiagram = useCallback(() => {
-    setNodes([]);
-    setEdges([]);
+    setNodes((currNodes) => {
+      setEdges((currEdges) => {
+        pushToHistory(currNodes, currEdges);
+        return [];
+      });
+      return [];
+    });
     setSelectedNode(null);
-  }, []);
+  }, [pushToHistory]);
 
   return {
     // Estado del grafo
@@ -216,6 +293,11 @@ export function useDiagram() {
     deleteNode,
     loadDiagram,
     clearDiagram,
+    // Deshacer / Rehacer (Atrás / Adelante)
+    undo,
+    redo,
+    canUndo,
+    canRedo,
     // Datos derivados
     costBreakdown,
     auditResult,

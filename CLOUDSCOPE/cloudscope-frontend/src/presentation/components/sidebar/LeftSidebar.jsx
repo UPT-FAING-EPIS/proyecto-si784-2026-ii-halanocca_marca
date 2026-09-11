@@ -1,11 +1,6 @@
-/**
- * LeftSidebar – Paleta de componentes Multi-Cloud para CloudScope (RF-02).
- * Soporta AWS, Microsoft Azure y Google Cloud Platform (GCP).
- * Los ítems son arrastrables al lienzo con HTML5 Drag & Drop.
- */
-
 import React, { useState } from 'react';
 import { getNodesByCategory } from '../../../domain/models/CloudNode.js';
+import { getServiceIcon, AwsLogo, AzureLogo, GcpLogo } from '../icons/CloudIcons.jsx';
 
 /** Icono de búsqueda */
 function SearchIcon() {
@@ -44,7 +39,7 @@ function PaletteItem({ meta }) {
       onMouseLeave={(e) => e.currentTarget.style.borderColor = ''}
       title={`Arrastrar al lienzo: ${meta.description}`}
     >
-      {/* Badge de icono */}
+      {/* Badge de icono oficial */}
       <div
         style={{
           backgroundColor: meta.bgColor,
@@ -53,7 +48,7 @@ function PaletteItem({ meta }) {
         }}
         className="w-8 h-8 rounded-lg border flex items-center justify-center font-black text-[10px] shrink-0 shadow-sm"
       >
-        {meta.icon}
+        {getServiceIcon(meta.type, "w-4 h-4", meta.color)}
       </div>
 
       {/* Info */}
@@ -66,10 +61,13 @@ function PaletteItem({ meta }) {
             {meta.label}
           </span>
           <span
-            className="text-[8px] font-bold px-1 rounded uppercase tracking-wider shrink-0"
+            className="text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 flex items-center gap-0.5"
             style={{ color: pConfig.color, background: pConfig.bg }}
           >
-            {meta.provider}
+            {meta.provider === 'aws' && <AwsLogo className="w-2 h-2 shrink-0" />}
+            {meta.provider === 'azure' && <AzureLogo className="w-2 h-2 shrink-0" />}
+            {meta.provider === 'gcp' && <GcpLogo className="w-2 h-2 shrink-0" />}
+            <span>{meta.provider}</span>
           </span>
         </div>
         <div className="text-[9px] text-slate-500 truncate">{meta.description}</div>
@@ -135,14 +133,17 @@ export default function LeftSidebar() {
               <button
                 key={p}
                 onClick={() => setProvider(p)}
-                className="py-1 text-[10px] font-bold rounded transition-all capitalize"
+                className="py-1 text-[10px] font-bold rounded transition-all capitalize flex items-center justify-center gap-1"
                 style={{
                   background: active ? '#1e293b' : 'transparent',
                   color: active ? cfg.color : '#64748b',
                   boxShadow: active ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
                 }}
               >
-                {cfg.label}
+                {p === 'aws' && <AwsLogo className="w-2.5 h-2.5 shrink-0" />}
+                {p === 'azure' && <AzureLogo className="w-2.5 h-2.5 shrink-0" />}
+                {p === 'gcp' && <GcpLogo className="w-2.5 h-2.5 shrink-0" />}
+                <span>{cfg.label}</span>
               </button>
             );
           })}

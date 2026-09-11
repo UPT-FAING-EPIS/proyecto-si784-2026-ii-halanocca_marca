@@ -1,15 +1,10 @@
-/**
- * Dashboard – Página de inicio con KPIs de todos los proyectos.
- * Muestra resumen de proyectos guardados, estadísticas y accesos rápidos.
- * RF-12: Panel resumen con indicadores clave de seguridad y costo.
- */
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listProjects, deleteProject, exportProjectJSON, importProjectJSON, saveProject } from '../../infrastructure/api/projectStorage.js';
 import { calculateCost, formatUSD } from '../../application/use-cases/calculateCost.js';
 import { runAudit } from '../../application/use-cases/runAudit.js';
 import { ARCHITECTURE_PRESETS } from '../../domain/models/ArchitecturePresets.js';
+import { CloudScopeLogo, AwsLogo, AzureLogo, GcpLogo, TerraformLogo, DockerLogo, KubernetesLogo } from '../components/icons/CloudIcons.jsx';
 
 // ─── Tarjeta de KPI ────────────────────────────────────────────────────────────
 function KpiCard({ label, value, sub, color = '#f59e0b', icon }) {
@@ -37,6 +32,15 @@ function ProjectCard({ project, onOpen, onDelete, onExport }) {
 
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  // Detectar proveedor primario del proyecto
+  const providers = (project.nodes ?? []).map((n) => {
+    const t = n.data?.cloudType ?? '';
+    if (t.startsWith('azure_')) return 'azure';
+    if (t.startsWith('gcp_')) return 'gcp';
+    return 'aws';
+  });
+  const primaryProvider = providers[0] ?? 'aws';
+
   return (
     <div className="rounded-2xl overflow-hidden group transition-all duration-200 cursor-pointer"
       style={{ background: '#0f172a', border: '1px solid #1e293b' }}
@@ -52,9 +56,16 @@ function ProjectCard({ project, onOpen, onDelete, onExport }) {
               <p className="text-xs truncate mt-0.5" style={{ color: '#475569' }}>{project.description}</p>
             )}
           </div>
-          <span className="text-[10px] ml-2 px-2 py-0.5 rounded font-semibold shrink-0"
-            style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.2)' }}>
-            AWS
+          <span
+            className="text-[10px] ml-2 px-2 py-0.5 rounded font-semibold shrink-0 flex items-center gap-1"
+            style={{
+              background: primaryProvider === 'azure' ? 'rgba(56,189,248,0.12)' : primaryProvider === 'gcp' ? 'rgba(248,113,113,0.12)' : 'rgba(245,158,11,0.12)',
+              color: primaryProvider === 'azure' ? '#38bdf8' : primaryProvider === 'gcp' ? '#f87171' : '#f59e0b',
+              border: `1px solid ${primaryProvider === 'azure' ? 'rgba(56,189,248,0.25)' : primaryProvider === 'gcp' ? 'rgba(248,113,113,0.25)' : 'rgba(245,158,11,0.25)'}`,
+            }}
+          >
+            {primaryProvider === 'azure' ? <AzureLogo className="w-2.5 h-2.5 shrink-0" /> : primaryProvider === 'gcp' ? <GcpLogo className="w-2.5 h-2.5 shrink-0" /> : <AwsLogo className="w-2.5 h-2.5 shrink-0" />}
+            <span className="uppercase">{primaryProvider}</span>
           </span>
         </div>
 
@@ -264,21 +275,66 @@ export default function Dashboard() {
     <div className="min-h-screen" style={{ background: '#080d18', fontFamily: "'Inter', sans-serif", color: '#f8fafc' }}>
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 flex items-center justify-between px-8 py-4"
-        style={{ background: 'rgba(8,13,24,0.9)', borderBottom: '1px solid #1e293b', backdropFilter: 'blur(10px)' }}>
+      <header className="sticky top-0 z-40 flex items-center justify-between px-6 md:px-8 py-3.5"
+        style={{ background: 'rgba(8,13,24,0.92)', borderBottom: '1px solid #1e293b', backdropFilter: 'blur(12px)' }}>
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center font-black text-sm"
-            style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)', boxShadow: '0 0 12px rgba(245,158,11,0.3)' }}>
-            <span style={{ color: '#080d18' }}>CS</span>
+          {/* Botones Atrás / Adelante en historial */}
+          <div className="flex items-center rounded-lg p-0.5" style={{ background: '#111827', border: '1px solid #1e293b' }}>
+            <button
+              onClick={() => navigate(-1)}
+              className="w-6 h-6 flex items-center justify-center rounded text-[12px] text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              title="Atrás (Página anterior)"
+            >
+              ‹
+            </button>
+            <button
+              onClick={() => navigate(1)}
+              className="w-6 h-6 flex items-center justify-center rounded text-[12px] text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              title="Adelante (Página siguiente)"
+            >
+              ›
+            </button>
           </div>
-          <span className="font-black text-lg">Cloud<span style={{ color: '#f59e0b' }}>Scope</span></span>
-          <span className="text-xs px-1.5 py-0.5 rounded font-bold"
-            style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.2)' }}>
-            Studio
-          </span>
+
+          {/* Logo oficial CloudScope */}
+          <div className="flex items-center gap-2.5">
+            <CloudScopeLogo className="w-7 h-7 shrink-0" />
+            <span className="font-black text-lg tracking-tight">Cloud<span style={{ color: '#f59e0b' }}>Scope</span></span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider"
+              style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)' }}>
+              Studio
+            </span>
+          </div>
+
+          {/* Badges de soporte oficial Multi-Cloud */}
+          <div className="hidden lg:flex items-center gap-2 ml-3 px-2.5 py-1 rounded-xl"
+            style={{ background: '#0b1120', border: '1px solid #1e293b' }}>
+            <span className="text-[10px] text-slate-500 font-semibold">Oficial:</span>
+            <div className="flex items-center gap-1.5" title="Soporte oficial AWS, Azure y Google Cloud Platform">
+              <AwsLogo className="w-3.5 h-3.5" />
+              <AzureLogo className="w-3.5 h-3.5" />
+              <GcpLogo className="w-3.5 h-3.5" />
+              <TerraformLogo className="w-3.5 h-3.5 ml-1" />
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          {/* Botón directo para ir o volver al Editor */}
+          <button
+            onClick={() => navigate('/editor')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200"
+            style={{
+              background: 'linear-gradient(135deg, #f59e0b, #f97316)',
+              color: '#080d18',
+              boxShadow: '0 2px 10px rgba(245,158,11,0.25)',
+            }}
+            title="Ir al lienzo interactivo del editor"
+          >
+            <span>Ir al Editor</span>
+            <span>→</span>
+          </button>
+
           <div className="text-right hidden sm:block">
             <div className="text-xs font-semibold" style={{ color: '#e2e8f0' }}>{user.name}</div>
             <div className="text-[10px]" style={{ color: '#475569' }}>{user.email}</div>
@@ -343,10 +399,13 @@ export default function Dashboard() {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span
-                      className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
+                      className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1"
                       style={{ color: preset.color, background: `${preset.color}15`, border: `1px solid ${preset.color}40` }}
                     >
-                      {preset.badge ?? preset.provider}
+                      {preset.provider === 'aws' && <AwsLogo className="w-2.5 h-2.5 shrink-0" />}
+                      {preset.provider === 'azure' && <AzureLogo className="w-2.5 h-2.5 shrink-0" />}
+                      {preset.provider === 'gcp' && <GcpLogo className="w-2.5 h-2.5 shrink-0" />}
+                      <span>{preset.badge ?? preset.provider}</span>
                     </span>
                     <span className="text-xs text-slate-600 font-mono">{preset.nodes.length} nodos</span>
                   </div>

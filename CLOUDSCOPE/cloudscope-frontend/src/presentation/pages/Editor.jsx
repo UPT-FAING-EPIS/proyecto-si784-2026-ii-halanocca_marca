@@ -30,6 +30,7 @@ function EditorInner() {
     addNode, onDragOver,
     updateNodeConfig, updateNodeLabel, deleteNode,
     loadDiagram, clearDiagram,
+    undo, redo, canUndo, canRedo,
     costBreakdown, auditResult,
     exportTerraform,
   } = useDiagram();
@@ -47,17 +48,27 @@ function EditorInner() {
   // ─── Estado del modal de guardado ─────────────────────────────────────────
   const [showSaveModal, setShowSaveModal] = useState(false);
 
-  // Ctrl+S → abrir modal
+  // Atajos de teclado: Ctrl+S (Guardar), Ctrl+Z (Atrás / Deshacer), Ctrl+Y (Adelante / Rehacer)
   useEffect(() => {
     const handler = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      // Evitar interceptar si está escribiendo en un input o textarea
+      const tag = e.target.tagName.toLowerCase();
+      const isInput = tag === 'input' || tag === 'textarea' || tag === 'select';
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
         setShowSaveModal(true);
+      } else if (!isInput && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if (!isInput && ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y' || ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z'))) {
+        e.preventDefault();
+        redo();
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, []);
+  }, [undo, redo]);
 
   // ─── Drop handler ─────────────────────────────────────────────────────────
   const handleDrop = useCallback(
@@ -119,6 +130,10 @@ function EditorInner() {
         onClearBlast={handleClearBlast}
         onLoadPreset={(preset) => loadDiagram(preset.nodes, preset.edges)}
         onClearCanvas={clearDiagram}
+        onUndo={undo}
+        onRedo={redo}
+        canUndo={canUndo}
+        canRedo={canRedo}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -201,6 +216,7 @@ function EditorInner() {
 
         <RightSidebar
           selectedNode={selectedNode}
+          onSelectNode={(node) => onNodeClick(null, node)}
           updateNodeConfig={updateNodeConfig}
           updateNodeLabel={updateNodeLabel}
           deleteNode={deleteNode}

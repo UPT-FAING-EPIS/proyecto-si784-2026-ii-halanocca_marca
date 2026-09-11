@@ -8,6 +8,7 @@ import { severityColor } from '../../../domain/models/SecurityRule.js';
 import { formatUSD } from '../../../application/use-cases/calculateCost.js';
 import { impactColor } from '../../../application/use-cases/runBlastRadius.js';
 import { generateAutoWhatIf, formatDelta } from '../../../application/use-cases/computeWhatIf.js';
+import { getServiceIcon, AwsLogo, AzureLogo, GcpLogo } from '../icons/CloudIcons.jsx';
 
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
 function Tab({ label, badge, active, onClick, color }) {
@@ -77,6 +78,8 @@ function PropertiesPanel({
   onSimulateBlast,
   blastResult,
   onClearBlast,
+  nodes = [],
+  onSelectNode,
 }) {
   if (!selectedNode) return (
     <div className="h-48 flex flex-col items-center justify-center text-center px-4 opacity-40">
@@ -93,17 +96,67 @@ function PropertiesPanel({
   const isSimulatingThisNode = blastResult?.sourceNodeId === selectedNode.id;
   const isSimulationActive = !!blastResult?.sourceNodeId;
 
+  // Navegación entre nodos (Atrás / Adelante en selección de componentes)
+  const nodeIndex = nodes.findIndex((n) => n.id === selectedNode.id);
+  const hasMultipleNodes = nodes.length > 1;
+
+  const handlePrevNode = () => {
+    if (!hasMultipleNodes) return;
+    const prevIdx = (nodeIndex - 1 + nodes.length) % nodes.length;
+    onSelectNode?.(nodes[prevIdx]);
+  };
+
+  const handleNextNode = () => {
+    if (!hasMultipleNodes) return;
+    const nextIdx = (nodeIndex + 1) % nodes.length;
+    onSelectNode?.(nodes[nextIdx]);
+  };
+
   return (
     <div className="space-y-4">
+      {/* Barra de navegación Atrás / Adelante entre Nodos */}
+      {hasMultipleNodes && (
+        <div
+          className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-[11px]"
+          style={{ background: '#0b1120', border: '1px solid #1e293b' }}
+        >
+          <button
+            onClick={handlePrevNode}
+            className="flex items-center gap-1 text-slate-400 hover:text-white px-2 py-0.5 rounded transition-colors"
+            title="Ir al nodo anterior (Atrás)"
+          >
+            <span>←</span>
+            <span>Anterior</span>
+          </button>
+          <span className="text-[10px] font-mono text-slate-500 font-semibold">
+            Nodo {nodeIndex >= 0 ? nodeIndex + 1 : 1} de {nodes.length}
+          </span>
+          <button
+            onClick={handleNextNode}
+            className="flex items-center gap-1 text-slate-400 hover:text-white px-2 py-0.5 rounded transition-colors"
+            title="Ir al nodo siguiente (Adelante)"
+          >
+            <span>Siguiente</span>
+            <span>→</span>
+          </button>
+        </div>
+      )}
+
+      {/* Header del nodo con iconos vectoriales oficiales */}
       <div className="rounded-xl p-3 flex items-center gap-3"
         style={{ background: meta.bgColor, border: `1px solid ${meta.borderColor}` }}>
-        <div className="w-10 h-10 rounded-xl border-2 flex items-center justify-center font-bold text-sm shrink-0"
+        <div className="w-10 h-10 rounded-xl border-2 flex items-center justify-center font-bold text-sm shrink-0 shadow-sm"
           style={{ background: `${meta.color}18`, borderColor: `${meta.color}40`, color: meta.color }}>
-          {meta.icon}
+          {getServiceIcon(selectedNode.data?.cloudType, "w-5 h-5", meta.color)}
         </div>
-        <div>
-          <div className="text-[12px] font-bold" style={{ color: '#f1f5f9' }}>{meta.label}</div>
-          <div className="text-[10px]" style={{ color: '#64748b' }}>{meta.category}</div>
+        <div className="flex-1 min-w-0">
+          <div className="text-[12px] font-bold text-slate-100 truncate">{meta.label}</div>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            {meta.provider === 'aws' && <AwsLogo className="w-3 h-3 shrink-0" />}
+            {meta.provider === 'azure' && <AzureLogo className="w-3 h-3 shrink-0" />}
+            {meta.provider === 'gcp' && <GcpLogo className="w-3 h-3 shrink-0" />}
+            <span className="text-[10px] text-slate-400 uppercase font-semibold">{meta.provider} • {meta.category}</span>
+          </div>
         </div>
       </div>
 
@@ -469,6 +522,7 @@ function WhatIfPanel({ nodes, costBreakdown }) {
 // ─── Componente principal ─────────────────────────────────────────────────────
 export default function RightSidebar({
   selectedNode,
+  onSelectNode,
   updateNodeConfig,
   updateNodeLabel,
   deleteNode,
@@ -490,6 +544,18 @@ export default function RightSidebar({
     { id: 'whatif', label: 'What-If', badge: null, color: '#a78bfa' },
   ];
 
+  const currentTabIndex = tabs.findIndex(t => t.id === activeTab);
+
+  const handlePrevTab = () => {
+    const prevIdx = (currentTabIndex - 1 + tabs.length) % tabs.length;
+    setActiveTab(tabs[prevIdx].id);
+  };
+
+  const handleNextTab = () => {
+    const nextIdx = (currentTabIndex + 1) % tabs.length;
+    setActiveTab(tabs[nextIdx].id);
+  };
+
   return (
     <aside className="w-72 flex flex-col shrink-0 z-20 overflow-hidden"
       style={{ background: '#0f172a', borderLeft: '1px solid #1e293b' }}>
@@ -502,7 +568,7 @@ export default function RightSidebar({
         {activeTab === 'properties' && (
           <PropertiesPanel selectedNode={selectedNode} updateNodeConfig={updateNodeConfig}
             updateNodeLabel={updateNodeLabel} deleteNode={deleteNode} onSimulateBlast={onSimulateBlast}
-            blastResult={blastResult} onClearBlast={onClearBlast} />
+            blastResult={blastResult} onClearBlast={onClearBlast} nodes={nodes ?? []} onSelectNode={onSelectNode} />
         )}
         {activeTab === 'blast' && (
           <BlastPanel blastResult={blastResult} nodes={nodes ?? []}
@@ -517,6 +583,34 @@ export default function RightSidebar({
         {activeTab === 'whatif' && (
           <WhatIfPanel nodes={nodes} costBreakdown={costBreakdown} />
         )}
+      </div>
+
+      {/* ── Barra de Navegación Atrás / Adelante entre Pestañas ──────────── */}
+      <div
+        className="px-3 py-2 flex items-center justify-between text-[11px] shrink-0"
+        style={{ background: '#0b1120', borderTop: '1px solid #1e293b' }}
+      >
+        <button
+          onClick={handlePrevTab}
+          className="flex items-center gap-1 text-slate-400 hover:text-white px-2 py-1 rounded-lg transition-colors hover:bg-slate-800"
+          title={`Pestaña anterior (${tabs[(currentTabIndex - 1 + tabs.length) % tabs.length].label})`}
+        >
+          <span>←</span>
+          <span>Anterior</span>
+        </button>
+
+        <span className="text-[10px] font-semibold text-slate-500">
+          {currentTabIndex + 1} / {tabs.length}
+        </span>
+
+        <button
+          onClick={handleNextTab}
+          className="flex items-center gap-1 text-slate-400 hover:text-white px-2 py-1 rounded-lg transition-colors hover:bg-slate-800"
+          title={`Pestaña siguiente (${tabs[(currentTabIndex + 1) % tabs.length].label})`}
+        >
+          <span>Siguiente</span>
+          <span>→</span>
+        </button>
       </div>
     </aside>
   );
