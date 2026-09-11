@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatUSD } from '../../../application/use-cases/calculateCost.js';
 import { ARCHITECTURE_PRESETS } from '../../../domain/models/ArchitecturePresets.js';
-import { CloudScopeLogo, AwsLogo, AzureLogo, GcpLogo } from '../icons/CloudIcons.jsx';
+import { CloudScopeLogo, AwsLogo, AzureLogo, GcpLogo, SaveIcon, PDFIcon, BlastIcon, StopIcon, XIcon, CheckIcon, UndoIcon, RedoIcon, ArrowLeftIcon } from '../icons/CloudIcons.jsx';
 
 export default function Header({
   costBreakdown,
@@ -76,84 +76,63 @@ export default function Header({
         boxShadow: '0 1px 0 rgba(255,255,255,0.04)',
       }}
     >
-      {/* ── Izquierda: Botón Atrás + Logo + Breadcrumb + Deshacer/Rehacer ── */}
-      <div className="flex items-center gap-2">
-        {/* Botón Navegación Atrás (Volver a Proyectos) */}
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-300 hover:text-white transition-all"
-          style={{ background: '#1e293b', border: '1px solid #334155' }}
-          title="Volver a lista de proyectos (Atrás)"
-        >
-          <span>←</span>
-          <span className="hidden sm:inline">Proyectos</span>
-        </button>
-
-        {/* Botones de Historial del Navegador (Atrás / Adelante) */}
-        <div className="hidden lg:flex items-center rounded-lg p-0.5" style={{ background: '#111827', border: '1px solid #1e293b' }}>
-          <button
-            onClick={() => navigate(-1)}
-            className="w-6 h-6 flex items-center justify-center rounded text-[11px] text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-            title="Página anterior (Atrás en navegador)"
-          >
-            ‹
-          </button>
-          <button
-            onClick={() => navigate(1)}
-            className="w-6 h-6 flex items-center justify-center rounded text-[11px] text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-            title="Página siguiente (Adelante en navegador)"
-          >
-            ›
-          </button>
-        </div>
-
-        {/* Separador */}
-        <div className="w-px h-4 bg-slate-800 hidden sm:block" />
-
+      {/* ── Izquierda: Logo + Breadcrumb Proyectos + Historial Deshacer/Rehacer ── */}
+      <div className="flex items-center gap-2.5">
         {/* Logo oficial CloudScope */}
         <button
           onClick={() => navigate('/dashboard')}
           className="flex items-center gap-2 hover:opacity-90 transition-opacity"
-          title="Ir al Dashboard"
+          title="Ir al Dashboard de Proyectos"
         >
           <CloudScopeLogo className="w-6 h-6 shrink-0" />
-          <span className="font-black text-sm tracking-tight hidden md:block" style={{ color: '#f8fafc' }}>
+          <span className="font-black text-sm tracking-tight hidden sm:block" style={{ color: '#f8fafc' }}>
             Cloud<span style={{ color: '#f59e0b' }}>Scope</span>
           </span>
         </button>
 
-        {/* Controles de Historial del Lienzo: Atrás (Deshacer) / Adelante (Rehacer) */}
-        <div className="flex items-center gap-1 ml-1">
+        <span className="text-slate-700 text-xs select-none">/</span>
+
+        {/* Volver a Proyectos */}
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-300 hover:text-white transition-all"
+          style={{ background: '#1e293b', border: '1px solid #334155' }}
+          title="Volver a la lista de proyectos"
+        >
+          <ArrowLeftIcon className="w-3 h-3 shrink-0" />
+          <span>Proyectos</span>
+        </button>
+
+        {/* Controles de Historial del Lienzo: Deshacer / Rehacer */}
+        <div className="flex items-center gap-1 ml-1 pl-2 border-l border-slate-800">
           <button
             onClick={onUndo}
             disabled={!canUndo}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-all"
+            className="p-1.5 rounded-lg text-[11px] transition-all"
             style={{
               background: canUndo ? '#1e293b' : 'rgba(30,41,59,0.4)',
               color: canUndo ? '#cbd5e1' : '#475569',
               border: '1px solid #334155',
               cursor: canUndo ? 'pointer' : 'not-allowed',
             }}
-            title="Atrás en cambios / Deshacer (Ctrl+Z)"
+            title="Deshacer (Ctrl+Z)"
           >
-            <span>↩</span>
-            <span className="hidden xl:inline text-[10px]">Atrás</span>
+            <UndoIcon className="w-3.5 h-3.5" />
           </button>
 
           <button
             onClick={onRedo}
             disabled={!canRedo}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-all"
+            className="p-1.5 rounded-lg text-[11px] transition-all"
             style={{
               background: canRedo ? '#1e293b' : 'rgba(30,41,59,0.4)',
               color: canRedo ? '#cbd5e1' : '#475569',
               border: '1px solid #334155',
               cursor: canRedo ? 'pointer' : 'not-allowed',
             }}
-            title="Adelante en cambios / Rehacer (Ctrl+Y)"
+            title="Rehacer (Ctrl+Y)"
           >
-            <span className="hidden xl:inline text-[10px]">Adelante</span>
-            <span>↪</span>
+            <RedoIcon className="w-3.5 h-3.5" />
           </button>
         </div>
 
@@ -163,7 +142,9 @@ export default function Header({
             style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}>
             <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
             <span className="hidden sm:inline">Blast Radius activo</span>
-            <button onClick={onClearBlast} className="ml-0.5 font-bold opacity-70 hover:opacity-100" title="Detener simulación">✕</button>
+            <button onClick={onClearBlast} className="ml-0.5 opacity-70 hover:opacity-100" title="Detener simulación">
+              <XIcon className="w-3 h-3" />
+            </button>
           </div>
         )}
       </div>
@@ -195,7 +176,9 @@ export default function Header({
             border: `1px solid ${issueColor}40`,
           }}
         >
-          {issueCount === 0 ? '✓ Clean' : `${issueCount} Issue${issueCount !== 1 ? 's' : ''}`}
+          {issueCount === 0 ? (
+            <span className="flex items-center gap-1"><CheckIcon className="w-3 h-3" /> Clean</span>
+          ) : `${issueCount} Issue${issueCount !== 1 ? 's' : ''}`}
         </span>
       </div>
 
@@ -216,7 +199,7 @@ export default function Header({
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(192,132,252,0.35)'; }}
             title="Cargar arquitecturas empresariales de referencia"
           >
-            <span>⚡</span>
+            <BlastIcon className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Plantillas</span>
             <span className="text-[9px] opacity-70">▼</span>
           </button>
@@ -261,9 +244,9 @@ export default function Header({
                     onClearCanvas?.();
                     setShowPresets(false);
                   }}
-                  className="w-full text-center py-1 text-[10px] font-semibold text-slate-500 hover:text-red-400 transition-colors"
+                  className="w-full text-center py-1 text-[10px] font-semibold text-slate-500 hover:text-red-400 transition-colors flex items-center justify-center gap-1"
                 >
-                  ✕ Limpiar lienzo (lienzo vacío)
+                  <XIcon className="w-3 h-3" /> Limpiar lienzo
                 </button>
               </div>
             </div>
@@ -279,7 +262,8 @@ export default function Header({
           onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = '#334155'; }}
           title="Guardar proyecto (Ctrl+S)"
         >
-          💾 <span className="hidden sm:inline">Guardar</span>
+          <SaveIcon className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Guardar</span>
         </button>
 
         {/* Reporte PDF (RF-11) */}
@@ -291,7 +275,8 @@ export default function Header({
           onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(59,130,246,0.3)'; e.currentTarget.style.color = '#93c5fd'; }}
           title="Descargar reporte de auditoría y costos en PDF (RF-11)"
         >
-          📄 <span className="hidden sm:inline">Reporte PDF</span>
+          <PDFIcon className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Reporte PDF</span>
         </button>
 
         {/* Export IaC */}
@@ -307,7 +292,7 @@ export default function Header({
             boxShadow: exported ? 'none' : '0 3px 10px rgba(245,158,11,0.25)',
           }}
         >
-          {exported ? '✓ OK' : (
+          {exported ? <span className="flex items-center gap-1"><CheckIcon className="w-3.5 h-3.5" /> OK</span> : (
             <>
               <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -320,18 +305,8 @@ export default function Header({
         {/* Separador */}
         <div className="w-px h-5 mx-1 hidden sm:block" style={{ background: '#1e293b' }} />
 
-        {/* Ir al Dashboard & Cerrar sesión */}
+        {/* Cerrar sesión */}
         <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white transition-colors"
-            style={{ background: '#1e293b', border: '1px solid #334155' }}
-            title="Ir a Dashboard de proyectos"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-            </svg>
-          </button>
           <button
             onClick={handleLogout}
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all"

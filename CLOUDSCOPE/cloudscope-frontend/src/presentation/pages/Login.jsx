@@ -6,7 +6,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CloudScopeLogo, AwsLogo, AzureLogo, GcpLogo, TerraformLogo } from '../components/icons/CloudIcons.jsx';
+import { CloudScopeLogo, AwsLogo, AzureLogo, GcpLogo, TerraformLogo, HexagonIcon, ShieldIcon, DollarIcon, PDFIcon, WarningIcon, ArrowRightIcon } from '../components/icons/CloudIcons.jsx';
 
 // ─── Mock Auth (reemplazar por llamada real al backend en VPS) ────────────────
 const MOCK_USERS = [
@@ -158,13 +158,13 @@ export default function Login() {
         {/* Features bullets */}
         <div className="relative z-10 space-y-4">
           {[
-            { icon: '⬡', text: 'Lienzo interactivo multi-cloud basado en grafos (ReactFlow)' },
-            { icon: '🛡️', text: 'Auditoría CIS Benchmarks y Blast Radius en tiempo real' },
-            { icon: '💰', text: 'Estimación FinOps dinámica y análisis What-If comparativo' },
-            { icon: '📦', text: 'Exportación automática a Terraform HCL multi-proveedor' },
-          ].map(({ icon, text }) => (
+            { icon: <HexagonIcon className="w-4 h-4" />, text: 'Lienzo interactivo multi-cloud basado en grafos (ReactFlow)', color: '#f59e0b' },
+            { icon: <ShieldIcon className="w-4 h-4" />, text: 'Auditoría CIS Benchmarks y Blast Radius en tiempo real', color: '#34d399' },
+            { icon: <DollarIcon className="w-4 h-4" />, text: 'Estimación FinOps dinámica y análisis What-If comparativo', color: '#34d399' },
+            { icon: <PDFIcon className="w-4 h-4" />, text: 'Exportación automática a Terraform HCL multi-proveedor', color: '#818cf8' },
+          ].map(({ icon, text, color }) => (
             <div key={text} className="flex items-center gap-3">
-              <span className="text-lg">{icon}</span>
+              <span style={{ color }}>{icon}</span>
               <span className="text-sm" style={{ color: '#94a3b8' }}>{text}</span>
             </div>
           ))}
@@ -178,26 +178,6 @@ export default function Login() {
       {/* ── Panel derecho: formulario ───────────────────────────────────── */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-
-          {/* Barra de Navegación Atrás / Adelante */}
-          <div className="flex items-center justify-between mb-8 pb-3 border-b border-slate-800/80">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
-              title="Volver a la página anterior (Atrás)"
-            >
-              <span>←</span>
-              <span>Atrás</span>
-            </button>
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="text-xs text-amber-400/80 hover:text-amber-300 font-semibold flex items-center gap-1 transition-colors"
-              title="Ir al Dashboard de proyectos"
-            >
-              <span>Dashboard</span>
-              <span>→</span>
-            </button>
-          </div>
 
           {/* Logo móvil */}
           <div className="flex lg:hidden items-center gap-2 mb-10 justify-center">
@@ -216,7 +196,7 @@ export default function Login() {
           {error && (
             <div className="mb-4 px-4 py-3 rounded-xl text-sm flex items-center gap-2"
               style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}>
-              ⚠ {error}
+              <WarningIcon className="w-4 h-4 shrink-0" /> {error}
             </div>
           )}
 
@@ -299,7 +279,12 @@ export default function Login() {
                   <span className="w-4 h-4 border-2 border-slate-600 border-t-slate-400 rounded-full animate-spin" />
                   Autenticando...
                 </>
-              ) : 'Iniciar sesión →'}
+              ) : (
+                <span className="flex items-center gap-1.5">
+                  <span>Iniciar sesión</span>
+                  <ArrowRightIcon className="w-4 h-4" />
+                </span>
+              )}
             </button>
           </form>
 
@@ -324,15 +309,15 @@ export default function Login() {
             onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#334155'; e.currentTarget.style.color = '#e2e8f0'; }}
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1e293b'; e.currentTarget.style.color = '#94a3b8'; }}
           >
-            🚀 Acceso Demo (sin cuenta)
+            Acceso Demo (sin cuenta)
           </button>
 
           {/* Hint credentials */}
           <div className="mt-6 p-3 rounded-xl text-xs space-y-1"
             style={{ background: '#0f172a', border: '1px solid #1e293b', color: '#475569' }}>
             <div className="font-semibold text-slate-500 mb-1">Credenciales de prueba:</div>
-            <div>📧 admin@cloudscope.io · 🔑 admin123</div>
-            <div>📧 demo@cloudscope.io &nbsp; · 🔑 demo123</div>
+            <div className="font-mono">admin@cloudscope.io · admin123</div>
+            <div className="font-mono">demo@cloudscope.io&nbsp;&nbsp; · demo123</div>
           </div>
         </div>
       </div>

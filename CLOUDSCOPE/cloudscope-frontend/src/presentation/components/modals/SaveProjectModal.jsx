@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { saveProject, getCurrentProjectId, listProjects } from '../../../infrastructure/api/projectStorage.js';
+import { XIcon, CheckIcon, SaveIcon } from '../icons/CloudIcons.jsx';
 
 export default function SaveProjectModal({ nodes, edges, onClose, onSaved }) {
   const currentId = getCurrentProjectId();
@@ -50,7 +51,7 @@ export default function SaveProjectModal({ nodes, edges, onClose, onSaved }) {
             style={{ color: '#475569', background: '#1e293b' }}
             onMouseEnter={(e) => e.currentTarget.style.color = '#f8fafc'}
             onMouseLeave={(e) => e.currentTarget.style.color = '#475569'}>
-            ✕
+            <XIcon className="w-3.5 h-3.5" />
           </button>
         </div>
 
@@ -99,9 +100,13 @@ export default function SaveProjectModal({ nodes, edges, onClose, onSaved }) {
               color: saved ? '#34d399' : !name.trim() ? '#334155' : '#080d18',
               border: saved ? '1px solid rgba(52,211,153,0.3)' : 'none',
             }}>
-            {saved ? '✓ Guardado!' : saving ? (
+            {saved ? (
+              <span className="flex items-center gap-1.5"><CheckIcon className="w-4 h-4" /> Guardado!</span>
+            ) : saving ? (
               <><span className="w-4 h-4 border-2 border-amber-700 border-t-amber-300 rounded-full animate-spin" /> Guardando...</>
-            ) : '💾 Guardar'}
+            ) : (
+              <span className="flex items-center gap-1.5"><SaveIcon className="w-4 h-4" /> Guardar</span>
+            )}
           </button>
         </div>
       </div>

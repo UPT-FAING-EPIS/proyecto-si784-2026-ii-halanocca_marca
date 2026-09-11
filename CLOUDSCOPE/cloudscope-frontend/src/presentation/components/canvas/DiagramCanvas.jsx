@@ -4,6 +4,7 @@
  */
 
 import React, { useMemo } from 'react';
+import { StopIcon } from '../icons/CloudIcons.jsx';
 import ReactFlow, {
   Background,
   Controls,
@@ -146,7 +147,7 @@ export default function DiagramCanvas({
             onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.25)'}
             title="Detener y limpiar la simulación de impacto"
           >
-            <span>⏹</span> Parar Simulación
+            <StopIcon className="w-3.5 h-3.5" /> Parar Simulación
           </button>
         </div>
       )}

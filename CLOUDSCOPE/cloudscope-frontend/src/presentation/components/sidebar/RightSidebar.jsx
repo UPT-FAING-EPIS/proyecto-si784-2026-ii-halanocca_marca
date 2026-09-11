@@ -3,6 +3,7 @@
  */
 
 import React, { useState } from 'react';
+import { BlastIcon, StopIcon, TrashIcon, PDFIcon, ShieldIcon, LightbulbIcon, DollarIcon, BeakerIcon, XIcon, CheckIcon, ArrowLeftIcon, ArrowRightIcon } from '../icons/CloudIcons.jsx';
 import { getNodeMeta } from '../../../domain/models/CloudNode.js';
 import { severityColor } from '../../../domain/models/SecurityRule.js';
 import { formatUSD } from '../../../application/use-cases/calculateCost.js';
@@ -123,9 +124,9 @@ function PropertiesPanel({
           <button
             onClick={handlePrevNode}
             className="flex items-center gap-1 text-slate-400 hover:text-white px-2 py-0.5 rounded transition-colors"
-            title="Ir al nodo anterior (Atrás)"
+            title="Ir al nodo anterior"
           >
-            <span>←</span>
+            <ArrowLeftIcon className="w-3 h-3" />
             <span>Anterior</span>
           </button>
           <span className="text-[10px] font-mono text-slate-500 font-semibold">
@@ -134,10 +135,10 @@ function PropertiesPanel({
           <button
             onClick={handleNextNode}
             className="flex items-center gap-1 text-slate-400 hover:text-white px-2 py-0.5 rounded transition-colors"
-            title="Ir al nodo siguiente (Adelante)"
+            title="Ir al nodo siguiente"
           >
             <span>Siguiente</span>
-            <span>→</span>
+            <ArrowRightIcon className="w-3 h-3" />
           </button>
         </div>
       )}
@@ -187,7 +188,7 @@ function PropertiesPanel({
             title="Detener la simulación de impacto de este componente"
           >
             <span className="w-2 h-2 rounded-full bg-red-400 animate-ping" />
-            <span>⏹</span> Parar Simulación (Activa)
+            <StopIcon className="w-3 h-3" /> Parar Simulación (Activa)
           </button>
         ) : (
           <button
@@ -198,7 +199,7 @@ function PropertiesPanel({
             onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
             title="Simular radio de impacto (Blast Radius)"
           >
-            <span>⚡</span> Iniciar Simulación (Blast Radius)
+            <BlastIcon className="w-3.5 h-3.5" /> Iniciar Simulación (Blast Radius)
           </button>
         )}
 
@@ -210,7 +211,7 @@ function PropertiesPanel({
             onMouseEnter={(e) => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = '#334155'; }}
           >
-            <span>✕</span> Parar simulación activa
+            <XIcon className="w-3 h-3" /> Parar simulación activa
           </button>
         )}
 
@@ -221,7 +222,7 @@ function PropertiesPanel({
           onMouseEnter={(e) => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.25)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.color = '#475569'; e.currentTarget.style.borderColor = '#1e293b'; }}
         >
-          <span>🗑</span> Eliminar nodo
+          <TrashIcon className="w-3.5 h-3.5" /> Eliminar nodo
         </button>
       </div>
     </div>
@@ -233,7 +234,7 @@ function BlastPanel({ blastResult, nodes, onSimulateBlast, onClearBlast }) {
   if (!blastResult?.sourceNodeId) return (
     <div className="space-y-4">
       <div className="p-4 rounded-xl text-center" style={{ background: '#0b1120', border: '1px solid #1e293b' }}>
-        <div className="text-3xl mb-2">⚡</div>
+        <div className="mb-2" style={{ color: '#ef4444' }}><BlastIcon className="w-8 h-8 mx-auto" /></div>
         <p className="text-xs" style={{ color: '#475569' }}>
           Selecciona un componente en el canvas y haz click en "Simular Blast Radius" para ver los nodos afectados.
         </p>
@@ -247,9 +248,9 @@ function BlastPanel({ blastResult, nodes, onSimulateBlast, onClearBlast }) {
               style={{ background: '#0f172a', border: '1px solid #1e293b' }}
               onMouseEnter={(e) => e.currentTarget.style.borderColor = '#ef444440'}
               onMouseLeave={(e) => e.currentTarget.style.borderColor = '#1e293b'}>
-              <span className="text-xs font-bold px-1.5 py-0.5 rounded" style={{ background: meta?.bgColor, color: meta?.color }}>{meta?.icon}</span>
+              <span className="text-xs font-bold px-1.5 py-0.5 rounded" style={{ background: meta?.bgColor, color: meta?.color }}>{meta?.icon ?? '?'}</span>
               <span className="text-[11px]" style={{ color: '#94a3b8' }}>{n.data.label}</span>
-              <span className="ml-auto text-[10px]" style={{ color: '#334155' }}>⚡</span>
+              <span className="ml-auto" style={{ color: '#334155' }}><BlastIcon className="w-3 h-3" /></span>
             </button>
           );
         })}
@@ -332,7 +333,7 @@ function BlastPanel({ blastResult, nodes, onSimulateBlast, onClearBlast }) {
         style={{ background: '#1e293b', color: '#64748b', border: '1px solid #334155' }}
         onMouseEnter={(e) => e.currentTarget.style.color = '#f8fafc'}
         onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>
-        ✕ Limpiar simulación
+        <span className="flex items-center justify-center gap-1"><XIcon className="w-3 h-3" /> Limpiar simulación</span>
       </button>
     </div>
   );
@@ -356,7 +357,7 @@ function AuditPanel({ auditResult, onExportPDF }) {
           border: '1px solid rgba(255,255,255,0.1)',
         }}
       >
-        <span>📄</span> Exportar Reporte PDF (CIS & FinOps)
+        <PDFIcon className="w-3.5 h-3.5" /> Exportar Reporte PDF (CIS & FinOps)
       </button>
 
       <div className="rounded-xl p-3.5 flex items-center justify-between"
@@ -364,7 +365,7 @@ function AuditPanel({ auditResult, onExportPDF }) {
         <div>
           <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#475569' }}>Audit Score</div>
           <div className="text-[11px] mt-0.5" style={{ color: '#64748b' }}>
-            {total === 0 ? 'No issues ✅' : `${total} issue${total !== 1 ? 's' : ''} found`}
+            {total === 0 ? <span className="flex items-center gap-1" style={{ color: '#34d399' }}><CheckIcon className="w-3.5 h-3.5" /> No issues</span> : `${total} issue${total !== 1 ? 's' : ''} found`}
           </div>
         </div>
         <div className="text-3xl font-black font-mono" style={{ color: scoreColor }}>{score}</div>
@@ -387,7 +388,7 @@ function AuditPanel({ auditResult, onExportPDF }) {
       <div className="space-y-2">
         {findings.length === 0 ? (
           <div className="text-center py-6 text-[11px]" style={{ color: '#334155' }}>
-            <div className="text-2xl mb-1">🛡️</div>
+            <div className="mb-1" style={{ color: '#34d399' }}><ShieldIcon className="w-8 h-8 mx-auto" /></div>
             All security rules passed.
           </div>
         ) : findings.map((f, i) => {
@@ -402,8 +403,9 @@ function AuditPanel({ auditResult, onExportPDF }) {
               </div>
               <p className="text-[10px] leading-relaxed" style={{ color: '#64748b' }}>{f.description}</p>
               <div className="text-[10px] px-2 py-1 rounded leading-relaxed"
-                style={{ background: '#0f172a', color: '#34d399', border: '1px solid #0d3226' }}>
-                💡 {f.recommendation}
+                style={{ background: '#0f172a', color: '#34d399', border: '1px solid #0d3226' }}
+              >
+                <span className="flex items-start gap-1"><LightbulbIcon className="w-3 h-3 shrink-0 mt-0.5" /> {f.recommendation}</span>
               </div>
               <div className="text-[9px]" style={{ color: '#334155' }}>{f.framework} · {f.ruleId}</div>
             </div>
@@ -436,7 +438,8 @@ function FinOpsPanel({ costBreakdown }) {
       )}
       {lineItems.length === 0 ? (
         <div className="text-center py-6 text-[11px]" style={{ color: '#334155' }}>
-          <div className="text-2xl mb-1">💰</div>Add billable components to see breakdown.
+          <div className="mb-1" style={{ color: '#34d399' }}><DollarIcon className="w-8 h-8 mx-auto" /></div>
+          <div>Add billable components to see breakdown.</div>
         </div>
       ) : (
         <div className="space-y-2">
@@ -471,7 +474,7 @@ function WhatIfPanel({ nodes, costBreakdown }) {
   if (scenarios.length === 0) {
     return (
       <div className="text-center py-10 px-4" style={{ color: '#334155' }}>
-        <div className="text-3xl mb-2">🔬</div>
+        <div className="mb-2" style={{ color: '#a78bfa' }}><BeakerIcon className="w-8 h-8 mx-auto" /></div>
         <p className="text-[11px]">Agrega componentes EC2, RDS o S3 para ver escenarios de What-If automáticos.</p>
       </div>
     );
@@ -595,7 +598,7 @@ export default function RightSidebar({
           className="flex items-center gap-1 text-slate-400 hover:text-white px-2 py-1 rounded-lg transition-colors hover:bg-slate-800"
           title={`Pestaña anterior (${tabs[(currentTabIndex - 1 + tabs.length) % tabs.length].label})`}
         >
-          <span>←</span>
+          <ArrowLeftIcon className="w-3 h-3" />
           <span>Anterior</span>
         </button>
 
@@ -609,7 +612,7 @@ export default function RightSidebar({
           title={`Pestaña siguiente (${tabs[(currentTabIndex + 1) % tabs.length].label})`}
         >
           <span>Siguiente</span>
-          <span>→</span>
+          <ArrowRightIcon className="w-3 h-3" />
         </button>
       </div>
     </aside>

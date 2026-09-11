@@ -45,7 +45,7 @@ function buildReportHTML(projectName, nodes, edges, auditResult, costBreakdown) 
 
   // Findings HTML
   const findingsHTML = auditResult.findings.length === 0
-    ? `<div style="text-align:center;padding:32px;color:#334155;">✅ No security issues found — architecture is compliant.</div>`
+    ? `<div style="text-align:center;padding:32px;color:#22c55e;font-weight:600;">No security issues found — architecture is compliant.</div>`
     : auditResult.findings.map(f => {
         const cfg = SEVERITY_CONFIG[f.severity] ?? SEVERITY_CONFIG.INFO;
         return `
@@ -56,7 +56,7 @@ function buildReportHTML(projectName, nodes, edges, auditResult, costBreakdown) 
             </div>
             <p style="color:#94a3b8;font-size:12px;margin:0 0 8px;">${f.description}</p>
             <div style="background:#0f172a;border:1px solid #22c55e40;border-radius:8px;padding:10px;font-size:12px;color:#22c55e;">
-              💡 <strong>Recomendación:</strong> ${f.recommendation}
+              <strong>Recomendación:</strong> ${f.recommendation}
             </div>
             <div style="margin-top:6px;font-size:10px;color:#475569;">${f.framework} · ${f.ruleId}</div>
           </div>
@@ -203,7 +203,7 @@ export function generateAuditReport(projectName, nodes, edges, auditResult, cost
   const url = URL.createObjectURL(blob);
   const win = window.open(url, '_blank');
   if (!win) {
-    alert('⚠ Permite popups para generar el reporte PDF.');
+    alert('Atención: Permite ventanas emergentes para generar el reporte PDF.');
   }
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }

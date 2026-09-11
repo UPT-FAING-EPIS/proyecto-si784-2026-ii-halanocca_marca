@@ -4,7 +4,7 @@ import { listProjects, deleteProject, exportProjectJSON, importProjectJSON, save
 import { calculateCost, formatUSD } from '../../application/use-cases/calculateCost.js';
 import { runAudit } from '../../application/use-cases/runAudit.js';
 import { ARCHITECTURE_PRESETS } from '../../domain/models/ArchitecturePresets.js';
-import { CloudScopeLogo, AwsLogo, AzureLogo, GcpLogo, TerraformLogo, DockerLogo, KubernetesLogo } from '../components/icons/CloudIcons.jsx';
+import { CloudScopeLogo, AwsLogo, AzureLogo, GcpLogo, TerraformLogo, DockerLogo, KubernetesLogo, FolderIcon, DollarIcon, ShieldIcon, WarningIcon, TrashIcon, HexagonIcon, BlastIcon, ArrowRightIcon } from '../components/icons/CloudIcons.jsx';
 
 // ─── Tarjeta de KPI ────────────────────────────────────────────────────────────
 function KpiCard({ label, value, sub, color = '#f59e0b', icon }) {
@@ -13,7 +13,7 @@ function KpiCard({ label, value, sub, color = '#f59e0b', icon }) {
       style={{ background: '#0f172a', border: '1px solid #1e293b' }}>
       <div className="flex items-center justify-between">
         <span className="text-sm" style={{ color: '#64748b' }}>{label}</span>
-        <span className="text-xl">{icon}</span>
+        <span className="opacity-80" style={{ color }}>{icon}</span>
       </div>
       <div className="text-3xl font-black font-mono" style={{ color }}>{value}</div>
       {sub && <div className="text-xs" style={{ color: '#475569' }}>{sub}</div>}
@@ -99,7 +99,7 @@ function ProjectCard({ project, onOpen, onDelete, onExport }) {
             onMouseEnter={(e) => e.currentTarget.style.color = '#94a3b8'}
             onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
             title="Exportar JSON">
-            ↓ JSON
+            JSON
           </button>
           {confirmDelete ? (
             <button onClick={(e) => { e.stopPropagation(); onDelete(project.id); setConfirmDelete(false); }}
@@ -113,8 +113,8 @@ function ProjectCard({ project, onOpen, onDelete, onExport }) {
               style={{ color: '#64748b', background: '#1e293b' }}
               onMouseEnter={(e) => e.currentTarget.style.color = '#f87171'}
               onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
-              title="Eliminar">
-              🗑
+            title="Eliminar">
+              <TrashIcon className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
@@ -175,7 +175,10 @@ function NewProjectModal({ onClose, onCreate }) {
               background: name.trim() ? 'linear-gradient(135deg, #f59e0b, #f97316)' : '#1e293b',
               color: name.trim() ? '#080d18' : '#334155',
             }}>
-            Crear proyecto →
+            <span className="flex items-center justify-center gap-1.5">
+              <span>Crear proyecto</span>
+              <ArrowRightIcon className="w-4 h-4" />
+            </span>
           </button>
         </div>
       </div>
@@ -278,24 +281,6 @@ export default function Dashboard() {
       <header className="sticky top-0 z-40 flex items-center justify-between px-6 md:px-8 py-3.5"
         style={{ background: 'rgba(8,13,24,0.92)', borderBottom: '1px solid #1e293b', backdropFilter: 'blur(12px)' }}>
         <div className="flex items-center gap-3">
-          {/* Botones Atrás / Adelante en historial */}
-          <div className="flex items-center rounded-lg p-0.5" style={{ background: '#111827', border: '1px solid #1e293b' }}>
-            <button
-              onClick={() => navigate(-1)}
-              className="w-6 h-6 flex items-center justify-center rounded text-[12px] text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-              title="Atrás (Página anterior)"
-            >
-              ‹
-            </button>
-            <button
-              onClick={() => navigate(1)}
-              className="w-6 h-6 flex items-center justify-center rounded text-[12px] text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-              title="Adelante (Página siguiente)"
-            >
-              ›
-            </button>
-          </div>
-
           {/* Logo oficial CloudScope */}
           <div className="flex items-center gap-2.5">
             <CloudScopeLogo className="w-7 h-7 shrink-0" />
@@ -320,7 +305,7 @@ export default function Dashboard() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Botón directo para ir o volver al Editor */}
+          {/* Botón directo para ir al Editor */}
           <button
             onClick={() => navigate('/editor')}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200"
@@ -332,7 +317,7 @@ export default function Dashboard() {
             title="Ir al lienzo interactivo del editor"
           >
             <span>Ir al Editor</span>
-            <span>→</span>
+            <ArrowRightIcon className="w-3.5 h-3.5" />
           </button>
 
           <div className="text-right hidden sm:block">
@@ -354,7 +339,7 @@ export default function Dashboard() {
         {/* ── Bienvenida ─────────────────────────────────────────────────── */}
         <div className="mb-10">
           <h1 className="text-4xl font-black mb-2">
-            Hola, <span style={{ color: '#f59e0b' }}>{user.name.split(' ')[0]}</span> 👋
+            Hola, <span style={{ color: '#f59e0b' }}>{user.name.split(' ')[0]}</span>
           </h1>
           <p className="text-sm" style={{ color: '#475569' }}>
             Aquí están tus proyectos de arquitectura cloud guardados en este dispositivo.
@@ -363,11 +348,11 @@ export default function Dashboard() {
 
         {/* ── KPIs ──────────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-          <KpiCard label="Proyectos" value={projects.length} icon="📁" sub="guardados localmente" />
-          <KpiCard label="Costo Total" value={formatUSD(totalCost)} icon="💰" color="#34d399" sub="estimado /mes" />
-          <KpiCard label="Audit Score" value={`${avgScore}/100`} icon="🛡️"
+          <KpiCard label="Proyectos" value={projects.length} icon={<FolderIcon className="w-5 h-5" />} sub="guardados localmente" />
+          <KpiCard label="Costo Total" value={formatUSD(totalCost)} icon={<DollarIcon className="w-5 h-5" />} color="#34d399" sub="estimado /mes" />
+          <KpiCard label="Audit Score" value={`${avgScore}/100`} icon={<ShieldIcon className="w-5 h-5" />}
             color={avgScore >= 80 ? '#34d399' : avgScore >= 60 ? '#f59e0b' : '#ef4444'} sub="promedio" />
-          <KpiCard label="Issues" value={totalIssues} icon="⚠" color={totalIssues > 0 ? '#f87171' : '#34d399'} sub="seguridad activos" />
+          <KpiCard label="Issues" value={totalIssues} icon={<WarningIcon className="w-5 h-5" />} color={totalIssues > 0 ? '#f87171' : '#34d399'} sub="seguridad activos" />
         </div>
 
         {/* ── Plantillas de Arquitectura ──────────────────────────────────── */}
@@ -375,7 +360,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-                <span>⚡</span> Plantillas de Arquitectura de Referencia
+                <BlastIcon className="w-4 h-4 text-amber-400" /> Plantillas de Arquitectura de Referencia
               </h2>
               <p className="text-xs text-slate-500">Comienza rápidamente con topologías probadas y optimizadas</p>
             </div>
@@ -419,7 +404,7 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[11px]">
                   <span className="text-slate-500 capitalize">{preset.provider}</span>
                   <span className="font-bold flex items-center gap-1" style={{ color: preset.color }}>
-                    Crear y editar →
+                    Crear y editar <ArrowRightIcon className="w-3 h-3" />
                   </span>
                 </div>
               </div>
@@ -448,19 +433,20 @@ export default function Dashboard() {
               style={{ background: '#1e293b', color: '#94a3b8', border: '1px solid #334155' }}
               onMouseEnter={(e) => e.currentTarget.style.color = '#f8fafc'}
               onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}>
-              ↑ Importar JSON
+              Importar JSON
             </button>
             <button onClick={() => navigate('/editor')}
               className="px-3 py-2 rounded-xl text-sm font-semibold transition-all"
               style={{ background: '#1e293b', color: '#94a3b8', border: '1px solid #334155' }}
               onMouseEnter={(e) => e.currentTarget.style.color = '#f8fafc'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}>
-              + Nuevo (vacío)
+              onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+              title="Abrir editor con lienzo en blanco">
+              Lienzo en blanco
             </button>
             <button onClick={() => setShowNewModal(true)}
-              className="px-4 py-2 rounded-xl text-sm font-bold"
+              className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-1.5"
               style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)', color: '#080d18', boxShadow: '0 4px 14px rgba(245,158,11,0.25)' }}>
-              + Nuevo Proyecto
+              <span>+ Nuevo Proyecto</span>
             </button>
           </div>
         </div>
@@ -468,7 +454,7 @@ export default function Dashboard() {
         {/* ── Grid de proyectos ─────────────────────────────────────────── */}
         {filtered.length === 0 ? (
           <div className="text-center py-24 rounded-2xl" style={{ border: '2px dashed #1e293b' }}>
-            <div className="text-5xl mb-4">⬡</div>
+            <div className="mb-4 flex justify-center" style={{ color: '#334155' }}><HexagonIcon className="w-12 h-12" /></div>
             <h3 className="text-lg font-bold mb-2" style={{ color: '#334155' }}>
               {projects.length === 0 ? 'No tienes proyectos aún' : 'Sin resultados'}
             </h3>
