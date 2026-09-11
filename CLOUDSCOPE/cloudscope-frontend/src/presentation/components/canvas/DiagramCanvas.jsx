@@ -66,47 +66,90 @@ export default function DiagramCanvas({
   onPaneClick,
   onDragOver,
   blastResult,
+  onClearBlast,
 }) {
   const { nodes: displayNodes, edges: displayEdges } = useMemo(
     () => applyBlastStyles(nodes, edges, blastResult),
     [nodes, edges, blastResult]
   );
 
+  const sourceNode = blastResult?.sourceNodeId
+    ? nodes.find(n => n.id === blastResult.sourceNodeId)
+    : null;
+
   return (
-    <ReactFlow
-      nodes={displayNodes}
-      edges={displayEdges}
-      nodeTypes={NODE_TYPES}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      onConnect={onConnect}
-      onNodeClick={onNodeClick}
-      onPaneClick={onPaneClick}
-      onDragOver={onDragOver}
-      defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
-      fitView
-      fitViewOptions={{ padding: 0.2 }}
-      minZoom={0.25}
-      maxZoom={2.5}
-      deleteKeyCode="Delete"
-      proOptions={{ hideAttribution: true }}
-    >
-      <Background
-        variant="dots"
-        gap={20}
-        size={1}
-        color="#1e3a5f"
-        style={{ backgroundColor: '#0b1120' }}
-      />
-      <Controls showInteractive={false} />
-      <MiniMap
-        nodeColor={(n) => {
-          const meta = n.data?.cloudType ? getNodeMeta(n.data.cloudType) : null;
-          return meta?.color ?? '#64748b';
-        }}
-        maskColor="rgba(11,17,32,0.75)"
-        style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 10 }}
-      />
-    </ReactFlow>
+    <div className="w-full h-full relative">
+      <ReactFlow
+        nodes={displayNodes}
+        edges={displayEdges}
+        nodeTypes={NODE_TYPES}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onNodeClick={onNodeClick}
+        onPaneClick={onPaneClick}
+        onDragOver={onDragOver}
+        defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
+        fitView
+        fitViewOptions={{ padding: 0.2 }}
+        minZoom={0.25}
+        maxZoom={2.5}
+        deleteKeyCode="Delete"
+        proOptions={{ hideAttribution: true }}
+      >
+        <Background
+          variant="dots"
+          gap={20}
+          size={1}
+          color="#1e3a5f"
+          style={{ backgroundColor: '#0b1120' }}
+        />
+        <Controls showInteractive={false} />
+        <MiniMap
+          nodeColor={(n) => {
+            const meta = n.data?.cloudType ? getNodeMeta(n.data.cloudType) : null;
+            return meta?.color ?? '#64748b';
+          }}
+          maskColor="rgba(11,17,32,0.75)"
+          style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 10 }}
+        />
+      </ReactFlow>
+
+      {/* Floating HUD: Parar Simulación en Vivo */}
+      {blastResult?.sourceNodeId && (
+        <div
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-4 py-2 rounded-2xl shadow-2xl"
+          style={{
+            background: 'rgba(15,23,42,0.94)',
+            border: '1px solid rgba(239,68,68,0.5)',
+            backdropFilter: 'blur(16px)',
+            boxShadow: '0 0 25px rgba(239,68,68,0.25)',
+          }}
+        >
+          <span className="w-2.5 h-2.5 rounded-full bg-red-400 animate-ping shrink-0" />
+          <div className="text-xs">
+            <span className="text-slate-400">Simulación: </span>
+            <span className="font-bold text-slate-100">{sourceNode?.data?.label ?? 'Componente'}</span>
+            <span className="text-red-400 font-semibold ml-1.5">
+              ({blastResult.affectedNodeIds?.length ?? 0} nodos afectados)
+            </span>
+          </div>
+          <button
+            onClick={onClearBlast}
+            className="px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 shadow-md"
+            style={{
+              background: 'rgba(239,68,68,0.25)',
+              color: '#fca5a5',
+              border: '1px solid rgba(239,68,68,0.5)',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.4)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.25)'}
+            title="Detener y limpiar la simulación de impacto"
+          >
+            <span>⏹</span> Parar Simulación
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

@@ -251,7 +251,230 @@ resource "aws_s3_bucket_public_access_block" "${name}" {
 }`;
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Azure Generators
+// ─────────────────────────────────────────────────────────────────────────
+function genAzureVNet(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'vnet');
+  return `
+resource "azurerm_virtual_network" "${name}" {
+  name                = "${name}"
+  address_space       = ["${cfg.addressSpace ?? '10.1.0.0/16'}"]
+  location            = var.azure_location
+  resource_group_name = azurerm_resource_group.rg.name
+  tags = { ManagedBy = "CloudScope", Environment = "Production" }
+}`;
+}
+
+function genAzureSubnet(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'subnet');
+  return `
+resource "azurerm_subnet" "${name}" {
+  name                 = "${name}"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["${cfg.addressPrefix ?? '10.1.1.0/24'}"]
+}`;
+}
+
+function genAzureAppGW(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'appgw');
+  return `
+resource "azurerm_application_gateway" "${name}" {
+  name                = "${name}"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = var.azure_location
+  sku {
+    name     = "${cfg.sku ?? 'Standard_v2'}"
+    tier     = "${cfg.sku ?? 'Standard_v2'}"
+    capacity = 2
+  }
+  tags = { ManagedBy = "CloudScope" }
+}`;
+}
+
+function genAzureVM(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'vm');
+  return `
+resource "azurerm_linux_virtual_machine" "${name}" {
+  name                = "${name}"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = var.azure_location
+  size                = "${cfg.size ?? 'Standard_B1s'}"
+  admin_username      = "cloudscope"
+  network_interface_ids = [azurerm_network_interface.${name}_nic.id]
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "latest"
+  }
+  tags = { ManagedBy = "CloudScope" }
+}`;
+}
+
+function genAzureFunction(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'func');
+  return `
+resource "azurerm_linux_function_app" "${name}" {
+  name                = "${name}-app"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = var.azure_location
+  service_plan_id     = azurerm_service_plan.plan.id
+  storage_account_name = azurerm_storage_account.sa.name
+  site_config {
+    application_stack {
+      node_version = "20"
+    }
+  }
+  tags = { ManagedBy = "CloudScope" }
+}`;
+}
+
+function genAzureSQL(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'sql');
+  return `
+resource "azurerm_mssql_database" "${name}" {
+  name         = "${name}"
+  server_id    = azurerm_mssql_server.sql_server.id
+  sku_name     = "${cfg.tier ?? 'Basic'}"
+  zone_redundant = ${cfg.zoneRedundant ? 'true' : 'false'}
+  tags = { ManagedBy = "CloudScope" }
+}`;
+}
+
+function genAzureBlob(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'blob');
+  return `
+resource "azurerm_storage_account" "${name}" {
+  name                     = "${name.replace(/_/g, '')}store"
+  resource_group_name      = azurerm_resource_group.rg.name
+  location                 = var.azure_location
+  account_tier             = "Standard"
+  account_replication_type = "${cfg.replication ?? 'LRS'}"
+  allow_nested_items_to_be_public = ${cfg.publicBlobAccess ? 'true' : 'false'}
+  tags = { ManagedBy = "CloudScope" }
+}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// GCP Generators
+// ─────────────────────────────────────────────────────────────────────────
+function genGcpVPC(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'gcp_vpc');
+  return `
+resource "google_compute_network" "${name}" {
+  name                    = "${name}"
+  auto_create_subnetworks = ${cfg.subnetMode === 'auto' ? 'true' : 'false'}
+}`;
+}
+
+function genGcpSubnet(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'gcp_subnet');
+  return `
+resource "google_compute_subnetwork" "${name}" {
+  name          = "${name}"
+  ip_cidr_range = "${cfg.ipRange ?? '10.128.0.0/20'}"
+  region        = var.gcp_region
+  network       = google_compute_network.main.id
+}`;
+}
+
+function genGcpLB(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'gcp_lb');
+  return `
+resource "google_compute_global_forwarding_rule" "${name}" {
+  name                  = "${name}"
+  target                = google_compute_target_http_proxy.default.id
+  port_range            = "80"
+  network_tier          = "${cfg.tier ?? 'PREMIUM'}"
+}`;
+}
+
+function genGcpGCE(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'gce_vm');
+  return `
+resource "google_compute_instance" "${name}" {
+  name         = "${name}"
+  machine_type = "${cfg.machineType ?? 'e2-micro'}"
+  zone         = var.gcp_zone
+  boot_disk {
+    initialize_params {
+      image = "debian-cloud/debian-12"
+    }
+  }
+  network_interface {
+    network = google_compute_network.main.id
+  }
+  labels = { managed_by = "cloudscope" }
+}`;
+}
+
+function genGcpCloudFunction(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'cloud_fn');
+  return `
+resource "google_cloudfunctions_function" "${name}" {
+  name        = "${name}"
+  description = "CloudScope Managed Function"
+  runtime     = "${cfg.runtime ?? 'nodejs20'}"
+  available_memory_mb   = 256
+  trigger_http          = true
+  entry_point           = "handler"
+}`;
+}
+
+function genGcpCloudSQL(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'cloud_sql');
+  return `
+resource "google_sql_database_instance" "${name}" {
+  name             = "${name}"
+  database_version = "${cfg.databaseVersion ?? 'POSTGRES_15'}"
+  region           = var.gcp_region
+  settings {
+    tier = "${cfg.tier ?? 'db-f1-micro'}"
+    availability_type = "${cfg.highAvailability ? 'REGIONAL' : 'ZONAL'}"
+    ip_configuration {
+      ipv4_enabled = ${cfg.publicIp ? 'true' : 'false'}
+    }
+  }
+}`;
+}
+
+function genGcpGCS(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'gcs_bucket');
+  return `
+resource "google_storage_bucket" "${name}" {
+  name          = "${name}-\${random_id.suffix.hex}"
+  location      = "US"
+  storage_class = "${cfg.storageClass ?? 'STANDARD'}"
+  uniform_bucket_level_access = ${cfg.uniformAccess !== false ? 'true' : 'false'}
+  versioning {
+    enabled = ${cfg.versioning ? 'true' : 'false'}
+  }
+  labels = { managed_by = "cloudscope" }
+}`;
+}
+
 const GENERATORS = {
+  // AWS
   vpc: genVPC,
   subnet: genSubnet,
   igw: genIGW,
@@ -260,6 +483,22 @@ const GENERATORS = {
   lambda: genLambda,
   rds: genRDS,
   s3: genS3,
+  // Azure
+  azure_vnet: genAzureVNet,
+  azure_subnet: genAzureSubnet,
+  azure_appgw: genAzureAppGW,
+  azure_vm: genAzureVM,
+  azure_function: genAzureFunction,
+  azure_sql: genAzureSQL,
+  azure_blob: genAzureBlob,
+  // GCP
+  gcp_vpc: genGcpVPC,
+  gcp_subnet: genGcpSubnet,
+  gcp_lb: genGcpLB,
+  gcp_gce: genGcpGCE,
+  gcp_cloudfunction: genGcpCloudFunction,
+  gcp_cloudsql: genGcpCloudSQL,
+  gcp_gcs: genGcpGCS,
 };
 
 /**
@@ -272,23 +511,33 @@ const GENERATORS = {
 export function generateTerraform(nodes, edges, projectName = 'cloudscope') {
   const tfName = toTfName(projectName);
 
+  const hasAws = nodes.some(n => !n.data?.cloudType?.startsWith('azure_') && !n.data?.cloudType?.startsWith('gcp_'));
+  const hasAzure = nodes.some(n => n.data?.cloudType?.startsWith('azure_'));
+  const hasGcp = nodes.some(n => n.data?.cloudType?.startsWith('gcp_'));
+
   const header = `# ============================================================
-# CloudScope – Generated Terraform Configuration
+# CloudScope – Multi-Cloud Terraform Configuration (IaC)
 # Project: ${projectName}
 # Generated: ${new Date().toISOString()}
-# 
-# WARNING: This file was auto-generated. Review all resource
-# configurations before applying to a real AWS environment.
+# Providers: ${[hasAws && 'AWS', hasAzure && 'Azure', hasGcp && 'GCP'].filter(Boolean).join(', ') || 'AWS'}
 # ============================================================
 
 terraform {
   required_version = ">= 1.5.0"
 
   required_providers {
-    aws = {
+    ${hasAws ? `aws = {
       source  = "hashicorp/aws"
       version = "~> 5.0"
-    }
+    }` : ''}
+    ${hasAzure ? `azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.0"
+    }` : ''}
+    ${hasGcp ? `google = {
+      source  = "hashicorp/google"
+      version = "~> 5.0"
+    }` : ''}
     random = {
       source  = "hashicorp/random"
       version = "~> 3.0"
@@ -296,7 +545,7 @@ terraform {
   }
 }
 
-provider "aws" {
+${hasAws ? `provider "aws" {
   region = var.aws_region
 }
 
@@ -304,31 +553,48 @@ variable "aws_region" {
   description = "AWS region to deploy resources"
   type        = string
   default     = "us-east-1"
+}` : ''}
+
+${hasAzure ? `provider "azurerm" {
+  features {}
 }
+
+variable "azure_location" {
+  description = "Azure region to deploy resources"
+  type        = string
+  default     = "eastus"
+}
+
+resource "azurerm_resource_group" "rg" {
+  name     = "${tfName}-rg"
+  location = var.azure_location
+}` : ''}
+
+${hasGcp ? `provider "google" {
+  project = var.gcp_project
+  region  = var.gcp_region
+}
+
+variable "gcp_project" {
+  description = "GCP Project ID"
+  type        = string
+  default     = "my-cloudscope-project"
+}
+
+variable "gcp_region" {
+  description = "GCP region"
+  type        = string
+  default     = "us-central1"
+}
+
+variable "gcp_zone" {
+  description = "GCP zone"
+  type        = string
+  default     = "us-central1-a"
+}` : ''}
 
 resource "random_id" "suffix" {
   byte_length = 4
-}
-
-# ─────────────────────────────────────────────────────────────
-# AMI Data Sources (used by EC2 resources)
-# ─────────────────────────────────────────────────────────────
-data "aws_ami" "amazon_linux_2" {
-  most_recent = true
-  owners      = ["amazon"]
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-data "aws_ami" "ubuntu_22_04" {
-  most_recent = true
-  owners      = ["099720109477"] # Canonical
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
-  }
 }
 `;
 

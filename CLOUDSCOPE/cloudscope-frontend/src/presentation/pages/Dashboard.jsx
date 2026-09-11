@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { listProjects, deleteProject, exportProjectJSON, importProjectJSON, saveProject } from '../../infrastructure/api/projectStorage.js';
 import { calculateCost, formatUSD } from '../../application/use-cases/calculateCost.js';
 import { runAudit } from '../../application/use-cases/runAudit.js';
+import { ARCHITECTURE_PRESETS } from '../../domain/models/ArchitecturePresets.js';
 
 // ─── Tarjeta de KPI ────────────────────────────────────────────────────────────
 function KpiCard({ label, value, sub, color = '#f59e0b', icon }) {
@@ -223,6 +224,19 @@ export default function Dashboard() {
     loadProjects();
   };
 
+  const handleCreateFromPreset = (preset) => {
+    const saved = saveProject(
+      null,
+      preset.name,
+      preset.description,
+      preset.nodes,
+      preset.edges
+    );
+    loadProjects();
+    localStorage.setItem('cs_current_project', JSON.stringify(saved));
+    navigate('/editor');
+  };
+
   const handleExport = (project) => exportProjectJSON(project);
 
   const handleImport = async () => {
@@ -298,6 +312,60 @@ export default function Dashboard() {
           <KpiCard label="Audit Score" value={`${avgScore}/100`} icon="🛡️"
             color={avgScore >= 80 ? '#34d399' : avgScore >= 60 ? '#f59e0b' : '#ef4444'} sub="promedio" />
           <KpiCard label="Issues" value={totalIssues} icon="⚠" color={totalIssues > 0 ? '#f87171' : '#34d399'} sub="seguridad activos" />
+        </div>
+
+        {/* ── Plantillas de Arquitectura ──────────────────────────────────── */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                <span>⚡</span> Plantillas de Arquitectura de Referencia
+              </h2>
+              <p className="text-xs text-slate-500">Comienza rápidamente con topologías probadas y optimizadas</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {ARCHITECTURE_PRESETS.map(preset => (
+              <div
+                key={preset.id}
+                className="rounded-2xl p-4 flex flex-col justify-between transition-all group border cursor-pointer"
+                style={{ background: '#0f172a', borderColor: '#1e293b' }}
+                onClick={() => handleCreateFromPreset(preset)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = preset.color;
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#1e293b';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span
+                      className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
+                      style={{ color: preset.color, background: `${preset.color}15`, border: `1px solid ${preset.color}40` }}
+                    >
+                      {preset.badge ?? preset.provider}
+                    </span>
+                    <span className="text-xs text-slate-600 font-mono">{preset.nodes.length} nodos</span>
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-200 group-hover:text-white mb-1.5 transition-colors">
+                    {preset.name}
+                  </h3>
+                  <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed mb-4">
+                    {preset.description}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[11px]">
+                  <span className="text-slate-500 capitalize">{preset.provider}</span>
+                  <span className="font-bold flex items-center gap-1" style={{ color: preset.color }}>
+                    Crear y editar →
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* ── Acciones + búsqueda ───────────────────────────────────────── */}

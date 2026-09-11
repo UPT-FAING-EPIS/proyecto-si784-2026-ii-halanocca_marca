@@ -209,6 +209,98 @@ export const SECURITY_RULES = [
       });
     },
   },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SEC-008 · Azure SQL Database Public Access Enabled
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: 'SEC-008',
+    title: 'Azure SQL Database with Public Network Access',
+    severity: 'CRITICAL',
+    framework: 'CIS Microsoft Azure Benchmark 4.1.1',
+    evaluate(nodes) {
+      return nodes
+        .filter(n => n.data?.cloudType === 'azure_sql' && n.data?.config?.publicAccess === true)
+        .map(n => ({
+          ruleId: 'SEC-008',
+          severity: 'CRITICAL',
+          title: 'Azure SQL expuesto a redes públicas',
+          description: `La base de datos Azure SQL "${n.data.label}" tiene el acceso público habilitado, lo que permite conexiones externas si el firewall es permisivo.`,
+          recommendation: 'Deshabilita el acceso público a nivel de servidor Azure SQL y utiliza Azure Private Endpoints para tráfico privado.',
+          nodeId: n.id,
+          framework: 'CIS Microsoft Azure Benchmark 4.1.1',
+        }));
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SEC-009 · Azure Blob Storage Public Access Enabled
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: 'SEC-009',
+    title: 'Azure Blob Storage Public Access Allowed',
+    severity: 'HIGH',
+    framework: 'CIS Microsoft Azure Benchmark 3.1',
+    evaluate(nodes) {
+      return nodes
+        .filter(n => n.data?.cloudType === 'azure_blob' && n.data?.config?.publicBlobAccess === true)
+        .map(n => ({
+          ruleId: 'SEC-009',
+          severity: 'HIGH',
+          title: 'Azure Blob Storage con acceso público permitido',
+          description: `La cuenta de almacenamiento Azure Blob "${n.data.label}" permite el acceso anónimo a blobs y contenedores.`,
+          recommendation: 'Configura "Allow Public Blob Access" en falso para forzar autenticación mediante Microsoft Entra ID o Shared Access Signatures.',
+          nodeId: n.id,
+          framework: 'CIS Microsoft Azure Benchmark 3.1',
+        }));
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SEC-010 · GCP Cloud SQL Public IP Authorized
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: 'SEC-010',
+    title: 'GCP Cloud SQL Instance with Public IP Enabled',
+    severity: 'CRITICAL',
+    framework: 'CIS Google Cloud Platform Benchmark 6.2',
+    evaluate(nodes) {
+      return nodes
+        .filter(n => n.data?.cloudType === 'gcp_cloudsql' && n.data?.config?.publicIp === true)
+        .map(n => ({
+          ruleId: 'SEC-010',
+          severity: 'CRITICAL',
+          title: 'GCP Cloud SQL con IP Pública asignada',
+          description: `La instancia Cloud SQL "${n.data.label}" tiene habilitada la asignación de IP Pública, incrementando la superficie de ataque.`,
+          recommendation: 'Configura Private IP mediante VPC Peering o Private Service Connect para aislar la base de datos del tráfico público de internet.',
+          nodeId: n.id,
+          framework: 'CIS Google Cloud Platform Benchmark 6.2',
+        }));
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SEC-011 · GCP Cloud Storage without Uniform Bucket-Level Access
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: 'SEC-011',
+    title: 'GCP Storage Bucket without Uniform Access Control',
+    severity: 'MEDIUM',
+    framework: 'CIS Google Cloud Platform Benchmark 5.2',
+    evaluate(nodes) {
+      return nodes
+        .filter(n => n.data?.cloudType === 'gcp_gcs' && n.data?.config?.uniformAccess === false)
+        .map(n => ({
+          ruleId: 'SEC-011',
+          severity: 'MEDIUM',
+          title: 'GCP Storage sin Uniform Bucket-Level Access',
+          description: `El bucket Cloud Storage "${n.data.label}" utiliza ACLs individuales de objetos en lugar de control uniforme, dificultando la gobernanza.`,
+          recommendation: 'Habilita Uniform Bucket-Level Access para unificar permisos a través de políticas Cloud IAM centrales.',
+          nodeId: n.id,
+          framework: 'CIS Google Cloud Platform Benchmark 5.2',
+        }));
+    },
+  },
 ];
 
 /**

@@ -2,9 +2,10 @@
  * Header – Sprint 2: Agrega botones de Save, Dashboard y blast radius status.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatUSD } from '../../../application/use-cases/calculateCost.js';
+import { ARCHITECTURE_PRESETS } from '../../../domain/models/ArchitecturePresets.js';
 
 export default function Header({
   costBreakdown,
@@ -14,9 +15,24 @@ export default function Header({
   onSave,
   blastActive,
   onClearBlast,
+  onLoadPreset,
+  onClearCanvas,
 }) {
   const navigate = useNavigate();
   const [exported, setExported] = useState(false);
+  const [showPresets, setShowPresets] = useState(false);
+  const presetsRef = useRef(null);
+
+  // Cerrar presets al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (presetsRef.current && !presetsRef.current.contains(e.target)) {
+        setShowPresets(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Sesión de usuario
   const userRaw = localStorage.getItem('cs_user');
@@ -127,6 +143,72 @@ export default function Header({
 
       {/* Acciones */}
       <div className="flex items-center gap-2">
+        {/* Plantillas de Arquitectura (Presets) */}
+        <div className="relative" ref={presetsRef}>
+          <button
+            onClick={() => setShowPresets(!showPresets)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all"
+            style={{
+              background: '#1e293b',
+              color: '#c084fc',
+              border: '1px solid rgba(192,132,252,0.35)',
+              boxShadow: '0 2px 6px rgba(192,132,252,0.1)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#c084fc'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(192,132,252,0.35)'; }}
+            title="Cargar arquitecturas empresariales de referencia"
+          >
+            <span>⚡</span>
+            <span className="hidden sm:inline">Plantillas</span>
+            <span className="text-[9px] opacity-70">▼</span>
+          </button>
+
+          {showPresets && (
+            <div
+              className="absolute right-0 sm:left-0 mt-2 w-72 rounded-2xl p-2 z-50 shadow-2xl space-y-1"
+              style={{ background: '#0b1120', border: '1px solid #1e293b', backdropFilter: 'blur(16px)' }}
+            >
+              <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                Arquitecturas de Referencia
+              </div>
+              {ARCHITECTURE_PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => {
+                    onLoadPreset?.(p);
+                    setShowPresets(false);
+                  }}
+                  className="w-full text-left p-2.5 rounded-xl transition-colors hover:bg-slate-800/80 border border-transparent hover:border-slate-700/50 flex flex-col gap-1"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-200">{p.name}</span>
+                    <span
+                      className="text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider"
+                      style={{ color: p.color, background: `${p.color}20` }}
+                    >
+                      {p.badge ?? p.provider}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 line-clamp-2 leading-relaxed">
+                    {p.description}
+                  </p>
+                </button>
+              ))}
+              <div className="pt-1 border-t border-slate-800/80">
+                <button
+                  onClick={() => {
+                    onClearCanvas?.();
+                    setShowPresets(false);
+                  }}
+                  className="w-full text-center py-1 text-[10px] font-semibold text-slate-500 hover:text-red-400 transition-colors"
+                >
+                  ✕ Limpiar lienzo (lienzo vacío)
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Guardar */}
         <button
           onClick={onSave}

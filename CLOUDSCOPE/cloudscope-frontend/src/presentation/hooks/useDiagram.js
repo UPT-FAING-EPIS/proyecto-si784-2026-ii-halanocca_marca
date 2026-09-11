@@ -177,9 +177,25 @@ export function useDiagram() {
 
   // ─── Export IaC ──────────────────────────────────────────────────────────
   const exportTerraform = useCallback(() => {
-    const hcl = generateTerraform(nodes, edges, 'CloudScope');
+    const curProjRaw = localStorage.getItem('cs_current_project');
+    const curProj = curProjRaw ? JSON.parse(curProjRaw) : null;
+    const projectName = curProj?.name ?? 'CloudScope Architecture';
+    const hcl = generateTerraform(nodes, edges, projectName);
     downloadTerraform(hcl, 'cloudscope_main.tf');
   }, [nodes, edges]);
+
+  // ─── Cargar o limpiar diagrama ───────────────────────────────────────────
+  const loadDiagram = useCallback((newNodes, newEdges) => {
+    setNodes(newNodes ?? []);
+    setEdges(newEdges ?? []);
+    setSelectedNode(null);
+  }, []);
+
+  const clearDiagram = useCallback(() => {
+    setNodes([]);
+    setEdges([]);
+    setSelectedNode(null);
+  }, []);
 
   return {
     // Estado del grafo
@@ -198,6 +214,8 @@ export function useDiagram() {
     updateNodeConfig,
     updateNodeLabel,
     deleteNode,
+    loadDiagram,
+    clearDiagram,
     // Datos derivados
     costBreakdown,
     auditResult,

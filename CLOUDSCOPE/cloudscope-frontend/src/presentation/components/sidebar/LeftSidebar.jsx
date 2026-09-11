@@ -1,13 +1,13 @@
 /**
- * LeftSidebar – Paleta de componentes AWS para CloudScope.
- * Muestra los 8 servicios MVP agrupados por categoría.
- * Los ítems son arrastrables al canvas con Drag & Drop.
+ * LeftSidebar – Paleta de componentes Multi-Cloud para CloudScope (RF-02).
+ * Soporta AWS, Microsoft Azure y Google Cloud Platform (GCP).
+ * Los ítems son arrastrables al lienzo con HTML5 Drag & Drop.
  */
 
 import React, { useState } from 'react';
 import { getNodesByCategory } from '../../../domain/models/CloudNode.js';
 
-/** Icono de búsqueda simple */
+/** Icono de búsqueda */
 function SearchIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -16,12 +16,21 @@ function SearchIcon() {
   );
 }
 
+const PROVIDER_CONFIG = {
+  all:   { label: 'Todos', color: '#94a3b8', bg: '#1e293b' },
+  aws:   { label: 'AWS',   color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },
+  azure: { label: 'Azure', color: '#38bdf8', bg: 'rgba(56,189,248,0.15)' },
+  gcp:   { label: 'GCP',   color: '#f87171', bg: 'rgba(248,113,113,0.15)' },
+};
+
 /** Ítem individual de la paleta */
 function PaletteItem({ meta }) {
   const onDragStart = (event) => {
     event.dataTransfer.setData('application/cloudscope/nodetype', meta.type);
     event.dataTransfer.effectAllowed = 'move';
   };
+
+  const pConfig = PROVIDER_CONFIG[meta.provider] ?? PROVIDER_CONFIG.all;
 
   return (
     <div
@@ -33,7 +42,7 @@ function PaletteItem({ meta }) {
       style={{ '--hover-border': meta.borderColor }}
       onMouseEnter={(e) => e.currentTarget.style.borderColor = meta.borderColor}
       onMouseLeave={(e) => e.currentTarget.style.borderColor = ''}
-      title={`Drag to canvas: ${meta.description}`}
+      title={`Arrastrar al lienzo: ${meta.description}`}
     >
       {/* Badge de icono */}
       <div
@@ -42,29 +51,36 @@ function PaletteItem({ meta }) {
           borderColor: meta.borderColor,
           color: meta.color,
         }}
-        className="w-8 h-8 rounded-lg border flex items-center justify-center font-bold text-[10px] shrink-0"
+        className="w-8 h-8 rounded-lg border flex items-center justify-center font-black text-[10px] shrink-0 shadow-sm"
       >
         {meta.icon}
       </div>
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <div
-          style={{ color: '#e2e8f0' }}
-          className="text-[11px] font-semibold truncate group-hover:text-white transition-colors"
-        >
-          {meta.label}
+        <div className="flex items-center gap-1.5">
+          <span
+            style={{ color: '#e2e8f0' }}
+            className="text-[11px] font-semibold truncate group-hover:text-white transition-colors"
+          >
+            {meta.label}
+          </span>
+          <span
+            className="text-[8px] font-bold px-1 rounded uppercase tracking-wider shrink-0"
+            style={{ color: pConfig.color, background: pConfig.bg }}
+          >
+            {meta.provider}
+          </span>
         </div>
         <div className="text-[9px] text-slate-500 truncate">{meta.description}</div>
       </div>
 
       {/* Precio */}
-      {meta.baseCostPerMonth > 0 && (
-        <span className="text-[9px] font-mono text-emerald-400 shrink-0">
+      {meta.baseCostPerMonth > 0 ? (
+        <span className="text-[9px] font-mono text-emerald-400 shrink-0 font-medium">
           ${meta.baseCostPerMonth}/mo
         </span>
-      )}
-      {meta.baseCostPerMonth === 0 && (
+      ) : (
         <span className="text-[9px] font-mono text-slate-600 shrink-0">Free</span>
       )}
     </div>
@@ -72,8 +88,10 @@ function PaletteItem({ meta }) {
 }
 
 export default function LeftSidebar() {
+  const [provider, setProvider] = useState('all');
   const [search, setSearch] = useState('');
-  const categoryGroups = getNodesByCategory();
+
+  const categoryGroups = getNodesByCategory(provider);
 
   // Filtrar por búsqueda
   const filtered = Object.entries(categoryGroups).reduce((acc, [cat, items]) => {
@@ -82,28 +100,52 @@ export default function LeftSidebar() {
       (m) =>
         m.label.toLowerCase().includes(q) ||
         m.description.toLowerCase().includes(q) ||
-        m.type.toLowerCase().includes(q)
+        m.type.toLowerCase().includes(q) ||
+        m.provider.toLowerCase().includes(q)
     );
     if (matching.length > 0) acc[cat] = matching;
     return acc;
   }, {});
 
   return (
-    <aside className="w-60 flex flex-col shrink-0 z-20 overflow-hidden"
+    <aside className="w-64 flex flex-col shrink-0 z-20 overflow-hidden"
       style={{ background: '#0f172a', borderRight: '1px solid #1e293b' }}>
 
       {/* Header */}
-      <div className="px-3 pt-3 pb-2" style={{ borderBottom: '1px solid #1e293b' }}>
+      <div className="px-3 pt-3 pb-2.5" style={{ borderBottom: '1px solid #1e293b' }}>
         <div className="flex items-center justify-between mb-2">
           <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-            AWS Palette
+            Catálogo Cloud
           </span>
           <span
-            className="text-[9px] px-1.5 py-0.5 rounded font-semibold"
+            className="text-[9px] px-1.5 py-0.5 rounded font-bold"
             style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)' }}
           >
-            MVP
+            Multi-Cloud
           </span>
+        </div>
+
+        {/* Selector de Proveedor Cloud (RF-02) */}
+        <div className="grid grid-cols-4 gap-1 p-0.5 rounded-lg mb-2.5"
+          style={{ background: '#0b1120', border: '1px solid #1e293b' }}>
+          {['all', 'aws', 'azure', 'gcp'].map((p) => {
+            const active = provider === p;
+            const cfg = PROVIDER_CONFIG[p];
+            return (
+              <button
+                key={p}
+                onClick={() => setProvider(p)}
+                className="py-1 text-[10px] font-bold rounded transition-all capitalize"
+                style={{
+                  background: active ? '#1e293b' : 'transparent',
+                  color: active ? cfg.color : '#64748b',
+                  boxShadow: active ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
+                }}
+              >
+                {cfg.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* Búsqueda */}
@@ -113,7 +155,7 @@ export default function LeftSidebar() {
           </div>
           <input
             type="text"
-            placeholder="Search services..."
+            placeholder="Buscar servicio (ej. ec2, sql)..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-7 pr-2 py-1.5 rounded-lg text-[11px] outline-none transition"
@@ -132,17 +174,17 @@ export default function LeftSidebar() {
       <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-4 scrollbar-thin">
         {Object.entries(filtered).length === 0 && (
           <div className="text-center text-slate-600 text-[11px] py-8">
-            No services found
+            No se encontraron servicios
           </div>
         )}
 
         {Object.entries(filtered).map(([category, items]) => (
           <div key={category}>
-            <h4 className="text-[9px] font-bold uppercase tracking-widest mb-2 px-0.5"
-              style={{ color: '#64748b' }}>
-              {category}
-            </h4>
-            <div className="space-y-1">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1.5 px-1 flex items-center justify-between">
+              <span>{category}</span>
+              <span className="text-[9px] font-mono text-slate-600">{items.length}</span>
+            </div>
+            <div className="space-y-1.5">
               {items.map((meta) => (
                 <PaletteItem key={meta.type} meta={meta} />
               ))}
@@ -151,10 +193,10 @@ export default function LeftSidebar() {
         ))}
       </div>
 
-      {/* Footer */}
-      <div className="px-3 py-2 text-[9px] text-slate-600 text-center"
-        style={{ borderTop: '1px solid #1e293b' }}>
-        Drag items to the canvas ↗
+      {/* Footer info */}
+      <div className="px-3 py-2 text-[10px] text-slate-600 text-center"
+        style={{ borderTop: '1px solid #1e293b', background: '#0b1120' }}>
+        Arrastra un servicio al lienzo
       </div>
     </aside>
   );

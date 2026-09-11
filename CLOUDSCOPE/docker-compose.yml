@@ -1,6 +1,17 @@
 version: '3.8'
 
 services:
+  cloudscope-backend:
+    build:
+      context: ./cloudscope-backend
+      dockerfile: Dockerfile
+    container_name: cloudscope-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+
   cloudscope-frontend:
     build:
       context: ./cloudscope-frontend
@@ -9,5 +20,7 @@ services:
     restart: always
     ports:
       - "80:80"
+    depends_on:
+      - cloudscope-backend
     environment:
       - NODE_ENV=production

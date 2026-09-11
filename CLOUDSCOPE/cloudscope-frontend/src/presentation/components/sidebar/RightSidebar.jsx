@@ -69,7 +69,15 @@ function BoolField({ label, value, onChange }) {
 }
 
 // ─── Panel Properties ─────────────────────────────────────────────────────────
-function PropertiesPanel({ selectedNode, updateNodeConfig, updateNodeLabel, deleteNode, onSimulateBlast }) {
+function PropertiesPanel({
+  selectedNode,
+  updateNodeConfig,
+  updateNodeLabel,
+  deleteNode,
+  onSimulateBlast,
+  blastResult,
+  onClearBlast,
+}) {
   if (!selectedNode) return (
     <div className="h-48 flex flex-col items-center justify-center text-center px-4 opacity-40">
       <div className="text-3xl mb-2">⬡</div>
@@ -81,6 +89,9 @@ function PropertiesPanel({ selectedNode, updateNodeConfig, updateNodeLabel, dele
   if (!meta) return null;
   const config = selectedNode.data?.config ?? {};
   const schema = meta.configSchema ?? {};
+
+  const isSimulatingThisNode = blastResult?.sourceNodeId === selectedNode.id;
+  const isSimulationActive = !!blastResult?.sourceNodeId;
 
   return (
     <div className="space-y-4">
@@ -106,22 +117,60 @@ function PropertiesPanel({ selectedNode, updateNodeConfig, updateNodeLabel, dele
         return <TextField key={key} label={fs.label} value={val} onChange={v => updateNodeConfig(selectedNode.id, { [key]: v })} />;
       })}
 
-      {/* Botón Blast Radius */}
-      <button onClick={() => onSimulateBlast(selectedNode.id)}
-        className="w-full py-1.5 rounded-lg text-[11px] font-semibold transition-all mt-1"
-        style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}
-        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.18)'}
-        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}>
-        ⚡ Simular Blast Radius
-      </button>
+      {/* Botón Blast Radius: Iniciar / Parar Simulación */}
+      <div className="space-y-1.5 pt-1">
+        {isSimulatingThisNode ? (
+          <button
+            onClick={onClearBlast}
+            className="w-full py-2 rounded-xl text-[11px] font-bold transition-all flex items-center justify-center gap-2 shadow-lg"
+            style={{
+              background: 'rgba(239,68,68,0.2)',
+              border: '1px solid rgba(239,68,68,0.6)',
+              color: '#fca5a5',
+              boxShadow: '0 0 14px rgba(239,68,68,0.3)',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.3)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.2)'}
+            title="Detener la simulación de impacto de este componente"
+          >
+            <span className="w-2 h-2 rounded-full bg-red-400 animate-ping" />
+            <span>⏹</span> Parar Simulación (Activa)
+          </button>
+        ) : (
+          <button
+            onClick={() => onSimulateBlast(selectedNode.id)}
+            className="w-full py-1.5 rounded-lg text-[11px] font-semibold transition-all flex items-center justify-center gap-1.5"
+            style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.18)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
+            title="Simular radio de impacto (Blast Radius)"
+          >
+            <span>⚡</span> Iniciar Simulación (Blast Radius)
+          </button>
+        )}
 
-      <button onClick={() => deleteNode(selectedNode.id)}
-        className="w-full py-1.5 rounded-lg text-[11px] font-semibold transition-all"
-        style={{ background: 'rgba(71,85,105,0.1)', border: '1px solid #1e293b', color: '#475569' }}
-        onMouseEnter={(e) => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.25)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.color = '#475569'; e.currentTarget.style.borderColor = '#1e293b'; }}>
-        🗑 Eliminar nodo
-      </button>
+        {isSimulationActive && !isSimulatingThisNode && (
+          <button
+            onClick={onClearBlast}
+            className="w-full py-1.5 rounded-lg text-[10px] font-semibold transition-all flex items-center justify-center gap-1"
+            style={{ background: '#1e293b', border: '1px solid #334155', color: '#94a3b8' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = '#334155'; }}
+          >
+            <span>✕</span> Parar simulación activa
+          </button>
+        )}
+
+        <button
+          onClick={() => deleteNode(selectedNode.id)}
+          className="w-full py-1.5 rounded-lg text-[11px] font-semibold transition-all flex items-center justify-center gap-1.5"
+          style={{ background: 'rgba(71,85,105,0.1)', border: '1px solid #1e293b', color: '#475569' }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.25)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = '#475569'; e.currentTarget.style.borderColor = '#1e293b'; }}
+        >
+          <span>🗑</span> Eliminar nodo
+        </button>
+      </div>
     </div>
   );
 }
@@ -452,7 +501,8 @@ export default function RightSidebar({
       <div className="flex-1 overflow-y-auto p-3.5 space-y-3">
         {activeTab === 'properties' && (
           <PropertiesPanel selectedNode={selectedNode} updateNodeConfig={updateNodeConfig}
-            updateNodeLabel={updateNodeLabel} deleteNode={deleteNode} onSimulateBlast={onSimulateBlast} />
+            updateNodeLabel={updateNodeLabel} deleteNode={deleteNode} onSimulateBlast={onSimulateBlast}
+            blastResult={blastResult} onClearBlast={onClearBlast} />
         )}
         {activeTab === 'blast' && (
           <BlastPanel blastResult={blastResult} nodes={nodes ?? []}
