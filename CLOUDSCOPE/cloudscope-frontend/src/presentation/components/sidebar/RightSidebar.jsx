@@ -1,6 +1,5 @@
 /**
- * RightSidebar – Sprint 2: Añade pestaña "Blast" para simulación de radio de impacto.
- * También mejora el panel de propiedades con estado de blast radius del nodo seleccionado.
+ * RightSidebar – Sprint 3: What-If analysis + PDF export + Blast Radius + Audit + FinOps.
  */
 
 import React, { useState } from 'react';
@@ -8,6 +7,7 @@ import { getNodeMeta } from '../../../domain/models/CloudNode.js';
 import { severityColor } from '../../../domain/models/SecurityRule.js';
 import { formatUSD } from '../../../application/use-cases/calculateCost.js';
 import { impactColor } from '../../../application/use-cases/runBlastRadius.js';
+import { generateAutoWhatIf, formatDelta } from '../../../application/use-cases/computeWhatIf.js';
 
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
 function Tab({ label, badge, active, onClick, color }) {
@@ -237,12 +237,26 @@ function BlastPanel({ blastResult, nodes, onSimulateBlast, onClearBlast }) {
 }
 
 // ─── Panel Audit ──────────────────────────────────────────────────────────────
-function AuditPanel({ auditResult }) {
+function AuditPanel({ auditResult, onExportPDF }) {
   const { findings = [], score = 100, critical = 0, high = 0, medium = 0, total = 0 } = auditResult ?? {};
   const scoreColor = score >= 80 ? '#34d399' : score >= 60 ? '#f59e0b' : score >= 40 ? '#f97316' : '#ef4444';
 
   return (
     <div className="space-y-3">
+      {/* Botón de exportación PDF (RF-11) */}
+      <button
+        onClick={onExportPDF}
+        className="w-full py-2 px-3 rounded-xl text-[11px] font-bold flex items-center justify-center gap-2 transition-all hover:opacity-90"
+        style={{
+          background: 'linear-gradient(135deg, #2563eb, #4f46e5)',
+          color: '#ffffff',
+          boxShadow: '0 2px 8px rgba(37,99,235,0.3)',
+          border: '1px solid rgba(255,255,255,0.1)',
+        }}
+      >
+        <span>📄</span> Exportar Reporte PDF (CIS & FinOps)
+      </button>
+
       <div className="rounded-xl p-3.5 flex items-center justify-between"
         style={{ background: '#0b1120', border: '1px solid #1e293b' }}>
         <div>
@@ -347,6 +361,62 @@ function FinOpsPanel({ costBreakdown }) {
   );
 }
 
+// ─── Panel What-If ────────────────────────────────────────────────────────────
+function WhatIfPanel({ nodes, costBreakdown }) {
+  const scenarios = generateAutoWhatIf(nodes ?? []);
+  const totalCurrent = costBreakdown?.total ?? 0;
+
+  if (scenarios.length === 0) {
+    return (
+      <div className="text-center py-10 px-4" style={{ color: '#334155' }}>
+        <div className="text-3xl mb-2">🔬</div>
+        <p className="text-[11px]">Agrega componentes EC2, RDS o S3 para ver escenarios de What-If automáticos.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="rounded-xl p-3 text-[11px]" style={{ background: '#0b1120', border: '1px solid #1e293b' }}>
+        <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#475569' }}>Costo actual</div>
+        <div className="text-xl font-black font-mono" style={{ color: '#34d399' }}>{formatUSD(totalCurrent)}/mo</div>
+        <div className="text-[10px] mt-0.5" style={{ color: '#334155' }}>AWS us-east-1</div>
+      </div>
+
+      <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#475569' }}>Escenarios alternativos</div>
+
+      {scenarios.map((s, i) => {
+        const { formatted, color } = formatDelta(s.delta);
+        const newTotal = totalCurrent + s.delta;
+        const isUpgrade = s.delta > 0;
+        return (
+          <div key={i} className="rounded-xl p-3 space-y-2"
+            style={{ background: '#0b1120', border: `1px solid ${color}30` }}>
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="text-[11px] font-semibold truncate" style={{ color: '#e2e8f0' }}>
+                  {isUpgrade ? '↑' : '↓'} {s.label ?? `${s.nodeLabel} alternativo`}
+                </div>
+                <div className="text-[10px]" style={{ color: '#475569' }}>
+                  {formatUSD(s.currentCost)} → {formatUSD(s.alternativeCost)}/mo
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="text-[13px] font-black font-mono" style={{ color }}>{formatted}</div>
+                <div className="text-[10px]" style={{ color: '#334155' }}>${Math.abs(s.annualDelta).toFixed(0)}/año</div>
+              </div>
+            </div>
+            <div className="flex justify-between text-[10px]" style={{ color: '#475569' }}>
+              <span>Nuevo total:</span>
+              <span className="font-mono font-bold" style={{ color: '#94a3b8' }}>{formatUSD(newTotal)}/mo</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── Componente principal ─────────────────────────────────────────────────────
 export default function RightSidebar({
   selectedNode,
@@ -359,20 +429,22 @@ export default function RightSidebar({
   nodes,
   onSimulateBlast,
   onClearBlast,
+  onExportPDF,
 }) {
   const [activeTab, setActiveTab] = useState('properties');
 
   const tabs = [
     { id: 'properties', label: 'Props', badge: null, color: '#f59e0b' },
     { id: 'blast', label: 'Blast', badge: blastResult?.affectedNodeIds?.length ?? null, color: '#ef4444' },
-    { id: 'audit', label: 'Security', badge: auditResult?.total ?? 0, color: auditResult?.critical > 0 ? '#ef4444' : auditResult?.high > 0 ? '#f97316' : '#34d399' },
-    { id: 'finops', label: 'FinOps', badge: null, color: '#34d399' },
+    { id: 'audit', label: 'Audit', badge: auditResult?.total ?? 0, color: auditResult?.critical > 0 ? '#ef4444' : auditResult?.high > 0 ? '#f97316' : '#34d399' },
+    { id: 'finops', label: 'Cost', badge: null, color: '#34d399' },
+    { id: 'whatif', label: 'What-If', badge: null, color: '#a78bfa' },
   ];
 
   return (
     <aside className="w-72 flex flex-col shrink-0 z-20 overflow-hidden"
       style={{ background: '#0f172a', borderLeft: '1px solid #1e293b' }}>
-      <div className="flex" style={{ borderBottom: '1px solid #1e293b' }}>
+      <div className="flex overflow-x-auto" style={{ borderBottom: '1px solid #1e293b' }}>
         {tabs.map(tab => (
           <Tab key={tab.id} {...tab} active={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} />
         ))}
@@ -387,10 +459,13 @@ export default function RightSidebar({
             onSimulateBlast={onSimulateBlast} onClearBlast={onClearBlast} />
         )}
         {activeTab === 'audit' && (
-          <AuditPanel auditResult={auditResult} />
+          <AuditPanel auditResult={auditResult} onExportPDF={onExportPDF} />
         )}
         {activeTab === 'finops' && (
           <FinOpsPanel costBreakdown={costBreakdown} />
+        )}
+        {activeTab === 'whatif' && (
+          <WhatIfPanel nodes={nodes} costBreakdown={costBreakdown} />
         )}
       </div>
     </aside>

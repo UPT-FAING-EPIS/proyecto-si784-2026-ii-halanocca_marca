@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  cloudscope-frontend:
+    build:
+      context: ./cloudscope-frontend
+      dockerfile: Dockerfile
+    container_name: cloudscope-frontend
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production

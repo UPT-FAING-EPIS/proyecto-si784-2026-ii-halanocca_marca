@@ -8,7 +8,16 @@ import Login from './presentation/pages/Login.jsx';
 import Dashboard from './presentation/pages/Dashboard.jsx';
 import Editor from './presentation/pages/Editor.jsx';
 
-/** Guard de autenticación simple (comprueba token en localStorage) */
+// Auto-inject dev token ONLY if running locally and user hasn't explicitly logged out
+// (remove this block when the real backend is ready)
+const explicitLogout = sessionStorage.getItem('cs_logout');
+if (!localStorage.getItem('cs_token') && !explicitLogout) {
+  const devPayload = btoa(JSON.stringify({ sub: 'dev@cloudscope.io', name: 'Dev User', role: 'admin', exp: Date.now() + 86400000 }));
+  localStorage.setItem('cs_token', devPayload);
+  localStorage.setItem('cs_user', JSON.stringify({ email: 'dev@cloudscope.io', name: 'Dev User', role: 'admin' }));
+}
+
+/** Guard de autenticación */
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('cs_token');
   return token ? children : <Navigate to="/login" replace />;

@@ -15,6 +15,7 @@ import SaveProjectModal from '../components/modals/SaveProjectModal.jsx';
 import { useDiagram } from '../hooks/useDiagram.js';
 import { getNodeMeta } from '../../domain/models/CloudNode.js';
 import { runBlastRadius } from '../../application/use-cases/runBlastRadius.js';
+import { generateAuditReport } from '../../application/use-cases/generateAuditReport.js';
 
 function EditorInner() {
   const rfInstance = useReactFlow();
@@ -94,6 +95,14 @@ function EditorInner() {
     if (blastResult) setBlastResult(null);
   }, [nodes.length, edges.length]);
 
+  // Exportar reporte de auditoría a PDF (RF-11)
+  const handleExportPDF = useCallback(() => {
+    const curProjRaw = localStorage.getItem('cs_current_project');
+    const curProj = curProjRaw ? JSON.parse(curProjRaw) : null;
+    const projectName = curProj?.name ?? 'Arquitectura CloudScope';
+    generateAuditReport(projectName, nodes, edges, auditResult, costBreakdown);
+  }, [nodes, edges, auditResult, costBreakdown]);
+
   return (
     <div className="flex flex-col overflow-hidden select-none"
       style={{ height: '100vh', background: '#0b1120', color: '#f8fafc' }}>
@@ -102,6 +111,7 @@ function EditorInner() {
         costBreakdown={costBreakdown}
         auditResult={auditResult}
         onExportIaC={exportTerraform}
+        onExportPDF={handleExportPDF}
         onSave={() => setShowSaveModal(true)}
         blastActive={!!blastResult}
         onClearBlast={handleClearBlast}
@@ -146,6 +156,7 @@ function EditorInner() {
           nodes={nodes}
           onSimulateBlast={handleSimulateBlast}
           onClearBlast={handleClearBlast}
+          onExportPDF={handleExportPDF}
         />
       </div>
 

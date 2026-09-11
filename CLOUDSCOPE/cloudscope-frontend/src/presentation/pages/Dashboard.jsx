@@ -235,6 +235,7 @@ export default function Dashboard() {
   };
 
   const handleLogout = () => {
+    sessionStorage.setItem('cs_logout', '1');
     localStorage.removeItem('cs_token');
     localStorage.removeItem('cs_user');
     navigate('/login');

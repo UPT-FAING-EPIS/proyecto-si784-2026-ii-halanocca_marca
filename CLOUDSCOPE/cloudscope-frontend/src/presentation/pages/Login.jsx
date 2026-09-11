@@ -62,7 +62,8 @@ export default function Login() {
     setLoading(true);
     try {
       await mockLogin(email.trim(), password);
-      navigate('/editor');
+      sessionStorage.removeItem('cs_logout');
+      navigate('/dashboard');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -77,7 +78,8 @@ export default function Login() {
     setError('');
     try {
       await mockLogin('demo@cloudscope.io', 'demo123');
-      navigate('/editor');
+      sessionStorage.removeItem('cs_logout');
+      navigate('/dashboard');
     } catch (err) {
       setError(err.message);
     } finally {
