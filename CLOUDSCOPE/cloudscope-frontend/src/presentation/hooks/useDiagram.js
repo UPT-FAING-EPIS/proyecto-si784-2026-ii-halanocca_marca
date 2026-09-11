@@ -9,7 +9,7 @@ import {
   applyNodeChanges,
   applyEdgeChanges,
 } from 'reactflow';
-import { getNodeMeta } from '../../domain/models/CloudNode.js';
+
 import { calculateCost } from '../../application/use-cases/calculateCost.js';
 import { runAudit } from '../../application/use-cases/runAudit.js';
 import { generateTerraform, downloadTerraform } from '../../application/use-cases/generateTerraform.js';
@@ -121,11 +121,6 @@ export function useDiagram() {
   // ─── Drag & Drop: solo exponer addNode para que Editor.jsx lo llame ─────────
   const addNode = useCallback((newNode) => {
     setNodes((nds) => nds.concat(newNode));
-  }, []);
-
-  const onDragOver = useCallback((event) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
   }, []);
 
   const onDragOver = useCallback((event) => {
