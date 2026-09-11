@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CloudScope - Architecture & Audit Studio</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            aws: {
+              orange: '#FF9900',
+              navy: '#232F3E',
+              dark: '#0F172A',
+              card: '#1E293B',
+              border: '#334155'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom canvas & grid pattern */
+    .canvas-grid {
+      background-size: 24px 24px;
+      background-image: 
+        radial-gradient(circle, #334155 1px, transparent 1px);
+    }
+    .node-selected {
+      box-shadow: 0 0 0 2px #38BDF8, 0 10px 15px -3px rgba(56, 189, 248, 0.3);
+    }
+    .node-failed {
+      box-shadow: 0 0 0 2.5px #EF4444, 0 0 20px 4px rgba(239, 68, 68, 0.45) !important;
+      animation: pulse-fail 1.5s infinite;
+    }
+    .node-impacted {
+      box-shadow: 0 0 0 2px #F97316, 0 0 15px 2px rgba(249, 115, 22, 0.35) !important;
+    }
+    @keyframes pulse-fail {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+    /* SVG connection line transition */
+    .connection-line {
+      transition: stroke 0.3s ease, stroke-width 0.3s ease;
+    }
+    /* Scrollbar styling */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0F172A; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans h-screen flex flex-col overflow-hidden select-none">
+
+  <header class="h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 z-40">
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-amber-500 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+        <i data-lucide="cloud-cog" class="w-5 h-5 text-slate-950 stroke-[2.5]"></i>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <span class="font-bold text-lg tracking-tight text-white">Cloud<span class="text-amber-400">Scope</span></span>
+          <span class="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">Studio MVP</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live FinOps & Audit Status Bar -->
+    <div class="hidden md:flex items-center space-x-4 bg-slate-950/70 border border-slate-800 rounded-lg px-3 py-1.5 text-xs">
+      <div class="flex items-center space-x-2 pr-3 border-r border-slate-800">
+        <i data-lucide="dollar-sign" class="w-4 h-4 text-emerald-400"></i>
+        <span class="text-slate-400">Estimated FinOps:</span>
+        <span id="headerCostValue" class="font-bold text-emerald-400 text-sm">$0.00 /mo</span>
+      </div>
+      <div class="flex items-center space-x-2 pr-3 border-r border-slate-800">
+        <i data-lucide="shield-check" class="w-4 h-4 text-sky-400"></i>
+        <span class="text-slate-400">Audit Score:</span>
+        <span id="headerSecurityScore" class="font-bold text-sky-400 text-sm">100%</span>
+      </div>
+      <div class="flex items-center space-x-1 text-slate-400">
+        <span id="headerVulnerabilitiesCount" class="px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-semibold">0 Issues</span>
+      </div>
+    </div>
+
+    <!-- Actions & Simulation Toggles -->
+    <div class="flex items-center space-x-2">
+      <!-- Preset Architectures -->
+      <div class="relative inline-block text-left">
+        <select id="presetSelect" onchange="loadPresetArchitecture(this.value)" class="bg-slate-800 border border-slate-700 hover:border-slate-600 text-xs text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400">
+          <option value="" disabled selected>⚡ Load Preset...</option>
+          <option value="three-tier">3-Tier Web App (VPC, ALB, EC2, RDS)</option>
+          <option value="serverless">Serverless API (CF, S3, Lambda)</option>
+          <option value="insecure">Insecure Stack (Audit Detection Test)</option>
+          <option value="empty">Blank Canvas</option>
+        </select>
+      </div>
+
+      <!-- Blast Radius Simulation Mode Toggle -->
+      <button id="blastModeBtn" onclick="toggleBlastSimulation()" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs rounded-lg font-medium border border-slate-700 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition">
+        <i data-lucide="flame" class="w-4 h-4 text-rose-400"></i>
+        <span>Blast Radius Sim</span>
+      </button>
+
+      <!-- Terraform Export Button -->
+      <button onclick="openTerraformModal()" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs rounded-lg font-medium bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold shadow-md shadow-amber-500/10 transition">
+        <i data-lucide="code" class="w-4 h-4"></i>
+        <span>Export IaC</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- Left Sidebar: AWS Component Palette -->
+    <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col z-20 shrink-0">
+      <div class="p-3 border-b border-slate-800 flex items-center justify-between">
+        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
+          <i data-lucide="boxes" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span>AWS Palette</span>
+        </span>
+        <span class="text-[10px] text-slate-500">Drag or Click</span>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-3 space-y-4">
+        <!-- Compute Group -->
+        <div>
+          <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Compute & Serverless</h4>
+          <div class="space-y-1.5">
+            <div draggable="true" ondragstart="handleDragStart(event, 'ec2')" onclick="spawnNode('ec2')" class="palette-item p-2 rounded-md bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 hover:border-amber-500/50 cursor-grab active:cursor-grabbing flex items-center justify-between transition group">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-7 h-7 rounded bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20">
+                  <i data-lucide="server" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <div class="text-xs font-medium text-slate-200 group-hover:text-amber-300">EC2 Instance</div>
+                  <div class="text-[10px] text-slate-400">VM Compute</div>
+                </div>
+              </div>
+              <span class="text-[10px] font-mono text-emerald-400">$14.50/m</span>
+            </div>
+
+            <div draggable="true" ondragstart="handleDragStart(event, 'lambda')" onclick="spawnNode('lambda')" class="palette-item p-2 rounded-md bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 hover:border-amber-500/50 cursor-grab active:cursor-grabbing flex items-center justify-between transition group">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-7 h-7 rounded bg-orange-500/10 text-orange-400 flex items-center justify-center border border-orange-500/20">
+                  <i data-lucide="zap" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <div class="text-xs font-medium text-slate-200 group-hover:text-orange-300">AWS Lambda</div>
+                  <div class="text-[10px] text-slate-400">Function as a Service</div>
+                </div>
+              </div>
+              <span class="text-[10px] font-mono text-emerald-400">$2.50/m</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Networking & CDN -->
+        <div>
+          <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Network & Delivery</h4>
+          <div class="space-y-1.5">
+            <div draggable="true" ondragstart="handleDragStart(event, 'alb')" onclick="spawnNode('alb')" class="palette-item p-2 rounded-md bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 hover:border-amber-500/50 cursor-grab active:cursor-grabbing flex items-center justify-between transition group">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-7 h-7 rounded bg-purple-500/10 text-purple-400 flex items-center justify-center border border-purple-500/20">
+                  <i data-lucide="network" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <div class="text-xs font-medium text-slate-200 group-hover:text-purple-300">Application LB</div>
+                  <div class="text-[10px] text-slate-400">Elastic Load Balancer</div>
+                </div>
+              </div>
+              <span class="text-[10px] font-mono text-emerald-400">$22.00/m</span>
+            </div>
+
+            <div draggable="true" ondragstart="handleDragStart(event, 'cloudfront')" onclick="spawnNode('cloudfront')" class="palette-item p-2 rounded-md bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 hover:border-amber-500/50 cursor-grab active:cursor-grabbing flex items-center justify-between transition group">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-7 h-7 rounded bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20">
+                  <i data-lucide="globe" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <div class="text-xs font-medium text-slate-200 group-hover:text-indigo-300">CloudFront</div>
+                  <div class="text-[10px] text-slate-400">Edge CDN</div>
+                </div>
+              </div>
+              <span class="text-[10px] font-mono text-emerald-400">$8.50/m</span>
+            </div>
+
+            <div draggable="true" ondragstart="handleDragStart(event, 'vpc')" onclick="spawnNode('vpc')" class="palette-item p-2 rounded-md bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 hover:border-amber-500/50 cursor-grab active:cursor-grabbing flex items-center justify-between transition group">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-7 h-7 rounded bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20">
+                  <i data-lucide="shield" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <div class="text-xs font-medium text-slate-200 group-hover:text-blue-300">VPC Gateway</div>
+                  <div class="text-[10px] text-slate-400">Virtual Private Cloud</div>
+                </div>
+              </div>
+              <span class="text-[10px] font-mono text-emerald-400">$0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Storage & Database Group -->
+        <div>
+          <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Storage & Databases</h4>
+          <div class="space-y-1.5">
+            <div draggable="true" ondragstart="handleDragStart(event, 'rds')" onclick="spawnNode('rds')" class="palette-item p-2 rounded-md bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 hover:border-amber-500/50 cursor-grab active:cursor-grabbing flex items-center justify-between transition group">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-7 h-7 rounded bg-sky-500/10 text-sky-400 flex items-center justify-center border border-sky-500/20">
+                  <i data-lucide="database" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <div class="text-xs font-medium text-slate-200 group-hover:text-sky-300">RDS Database</div>
+                  <div class="text-[10px] text-slate-400">PostgreSQL / MySQL</div>
+                </div>
+              </div>
+              <span class="text-[10px] font-mono text-emerald-400">$29.00/m</span>
+            </div>
+
+            <div draggable="true" ondragstart="handleDragStart(event, 's3')" onclick="spawnNode('s3')" class="palette-item p-2 rounded-md bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 hover:border-amber-500/50 cursor-grab active:cursor-grabbing flex items-center justify-between transition group">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-7 h-7 rounded bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+                  <i data-lucide="folder-archive" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <div class="text-xs font-medium text-slate-200 group-hover:text-emerald-300">S3 Bucket</div>
+                  <div class="text-[10px] text-slate-400">Object Storage</div>
+                </div>
+              </div>
+              <span class="text-[10px] font-mono text-emerald-400">$5.00/m</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Canvas Controls -->
+      <div class="p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+        <button onclick="clearCanvas()" class="hover:text-rose-400 flex items-center space-x-1">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          <span>Clear</span>
+        </button>
+        <button onclick="autoLayout()" class="hover:text-amber-400 flex items-center space-x-1">
+          <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+          <span>Auto Tidy</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Center: Visual Canvas Area -->
+    <main class="flex-1 relative overflow-hidden bg-slate-950 flex flex-col">
+      <!-- Canvas Mode Banner / Notification -->
+      <div id="simulationBanner" class="hidden bg-rose-500/10 border-b border-rose-500/20 px-4 py-2 flex items-center justify-between z-10 transition-all">
+        <div class="flex items-center space-x-2 text-rose-300 text-xs font-medium">
+          <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400 animate-pulse"></i>
+          <span><strong>Blast Radius Simulation Active:</strong> Click on any component to trigger an outage and inspect cascading failures.</span>
+        </div>
+        <button onclick="toggleBlastSimulation()" class="text-rose-400 hover:text-rose-200 text-xs underline">Exit Simulation</button>
+      </div>
+
+      <!-- Connecting Instruction Tip -->
+      <div id="connectionHint" class="hidden absolute top-3 left-1/2 -translate-x-1/2 bg-sky-500/90 text-slate-950 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg z-30 flex items-center space-x-2">
+        <i data-lucide="arrow-right-circle" class="w-4 h-4"></i>
+        <span>Select target component to complete network link...</span>
+        <button onclick="cancelLinking()" class="text-slate-950 hover:opacity-75 font-bold ml-1">✕</button>
+      </div>
+
+      <!-- Canvas Viewport -->
+      <div id="canvasContainer" 
+           class="flex-1 relative w-full h-full overflow-hidden canvas-grid cursor-default"
+           ondragover="handleDragOver(event)" 
+           ondrop="handleDrop(event)">
+        
+        <!-- SVG Connecting lines layer -->
+        <svg id="svgLayer" class="absolute inset-0 w-full h-full pointer-events-none z-0">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748B" />
+            </marker>
+            <marker id="arrow-impacted" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#EF4444" />
+            </marker>
+          </defs>
+        </svg>
+
+        <!-- Nodes Container -->
+        <div id="nodesLayer" class="absolute inset-0 w-full h-full z-10 pointer-events-auto"></div>
+      </div>
+    </main>
+
+    <!-- Right Sidebar: Inspector, FinOps & Security Audit -->
+    <aside class="w-80 bg-slate-900 border-l border-slate-800 flex flex-col z-20 shrink-0">
+      <!-- Tabs header -->
+      <div class="flex border-b border-slate-800 text-xs font-semibold">
+        <button id="tabBtnInspector" onclick="switchRightTab('inspector')" class="flex-1 py-3 text-center border-b-2 border-amber-400 text-amber-400 transition flex items-center justify-center space-x-1">
+          <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+          <span>Properties</span>
+        </button>
+        <button id="tabBtnAudit" onclick="switchRightTab('audit')" class="flex-1 py-3 text-center border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center justify-center space-x-1">
+          <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+          <span>Audit & FinOps</span>
+        </button>
+      </div>
+
+      <!-- Tab Content: Inspector -->
+      <div id="tabInspector" class="flex-1 overflow-y-auto p-4 space-y-4">
+        <div id="noSelectionNotice" class="h-64 flex flex-col items-center justify-center text-center text-slate-500 p-4">
+          <i data-lucide="mouse-pointer-click" class="w-8 h-8 mb-2 stroke-1"></i>
+          <p class="text-xs">Select any component on the canvas to configure its AWS properties and sizing.</p>
+        </div>
+
+        <div id="inspectorForm" class="hidden space-y-4">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div class="flex items-center space-x-2">
+              <div id="inspectorIcon" class="p-1.5 rounded bg-slate-800 text-amber-400"></div>
+              <div>
+                <h3 id="inspectorTitle" class="text-sm font-semibold text-slate-200">Component</h3>
+                <span id="inspectorTypeBadge" class="text-[10px] text-slate-400 uppercase font-mono">AWS TYPE</span>
+              </div>
+            </div>
+            <button onclick="deleteSelectedNode()" class="text-rose-400 hover:text-rose-300 p-1" title="Delete node">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <!-- Common Name Field -->
+          <div>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Resource Name / Tag</label>
+            <input type="text" id="propName" oninput="updateCurrentNodeProperty('name', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400">
+          </div>
+
+          <!-- Component-specific dynamic forms -->
+          <div id="dynamicProps" class="space-y-3 pt-1">
+            <!-- Injected via JavaScript based on node type -->
+          </div>
+
+          <!-- Linking Action -->
+          <div class="pt-3 border-t border-slate-800">
+            <button id="connectFromBtn" onclick="startConnectionFromSelected()" class="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded text-xs flex items-center justify-center space-x-1.5 font-medium transition">
+              <i data-lucide="link" class="w-3.5 h-3.5 text-sky-400"></i>
+              <span>Connect to Another Node</span>
+            </button>
+          </div>
+
+          <!-- Cost Breakdown for this single node -->
+          <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 mt-4">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-slate-400">Item Cost Estimate:</span>
+              <span id="inspectorCost" class="font-mono font-bold text-emerald-400">$0.00/mo</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content: Audit & FinOps -->
+      <div id="tabAudit" class="hidden flex-1 overflow-y-auto p-4 space-y-4">
+        <!-- FinOps Overview Card -->
+        <div class="bg-slate-950 border border-slate-800 rounded-lg p-3.5">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-300 uppercase tracking-wide flex items-center space-x-1.5">
+              <i data-lucide="wallet" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>Monthly FinOps Breakdown</span>
+            </span>
+            <span id="finopsTotalBadge" class="text-sm font-mono font-bold text-emerald-400">$0.00</span>
+          </div>
+          <div id="finopsItemsList" class="text-[11px] space-y-1 pt-2 border-t border-slate-800 text-slate-400">
+            <!-- Cost rows injected via JS -->
+          </div>
+        </div>
+
+        <!-- Security & Architecture Compliance Engine -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-300 uppercase tracking-wide flex items-center space-x-1.5">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-amber-400"></i>
+              <span>CIS & Well-Architected</span>
+            </span>
+            <span id="auditScoreBadge" class="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300">Score: 100%</span>
+          </div>
+
+          <div id="auditIssuesList" class="space-y-2">
+            <!-- Audit findings injected via JS -->
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div id="terraformModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-3xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded bg-purple-500/10 text-purple-400 flex items-center justify-center border border-purple-500/20">
+            <i data-lucide="file-code" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white">Generated Terraform (IaC)</h3>
+            <p class="text-[11px] text-slate-400">Automated HashiCorp HCL configuration generated from your visual architecture</p>
+          </div>
+        </div>
+        <button onclick="closeTerraformModal()" class="text-slate-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-4 flex-1 overflow-y-auto bg-slate-950 font-mono text-xs text-slate-300 leading-relaxed select-text">
+        <pre><code id="terraformCodeBlock"># Generating Terraform...</code></pre>
+      </div>
+
+      <div class="p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between">
+        <span id="copySuccessNotice" class="text-xs text-emerald-400 hidden font-medium">✓ Copied to clipboard!</span>
+        <div class="flex items-center space-x-2 ml-auto">
+          <button onclick="copyTerraformCode()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-medium flex items-center space-x-1.5 transition">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            <span>Copy Code</span>
+          </button>
+          <button onclick="closeTerraformModal()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold rounded text-xs transition">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Component Catalog Configuration with FinOps base pricing and default metadata
+    const CATALOG = {
+      ec2: {
+        type: 'ec2',
+        title: 'EC2 Instance',
+        icon: 'server',
+        color: 'text-amber-400',
+        bgColor: 'bg-amber-500/10',
+        borderColor: 'border-amber-500/30',
+        defaults: {
+          name: 'app-server',
+          instanceType: 't3.micro', // Options: t3.micro ($10.40), t3.medium ($30.50), c5.large ($62.00)
+          publicIp: true,
+          inSubnet: 'public'
+        },
+        calculateCost: (props) => {
+          if (props.instanceType === 't3.micro') return 10.40;
+          if (props.instanceType === 't3.medium') return 30.50;
+          if (props.instanceType === 'c5.large') return 62.00;
+          return 15.00;
+        }
+      },
+      rds: {
+        type: 'rds',
+        title: 'RDS Database',
+        icon: 'database',
+        color: 'text-sky-400',
+        bgColor: 'bg-sky-500/10',
+        borderColor: 'border-sky-500/30',
+        defaults: {
+          name: 'primary-db',
+          engine: 'postgres',
+          multiAz: false, // Single-AZ creates a SPOF risk
+          publiclyAccessible: true, // Critical security issue if true
+          allocatedStorage: 20
+        },
+        calculateCost: (props) => {
+          let base = 25.00;
+          if (props.multiAz) base *= 1.8;
+          base += (props.allocatedStorage || 20) * 0.11;
+          return base;
+        }
+      },
+      s3: {
+        type: 's3',
+        title: 'S3 Bucket',
+        icon: 'folder-archive',
+        color: 'text-emerald-400',
+        bgColor: 'bg-emerald-500/10',
+        borderColor: 'border-emerald-500/30',
+        defaults: {
+          name: 'assets-bucket',
+          encrypted: false, // Security warning if unencrypted
+          versioning: true,
+          storageGb: 50
+        },
+        calculateCost: (props) => {
+          return (props.storageGb || 50) * 0.023;
+        }
+      },
+      alb: {
+        type: 'alb',
+        title: 'Application Load Balancer',
+        icon: 'network',
+        color: 'text-purple-400',
+        bgColor: 'bg-purple-500/10',
+        borderColor: 'border-purple-500/30',
+        defaults: {
+          name: 'main-alb',
+          scheme: 'internet-facing',
+          enableWaf: false
+        },
+        calculateCost: (props) => {
+          let cost = 22.50;
+          if (props.enableWaf) cost += 10.00;
+          return cost;
+        }
+      },
+      lambda: {
+        type: 'lambda',
+        title: 'AWS Lambda',
+        icon: 'zap',
+        color: 'text-orange-400',
+        bgColor: 'bg-orange-500/10',
+        borderColor: 'border-orange-500/30',
+        defaults: {
+          name: 'api-handler',
+          memoryMb: 512,
+          monthlyInvocations: 1000000
+        },
+        calculateCost: (props) => {
+          return 2.50;
+        }
+      },
+      cloudfront: {
+        type: 'cloudfront',
+        title: 'CloudFront CDN',
+        icon: 'globe',
+        color: 'text-indigo-400',
+        bgColor: 'bg-indigo-500/10',
+        borderColor: 'border-indigo-500/30',
+        defaults: {
+          name: 'cdn-distribution',
+          priceClass: 'PriceClass_100',
+          sslEnabled: true
+        },
+        calculateCost: (props) => {
+          return 8.50;
+        }
+      },
+      vpc: {
+        type: 'vpc',
+        title: 'VPC Gateway',
+        icon: 'shield',
+        color: 'text-blue-400',
+        bgColor: 'bg-blue-500/10',
+        borderColor: 'border-blue-500/30',
+        defaults: {
+          name: 'main-vpc',
+          cidr: '10.0.0.0/16',
+          natGateway: true
+        },
+        calculateCost: (props) => {
+          return props.natGateway ? 32.00 : 0.00;
+        }
+      }
+    };
+
+    // State Variables
+    let nodes = [];
+    let connections = []; // { id, from, to }
+    let selectedNodeId = null;
+    let linkingSourceNodeId = null;
+    let isBlastSimulationMode = false;
+    let failedNodeId = null;
+    let currentRightTab = 'inspector'; // 'inspector' | 'audit'
+
+    // Drag-drop tracking for coordinates
+    let draggingNodeId = null;
+    let dragOffset = { x: 0, y: 0 };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      // Load Default 3-Tier preset on start
+      loadPresetArchitecture('three-tier');
+    });
+
+    function spawnNode(type, x, y, customProps = {}) {
+      const config = CATALOG[type];
+      if (!config) return;
+
+      const id = 'node_' + Math.random().toString(36).substr(2, 9);
+      const posX = x !== undefined ? x : 120 + (nodes.length * 40) % 300;
+      const posY = y !== undefined ? y : 80 + (nodes.length * 35) % 250;
+
+      const newNode = {
+        id,
+        type,
+        x: Math.max(20, posX),
+        y: Math.max(20, posY),
+        properties: {
+          ...config.defaults,
+          ...customProps,
+          name: customProps.name || \`\${config.defaults.name}-\${nodes.length + 1}\`
+        }
+      };
+
+      nodes.push(newNode);
+      renderNodes();
+      renderConnections();
+      selectNode(id);
+      recalculateFinOpsAndAudit();
+      return newNode;
+    }
+
+    function renderNodes() {
+      const container = document.getElementById('nodesLayer');
+      container.innerHTML = '';
+
+      nodes.forEach(node => {
+        const config = CATALOG[node.type];
+        const isSelected = node.id === selectedNodeId;
+        const isFailed = isBlastSimulationMode && node.id === failedNodeId;
+        const isImpacted = isBlastSimulationMode && isNodeImpacted(node.id);
+
+        const nodeEl = document.createElement('div');
+        nodeEl.id = node.id;
+        nodeEl.className = \`absolute select-none bg-slate-900/95 border rounded-lg p-3 w-48 transition-all cursor-move shadow-lg
+          \${isSelected ? 'node-selected border-sky-400' : 'border-slate-800 hover:border-slate-600'}
+          \${isFailed ? 'node-failed bg-rose-950/80' : ''}
+          \${isImpacted ? 'node-impacted bg-orange-950/60' : ''}
+        \`;
+        nodeEl.style.left = \`\${node.x}px\`;
+        nodeEl.style.top = \`\${node.y}px\`;
+
+        // Node Content
+        nodeEl.innerHTML = \`
+          <div class="flex items-center justify-between mb-1.5 pointer-events-none">
+            <div class="flex items-center space-x-2">
+              <div class="w-6 h-6 rounded \${config.bgColor} \${config.color} flex items-center justify-center border \${config.borderColor}">
+                <i data-lucide="\${config.icon}" class="w-3.5 h-3.5"></i>
+              </div>
+              <div>
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">\${config.title}</div>
+              </div>
+            </div>
+            \${isFailed ? '<span class="px-1.5 py-0.2 text-[9px] font-bold bg-rose-500 text-white rounded">FAILED</span>' : ''}
+            \${isImpacted ? '<span class="px-1.5 py-0.2 text-[9px] font-bold bg-orange-500 text-white rounded">OUTAGE</span>' : ''}
+          </div>
+          <div class="text-xs font-semibold text-slate-100 truncate pointer-events-none">\${node.properties.name}</div>
+          <div class="mt-2 pt-1.5 border-t border-slate-800/80 flex items-center justify-between text-[10px] pointer-events-none">
+            <span class="text-slate-400 font-mono">\${getNodeSecondaryLabel(node)}</span>
+            <span class="text-emerald-400 font-mono font-medium">$\${config.calculateCost(node.properties).toFixed(2)}/m</span>
+          </div>
+        \`;
+
+        // Interactive Handlers
+        nodeEl.addEventListener('mousedown', (e) => handleNodeMouseDown(e, node.id));
+        nodeEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          handleNodeClick(node.id);
+        });
+
+        container.appendChild(nodeEl);
+      });
+
+      lucide.createIcons();
+    }
+
+    function getNodeSecondaryLabel(node) {
+      if (node.type === 'ec2') return node.properties.instanceType;
+      if (node.type === 'rds') return \`\${node.properties.engine} \${node.properties.multiAz ? '(Multi-AZ)' : '(Single-AZ)'}\`;
+      if (node.type === 's3') return \`\${node.properties.storageGb}GB \${node.properties.encrypted ? '🔒' : '⚠️'}\`;
+      if (node.type === 'alb') return node.properties.scheme;
+      if (node.type === 'vpc') return node.properties.cidr;
+      return node.type.toUpperCase();
+    }
+
+    function renderConnections() {
+      const svg = document.getElementById('svgLayer');
+      // Keep markers in SVG defs
+      const defs = svg.querySelector('defs').outerHTML;
+      let paths = '';
+
+      connections.forEach(conn => {
+        const source = nodes.find(n => n.id === conn.from);
+        const target = nodes.find(n => n.id === conn.to);
+        if (!source || !target) return;
+
+        // Node center coordinates
+        const x1 = source.x + 96;
+        const y1 = source.y + 40;
+        const x2 = target.x + 96;
+        const y2 = target.y + 40;
+
+        // Curved Bezier calculation
+        const dx = (x2 - x1) * 0.5;
+        const pathD = \`M \${x1} \${y1} C \${x1 + dx} \${y1}, \${x2 - dx} \${y2}, \${x2} \${y2}\`;
+
+        const isLineFailed = isBlastSimulationMode && (
+          source.id === failedNodeId || 
+          target.id === failedNodeId || 
+          isNodeImpacted(source.id) || 
+          isNodeImpacted(target.id)
+        );
+
+        const strokeColor = isLineFailed ? '#EF4444' : '#64748B';
+        const marker = isLineFailed ? 'url(#arrow-impacted)' : 'url(#arrow)';
+        const dashArray = isLineFailed ? 'stroke-dasharray="4 4"' : '';
+
+        paths += \`<path d="\${pathD}" fill="none" stroke="\${strokeColor}" stroke-width="2" marker-end="\${marker}" \${dashArray} class="connection-line" />\`;
+      });
+
+      svg.innerHTML = defs + paths;
+    }
+
+    function handleDragStart(e, type) {
+      e.dataTransfer.setData('cloudscope/component', type);
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      const type = e.dataTransfer.getData('cloudscope/component');
+      if (type) {
+        const rect = document.getElementById('canvasContainer').getBoundingClientRect();
+        const dropX = e.clientX - rect.left - 96;
+        const dropY = e.clientY - rect.top - 40;
+        spawnNode(type, dropX, dropY);
+      }
+    }
+
+    /* Node movement drag implementation */
+    function handleNodeMouseDown(e, nodeId) {
+      if (isBlastSimulationMode) return;
+      draggingNodeId = nodeId;
+      const node = nodes.find(n => n.id === nodeId);
+      dragOffset.x = e.clientX - node.x;
+      dragOffset.y = e.clientY - node.y;
+
+      document.addEventListener('mousemove', handleNodeMouseMove);
+      document.addEventListener('mouseup', handleNodeMouseUp);
+    }
+
+    function handleNodeMouseMove(e) {
+      if (!draggingNodeId) return;
+      const node = nodes.find(n => n.id === draggingNodeId);
+      if (!node) return;
+
+      const rect = document.getElementById('canvasContainer').getBoundingClientRect();
+      const newX = Math.max(10, Math.min(rect.width - 200, e.clientX - dragOffset.x));
+      const newY = Math.max(10, Math.min(rect.height - 100, e.clientY - dragOffset.y));
+
+      node.x = newX;
+      node.y = newY;
+
+      const el = document.getElementById(node.id);
+      if (el) {
+        el.style.left = \`\${newX}px\`;
+        el.style.top = \`\${newY}px\`;
+      }
+      renderConnections();
+    }
+
+    function handleNodeMouseUp() {
+      draggingNodeId = null;
+      document.removeEventListener('mousemove', handleNodeMouseMove);
+      document.removeEventListener('mouseup', handleNodeMouseUp);
+    }
+
+    function handleNodeClick(nodeId) {
+      if (isBlastSimulationMode) {
+        // In Blast Simulation: clicking a node simulates an outage at that node
+        failedNodeId = (failedNodeId === nodeId) ? null : nodeId;
+        renderNodes();
+        renderConnections();
+        return;
+      }
+
+      if (linkingSourceNodeId) {
+        // Complete node-to-node connection
+        if (linkingSourceNodeId !== nodeId) {
+          const exists = connections.some(c => 
+            (c.from === linkingSourceNodeId && c.to === nodeId) ||
+            (c.to === linkingSourceNodeId && c.from === nodeId)
+          );
+          if (!exists) {
+            connections.push({
+              id: 'conn_' + Math.random().toString(36).substr(2, 9),
+              from: linkingSourceNodeId,
+              to: nodeId
+            });
+            renderConnections();
+            recalculateFinOpsAndAudit();
+          }
+        }
+        cancelLinking();
+        return;
+      }
+
+      selectNode(nodeId);
+    }
+
+    function selectNode(nodeId) {
+      selectedNodeId = nodeId;
+      renderNodes();
+      updateInspectorView();
+    }
+
+    function updateInspectorView() {
+      const node = nodes.find(n => n.id === selectedNodeId);
+      const noNotice = document.getElementById('noSelectionNotice');
+      const form = document.getElementById('inspectorForm');
+
+      if (!node) {
+        noNotice.classList.remove('hidden');
+        form.classList.add('hidden');
+        return;
+      }
+
+      noNotice.classList.add('hidden');
+      form.classList.remove('hidden');
+
+      const config = CATALOG[node.type];
+      document.getElementById('inspectorTitle').innerText = config.title;
+      document.getElementById('inspectorTypeBadge').innerText = \`AWS::\${node.type.toUpperCase()}\`;
+      document.getElementById('inspectorIcon').innerHTML = \`<i data-lucide="\${config.icon}" class="w-4 h-4"></i>\`;
+      document.getElementById('propName').value = node.properties.name || '';
+
+      // Build component specific dynamic properties
+      const dynContainer = document.getElementById('dynamicProps');
+      dynContainer.innerHTML = '';
+
+      if (node.type === 'ec2') {
+        dynContainer.innerHTML = \`
+          <div>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Instance Type</label>
+            <select onchange="updateCurrentNodeProperty('instanceType', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-white">
+              <option value="t3.micro" \${node.properties.instanceType === 't3.micro' ? 'selected' : ''}>t3.micro (2 vCPU, 1 GB) - $10.40</option>
+              <option value="t3.medium" \${node.properties.instanceType === 't3.medium' ? 'selected' : ''}>t3.medium (2 vCPU, 4 GB) - $30.50</option>
+              <option value="c5.large" \${node.properties.instanceType === 'c5.large' ? 'selected' : ''}>c5.large (2 vCPU, 4 GB Compute) - $62.00</option>
+            </select>
+          </div>
+          <div class="flex items-center justify-between pt-2">
+            <span class="text-xs text-slate-300">Assign Public IPv4</span>
+            <input type="checkbox" \${node.properties.publicIp ? 'checked' : ''} onchange="updateCurrentNodeProperty('publicIp', this.checked)" class="rounded bg-slate-800 border-slate-700 text-amber-500">
+          </div>
+        \`;
+      } else if (node.type === 'rds') {
+        dynContainer.innerHTML = \`
+          <div>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Engine</label>
+            <select onchange="updateCurrentNodeProperty('engine', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-white">
+              <option value="postgres" \${node.properties.engine === 'postgres' ? 'selected' : ''}>PostgreSQL</option>
+              <option value="mysql" \${node.properties.engine === 'mysql' ? 'selected' : ''}>MySQL</option>
+            </select>
+          </div>
+          <div class="flex items-center justify-between pt-1">
+            <div>
+              <div class="text-xs text-slate-300 font-medium">Multi-AZ Standby</div>
+              <div class="text-[10px] text-slate-500">High Availability Replication</div>
+            </div>
+            <input type="checkbox" \${node.properties.multiAz ? 'checked' : ''} onchange="updateCurrentNodeProperty('multiAz', this.checked)" class="rounded bg-slate-800 border-slate-700 text-amber-500">
+          </div>
+          <div class="flex items-center justify-between pt-1">
+            <div>
+              <div class="text-xs text-rose-400 font-medium">Publicly Accessible</div>
+              <div class="text-[10px] text-slate-500">CIS Benchmark Check</div>
+            </div>
+            <input type="checkbox" \${node.properties.publiclyAccessible ? 'checked' : ''} onchange="updateCurrentNodeProperty('publiclyAccessible', this.checked)" class="rounded bg-slate-800 border-slate-700 text-rose-500">
+          </div>
+          <div>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Storage: <span id="storageLabel">\${node.properties.allocatedStorage}</span> GB</label>
+            <input type="range" min="20" max="500" step="10" value="\${node.properties.allocatedStorage}" oninput="updateCurrentNodeProperty('allocatedStorage', parseInt(this.value)); document.getElementById('storageLabel').innerText=this.value" class="w-full">
+          </div>
+        \`;
+      } else if (node.type === 's3') {
+        dynContainer.innerHTML = \`
+          <div class="flex items-center justify-between pt-1">
+            <div>
+              <div class="text-xs text-slate-300 font-medium">Server-Side Encryption (KMS)</div>
+              <div class="text-[10px] text-slate-500">Compliance Requirement</div>
+            </div>
+            <input type="checkbox" \${node.properties.encrypted ? 'checked' : ''} onchange="updateCurrentNodeProperty('encrypted', this.checked)" class="rounded bg-slate-800 border-slate-700 text-amber-500">
+          </div>
+          <div class="flex items-center justify-between pt-1">
+            <span class="text-xs text-slate-300">Object Versioning</span>
+            <input type="checkbox" \${node.properties.versioning ? 'checked' : ''} onchange="updateCurrentNodeProperty('versioning', this.checked)" class="rounded bg-slate-800 border-slate-700 text-amber-500">
+          </div>
+          <div class="pt-1">
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Bucket Storage: <span id="s3StorageLabel">\${node.properties.storageGb}</span> GB</label>
+            <input type="range" min="10" max="1000" step="50" value="\${node.properties.storageGb}" oninput="updateCurrentNodeProperty('storageGb', parseInt(this.value)); document.getElementById('s3StorageLabel').innerText=this.value" class="w-full">
+          </div>
+        \`;
+      } else if (node.type === 'alb') {
+        dynContainer.innerHTML = \`
+          <div>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">Scheme</label>
+            <select onchange="updateCurrentNodeProperty('scheme', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-white">
+              <option value="internet-facing" \${node.properties.scheme === 'internet-facing' ? 'selected' : ''}>internet-facing</option>
+              <option value="internal" \${node.properties.scheme === 'internal' ? 'selected' : ''}>internal</option>
+            </select>
+          </div>
+          <div class="flex items-center justify-between pt-2">
+            <div>
+              <div class="text-xs text-slate-300 font-medium">AWS WAF Shield</div>
+              <div class="text-[10px] text-slate-500">Web Application Firewall</div>
+            </div>
+            <input type="checkbox" \${node.properties.enableWaf ? 'checked' : ''} onchange="updateCurrentNodeProperty('enableWaf', this.checked)" class="rounded bg-slate-800 border-slate-700 text-amber-500">
+          </div>
+        \`;
+      } else if (node.type === 'vpc') {
+        dynContainer.innerHTML = \`
+          <div>
+            <label class="block text-[11px] font-medium text-slate-400 mb-1">IPv4 CIDR Block</label>
+            <input type="text" value="\${node.properties.cidr}" oninput="updateCurrentNodeProperty('cidr', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-white font-mono">
+          </div>
+          <div class="flex items-center justify-between pt-2">
+            <div>
+              <div class="text-xs text-slate-300 font-medium">NAT Gateway</div>
+              <div class="text-[10px] text-slate-500">Outbound Private Subnet Traffic</div>
+            </div>
+            <input type="checkbox" \${node.properties.natGateway ? 'checked' : ''} onchange="updateCurrentNodeProperty('natGateway', this.checked)" class="rounded bg-slate-800 border-slate-700 text-amber-500">
+          </div>
+        \`;
+      }
+
+      // Cost Calculation Display
+      const nodeCost = config.calculateCost(node.properties);
+      document.getElementById('inspectorCost').innerText = \`$\${nodeCost.toFixed(2)}/mo\`;
+
+      lucide.createIcons();
+    }
+
+    function updateCurrentNodeProperty(key, value) {
+      const node = nodes.find(n => n.id === selectedNodeId);
+      if (!node) return;
+      node.properties[key] = value;
+      renderNodes();
+      updateInspectorView();
+      recalculateFinOpsAndAudit();
+    }
+
+    function deleteSelectedNode() {
+      if (!selectedNodeId) return;
+      nodes = nodes.filter(n => n.id !== selectedNodeId);
+      connections = connections.filter(c => c.from !== selectedNodeId && c.to !== selectedNodeId);
+      selectedNodeId = null;
+      renderNodes();
+      renderConnections();
+      updateInspectorView();
+      recalculateFinOpsAndAudit();
+    }
+
+    function startConnectionFromSelected() {
+      if (!selectedNodeId) return;
+      linkingSourceNodeId = selectedNodeId;
+      document.getElementById('connectionHint').classList.remove('hidden');
+    }
+
+    function cancelLinking() {
+      linkingSourceNodeId = null;
+      document.getElementById('connectionHint').classList.add('hidden');
+    }
+
+    function recalculateFinOpsAndAudit() {
+      let totalCost = 0;
+      const finopsListEl = document.getElementById('finopsItemsList');
+      finopsListEl.innerHTML = '';
+
+      // FinOps Calculation
+      nodes.forEach(node => {
+        const config = CATALOG[node.type];
+        const cost = config.calculateCost(node.properties);
+        totalCost += cost;
+
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between py-1 border-b border-slate-900';
+        row.innerHTML = \`
+          <span class="truncate max-w-[170px]">\${node.properties.name}</span>
+          <span class="font-mono text-slate-300">$\${cost.toFixed(2)}</span>
+        \`;
+        finopsListEl.appendChild(row);
+      });
+
+      document.getElementById('headerCostValue').innerText = \`$\${totalCost.toFixed(2)} /mo\`;
+      document.getElementById('finopsTotalBadge').innerText = \`$\${totalCost.toFixed(2)} /mo\`;
+
+      // Security Audit Rules Engine (CIS Benchmarks & AWS Well-Architected)
+      const issues = [];
+
+      // Rule 1: S3 Encryption
+      const unencryptedBuckets = nodes.filter(n => n.type === 's3' && !n.properties.encrypted);
+      if (unencryptedBuckets.length > 0) {
+        issues.push({
+          severity: 'critical',
+          framework: 'CIS Benchmark 2.1.1',
+          title: 'Unencrypted S3 Bucket(s)',
+          desc: \`\${unencryptedBuckets.length} S3 bucket(s) lack server-side AES/KMS encryption. Data at rest is vulnerable.\`
+        });
+      }
+
+      // Rule 2: Publicly Accessible RDS Database
+      const publicDbs = nodes.filter(n => n.type === 'rds' && n.properties.publiclyAccessible);
+      if (publicDbs.length > 0) {
+        issues.push({
+          severity: 'critical',
+          framework: 'Well-Architected SEC-05',
+          title: 'Database Exposed to Internet',
+          desc: \`RDS instance is flagged as publicly accessible. Databases should reside in private subnets behind security groups.\`
+        });
+      }
+
+      // Rule 3: Single-AZ Database SPOF
+      const singleAzDbs = nodes.filter(n => n.type === 'rds' && !n.properties.multiAz);
+      if (singleAzDbs.length > 0) {
+        issues.push({
+          severity: 'medium',
+          framework: 'Well-Architected REL-02',
+          title: 'Single Point of Failure (SPOF) RDS',
+          desc: \`\${singleAzDbs.length} database(s) without Multi-AZ failover. Susceptible to availability zone outages.\`
+        });
+      }
+
+      // Rule 4: EC2 Directly Exposed without Load Balancer
+      const ec2Nodes = nodes.filter(n => n.type === 'ec2');
+      const hasAlb = nodes.some(n => n.type === 'alb');
+      if (ec2Nodes.length > 0 && !hasAlb) {
+        issues.push({
+          severity: 'low',
+          framework: 'AWS Best Practice',
+          title: 'Compute Without Load Balancer',
+          desc: 'EC2 instances detected without an Application Load Balancer for health checking and fault tolerance.'
+        });
+      }
+
+      // Rule 5: Missing VPC Boundary
+      const hasVpc = nodes.some(n => n.type === 'vpc');
+      if (nodes.length > 2 && !hasVpc) {
+        issues.push({
+          severity: 'medium',
+          framework: 'CIS Benchmark 4.1',
+          title: 'Default Network Isolation Missing',
+          desc: 'Architecture lacks a defined Virtual Private Cloud (VPC) network boundary.'
+        });
+      }
+
+      // Render Issues
+      const issuesContainer = document.getElementById('auditIssuesList');
+      issuesContainer.innerHTML = '';
+
+      let score = 100;
+      issues.forEach(issue => {
+        if (issue.severity === 'critical') score -= 25;
+        if (issue.severity === 'medium') score -= 15;
+        if (issue.severity === 'low') score -= 5;
+      });
+      score = Math.max(0, score);
+
+      document.getElementById('headerSecurityScore').innerText = \`\${score}%\`;
+      document.getElementById('auditScoreBadge').innerText = \`Score: \${score}%\`;
+      document.getElementById('headerVulnerabilitiesCount').innerText = \`\${issues.length} Issues\`;
+
+      if (issues.length === 0) {
+        issuesContainer.innerHTML = \`
+          <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 text-center">
+            <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400 mx-auto mb-1"></i>
+            <div class="text-xs font-semibold text-emerald-300">All Security Checks Passed</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Compliant with CIS Benchmarks</div>
+          </div>
+        \`;
+      } else {
+        issues.forEach(issue => {
+          const badgeClass = issue.severity === 'critical' ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' :
+                             issue.severity === 'medium' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                             'bg-sky-500/20 text-sky-400 border-sky-500/30';
+          const card = document.createElement('div');
+          card.className = 'bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs space-y-1';
+          card.innerHTML = \`
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-200">\${issue.title}</span>
+              <span class="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded border \${badgeClass}">\${issue.severity}</span>
+            </div>
+            <div class="text-[10px] font-mono text-slate-500">\${issue.framework}</div>
+            <p class="text-[11px] text-slate-400 leading-tight pt-0.5">\${issue.desc}</p>
+          \`;
+          issuesContainer.appendChild(card);
+        });
+      }
+
+      lucide.createIcons();
+    }
+
+    function toggleBlastSimulation() {
+      isBlastSimulationMode = !isBlastSimulationMode;
+      const banner = document.getElementById('simulationBanner');
+      const btn = document.getElementById('blastModeBtn');
+
+      if (isBlastSimulationMode) {
+        banner.classList.remove('hidden');
+        btn.classList.add('bg-rose-600', 'text-white', 'border-rose-500');
+        // Pick first EC2 or DB as starting simulated failure if none selected
+        if (!failedNodeId && nodes.length > 0) {
+          const defaultFail = nodes.find(n => n.type === 'rds' || n.type === 'ec2') || nodes[0];
+          failedNodeId = defaultFail.id;
+        }
+      } else {
+        banner.classList.add('hidden');
+        btn.classList.remove('bg-rose-600', 'text-white', 'border-rose-500');
+        failedNodeId = null;
+      }
+
+      renderNodes();
+      renderConnections();
+    }
+
+    // Graph traversal to find downstream nodes connected to failed node
+    function isNodeImpacted(nodeId) {
+      if (!failedNodeId || nodeId === failedNodeId) return false;
+
+      const visited = new Set();
+      const queue = [failedNodeId];
+
+      while (queue.length > 0) {
+        const current = queue.shift();
+        visited.add(current);
+
+        // Find neighbors connected directly or indirectly
+        connections.forEach(c => {
+          if (c.from === current && !visited.has(c.to)) {
+            queue.push(c.to);
+          }
+          if (c.to === current && !visited.has(c.from)) {
+            queue.push(c.from);
+          }
+        });
+      }
+
+      return visited.has(nodeId);
+    }
+
+    function loadPresetArchitecture(key) {
+      nodes = [];
+      connections = [];
+      selectedNodeId = null;
+      failedNodeId = null;
+
+      if (key === 'three-tier') {
+        const vpc = spawnNode('vpc', 60, 40, { name: 'prod-vpc', cidr: '10.0.0.0/16', natGateway: true });
+        const alb = spawnNode('alb', 280, 40, { name: 'external-alb', scheme: 'internet-facing', enableWaf: true });
+        const ec2_1 = spawnNode('ec2', 180, 190, { name: 'app-web-01', instanceType: 't3.micro', publicIp: false });
+        const ec2_2 = spawnNode('ec2', 380, 190, { name: 'app-web-02', instanceType: 't3.micro', publicIp: false });
+        const rds = spawnNode('rds', 280, 340, { name: 'postgres-prod-db', multiAz: true, publiclyAccessible: false, allocatedStorage: 100 });
+        const s3 = spawnNode('s3', 520, 190, { name: 'prod-user-assets', encrypted: true, storageGb: 150 });
+
+        connections.push(
+          { id: 'c1', from: vpc.id, to: alb.id },
+          { id: 'c2', from: alb.id, to: ec2_1.id },
+          { id: 'c3', from: alb.id, to: ec2_2.id },
+          { id: 'c4', from: ec2_1.id, to: rds.id },
+          { id: 'c5', from: ec2_2.id, to: rds.id },
+          { id: 'c6', from: ec2_2.id, to: s3.id }
+        );
+      } else if (key === 'serverless') {
+        const cf = spawnNode('cloudfront', 80, 80, { name: 'app-cdn' });
+        const s3 = spawnNode('s3', 300, 40, { name: 'frontend-spa-bucket', encrypted: true, storageGb: 20 });
+        const lambda = spawnNode('lambda', 300, 180, { name: 'graphql-api-fn' });
+        const rds = spawnNode('rds', 520, 180, { name: 'aurora-serverless-db', multiAz: true, publiclyAccessible: false });
+
+        connections.push(
+          { id: 'c1', from: cf.id, to: s3.id },
+          { id: 'c2', from: cf.id, to: lambda.id },
+          { id: 'c3', from: lambda.id, to: rds.id }
+        );
+      } else if (key === 'insecure') {
+        // Intentionally misconfigured to trigger audit warnings
+        const ec2 = spawnNode('ec2', 100, 100, { name: 'raw-exposed-vm', instanceType: 'c5.large', publicIp: true });
+        const rds = spawnNode('rds', 350, 100, { name: 'public-mysql', publiclyAccessible: true, multiAz: false });
+        const s3 = spawnNode('s3', 220, 260, { name: 'unencrypted-data', encrypted: false });
+
+        connections.push(
+          { id: 'c1', from: ec2.id, to: rds.id },
+          { id: 'c2', from: ec2.id, to: s3.id }
+        );
+      }
+
+      renderNodes();
+      renderConnections();
+      recalculateFinOpsAndAudit();
+      if (nodes.length > 0) selectNode(nodes[0].id);
+      document.getElementById('presetSelect').value = '';
+    }
+
+    function clearCanvas() {
+      nodes = [];
+      connections = [];
+      selectedNodeId = null;
+      failedNodeId = null;
+      renderNodes();
+      renderConnections();
+      updateInspectorView();
+      recalculateFinOpsAndAudit();
+    }
+
+    function autoLayout() {
+      // Simple automated grid alignment
+      nodes.forEach((n, idx) => {
+        n.x = 80 + (idx % 3) * 220;
+        n.y = 50 + Math.floor(idx / 3) * 150;
+      });
+      renderNodes();
+      renderConnections();
+    }
+
+    function switchRightTab(tab) {
+      currentRightTab = tab;
+      const tabInspector = document.getElementById('tabInspector');
+      const tabAudit = document.getElementById('tabAudit');
+      const btnInspector = document.getElementById('tabBtnInspector');
+      const btnAudit = document.getElementById('tabBtnAudit');
+
+      if (tab === 'inspector') {
+        tabInspector.classList.remove('hidden');
+        tabAudit.classList.add('hidden');
+        btnInspector.classList.add('border-amber-400', 'text-amber-400');
+        btnInspector.classList.remove('border-transparent', 'text-slate-400');
+        btnAudit.classList.remove('border-amber-400', 'text-amber-400');
+        btnAudit.classList.add('border-transparent', 'text-slate-400');
+      } else {
+        tabInspector.classList.add('hidden');
+        tabAudit.classList.remove('hidden');
+        btnAudit.classList.add('border-amber-400', 'text-amber-400');
+        btnAudit.classList.remove('border-transparent', 'text-slate-400');
+        btnInspector.classList.remove('border-amber-400', 'text-amber-400');
+        btnInspector.classList.add('border-transparent', 'text-slate-400');
+      }
+    }
+
+    function openTerraformModal() {
+      const modal = document.getElementById('terraformModal');
+      const codeBlock = document.getElementById('terraformCodeBlock');
+      document.getElementById('copySuccessNotice').classList.add('hidden');
+
+      let hcl = \`# Generated by CloudScope Studio
+# AWS Provider Configuration
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+\`;
+
+      if (nodes.length === 0) {
+        hcl += \`# Canvas is empty. Drag and drop components to generate IaC.\`;
+      }
+
+      nodes.forEach(node => {
+        const cleanName = node.properties.name.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase();
+        
+        if (node.type === 'vpc') {
+          hcl += \`resource "aws_vpc" "\${cleanName}" {
+  cidr_block           = "\${node.properties.cidr}"
+  enable_dns_hostnames = true
+  tags = {
+    Name = "\${node.properties.name}"
+  }
+}
+
+\`;
+        } else if (node.type === 'ec2') {
+          hcl += \`resource "aws_instance" "\${cleanName}" {
+  ami                         = "ami-0c7217cdde317cfec"
+  instance_type               = "\${node.properties.instanceType}"
+  associate_public_ip_address = \${node.properties.publicIp}
+  tags = {
+    Name = "\${node.properties.name}"
+  }
+}
+
+\`;
+        } else if (node.type === 'rds') {
+          hcl += \`resource "aws_db_instance" "\${cleanName}" {
+  identifier             = "\${cleanName}"
+  engine                 = "\${node.properties.engine}"
+  allocated_storage      = \${node.properties.allocatedStorage}
+  instance_class         = "db.t3.micro"
+  multi_az               = \${node.properties.multiAz}
+  publicly_accessible    = \${node.properties.publiclyAccessible}
+  skip_final_snapshot    = true
+}
+
+\`;
+        } else if (node.type === 's3') {
+          hcl += \`resource "aws_s3_bucket" "\${cleanName}" {
+  bucket = "\${cleanName}-bucket"
+}
+
+\`;
+          if (node.properties.encrypted) {
+            hcl += \`resource "aws_s3_bucket_server_side_encryption_configuration" "\${cleanName}_crypto" {
+  bucket = aws_s3_bucket.\${cleanName}.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+\`;
+          }
+        } else if (node.type === 'alb') {
+          hcl += \`resource "aws_lb" "\${cleanName}" {
+  name               = "\${cleanName}"
+  internal           = \${node.properties.scheme === 'internal'}
+  load_balancer_type = "application"
+}
+
+\`;
+        } else if (node.type === 'lambda') {
+          hcl += \`resource "aws_lambda_function" "\${cleanName}" {
+  function_name = "\${cleanName}"
+  role          = "arn:aws:iam::123456789012:role/lambda_role"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+}
+
+\`;
+        } else if (node.type === 'cloudfront') {
+          hcl += \`resource "aws_cloudfront_distribution" "\${cleanName}" {
+  enabled = true
+  price_class = "\${node.properties.priceClass}"
+}
+
+\`;
+        }
+      });
+
+      codeBlock.textContent = hcl;
+      modal.classList.remove('hidden');
+    }
+
+    function closeTerraformModal() {
+      document.getElementById('terraformModal').classList.add('hidden');
+    }
+
+    function copyTerraformCode() {
+      const code = document.getElementById('terraformCodeBlock').innerText;
+      const dummy = document.createElement('textarea');
+      document.body.appendChild(dummy);
+      dummy.value = code;
+      dummy.select();
+      document.execCommand('copy');
+      document.body.removeChild(dummy);
+
+      const notice = document.getElementById('copySuccessNotice');
+      notice.classList.remove('hidden');
+      setTimeout(() => notice.classList.add('hidden'), 2500);
+    }
+  </script>
+</body>
+</html>

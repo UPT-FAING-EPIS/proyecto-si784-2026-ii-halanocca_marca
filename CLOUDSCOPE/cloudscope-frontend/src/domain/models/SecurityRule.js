@@ -1,0 +1,227 @@
+/**
+ * SecurityRule – Modelo de dominio para las reglas de auditoría de seguridad.
+ * Alineado a AWS Well-Architected Framework y CIS Benchmarks for AWS.
+ * 
+ * Cada regla es una función pura que recibe el grafo (nodes + edges)
+ * y devuelve un array de hallazgos (findings).
+ */
+
+/**
+ * @typedef {'CRITICAL'|'HIGH'|'MEDIUM'|'LOW'|'INFO'} Severity
+ */
+
+/**
+ * @typedef {Object} SecurityFinding
+ * @property {string} ruleId       - Identificador de la regla (ej. "SEC-001")
+ * @property {Severity} severity   - Severidad del hallazgo
+ * @property {string} title        - Título corto
+ * @property {string} description  - Descripción técnica del problema
+ * @property {string} recommendation - Acción correctiva recomendada
+ * @property {string|null} nodeId  - ID del nodo afectado (null si es global)
+ * @property {string} framework    - Marco de referencia (CIS / Well-Architected / Custom)
+ */
+
+/**
+ * @typedef {Object} SecurityRule
+ * @property {string} id
+ * @property {string} title
+ * @property {Severity} severity
+ * @property {string} framework
+ * @property {(nodes: any[], edges: any[]) => SecurityFinding[]} evaluate
+ */
+
+/** @type {SecurityRule[]} */
+export const SECURITY_RULES = [
+  // ─────────────────────────────────────────────────────────────────────────
+  // SEC-001 · RDS Publicly Accessible
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: 'SEC-001',
+    title: 'RDS Instance Publicly Accessible',
+    severity: 'CRITICAL',
+    framework: 'CIS AWS Benchmark 2.3.1',
+    evaluate(nodes) {
+      return nodes
+        .filter(n => n.data?.cloudType === 'rds' && n.data?.config?.publiclyAccessible === true)
+        .map(n => ({
+          ruleId: 'SEC-001',
+          severity: 'CRITICAL',
+          title: 'RDS Instance Publicly Accessible',
+          description: `La instancia RDS "${n.data.label}" tiene "Publicly Accessible" habilitado, exponiendo la base de datos a internet.`,
+          recommendation: 'Deshabilita "Publicly Accessible" y coloca la RDS en una subnet privada. Usa bastion host o VPN para acceso administrativo.',
+          nodeId: n.id,
+          framework: 'CIS AWS Benchmark 2.3.1',
+        }));
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SEC-002 · S3 Block Public Access Disabled
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: 'SEC-002',
+    title: 'S3 Bucket with Public Access Enabled',
+    severity: 'HIGH',
+    framework: 'CIS AWS Benchmark 2.1.5',
+    evaluate(nodes) {
+      return nodes
+        .filter(n => n.data?.cloudType === 's3' && n.data?.config?.publicAccess === false)
+        .map(n => ({
+          ruleId: 'SEC-002',
+          severity: 'HIGH',
+          title: 'S3 Bucket sin Block Public Access',
+          description: `El bucket S3 "${n.data.label}" tiene "Block Public Access" deshabilitado, lo que puede exponer datos sensibles.`,
+          recommendation: 'Habilita las 4 configuraciones de Block Public Access a nivel de bucket y cuenta.',
+          nodeId: n.id,
+          framework: 'CIS AWS Benchmark 2.1.5',
+        }));
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SEC-003 · S3 Encryption Disabled
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: 'SEC-003',
+    title: 'S3 Bucket without Server-Side Encryption',
+    severity: 'MEDIUM',
+    framework: 'CIS AWS Benchmark 2.1.1',
+    evaluate(nodes) {
+      return nodes
+        .filter(n => n.data?.cloudType === 's3' && n.data?.config?.encryption === false)
+        .map(n => ({
+          ruleId: 'SEC-003',
+          severity: 'MEDIUM',
+          title: 'S3 sin cifrado en reposo',
+          description: `El bucket S3 "${n.data.label}" no tiene cifrado SSE habilitado.`,
+          recommendation: 'Habilita SSE-S3 o SSE-KMS en la configuración del bucket.',
+          nodeId: n.id,
+          framework: 'CIS AWS Benchmark 2.1.1',
+        }));
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SEC-004 · No VPC en el diagrama (arquitectura plana)
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: 'SEC-004',
+    title: 'No VPC defined in architecture',
+    severity: 'HIGH',
+    framework: 'AWS Well-Architected – Security Pillar',
+    evaluate(nodes) {
+      const hasVpc = nodes.some(n => n.data?.cloudType === 'vpc');
+      const hasNetworkResources = nodes.some(n => ['ec2','rds','alb'].includes(n.data?.cloudType));
+      if (!hasVpc && hasNetworkResources) {
+        return [{
+          ruleId: 'SEC-004',
+          severity: 'HIGH',
+          title: 'Arquitectura sin VPC definida',
+          description: 'El diagrama contiene recursos de red (EC2, RDS, ALB) pero no tiene una VPC. Los recursos quedarían en la VPC Default, lo cual no es una buena práctica.',
+          recommendation: 'Agrega un nodo VPC y conecta los recursos de red a ella. Define subnets públicas y privadas.',
+          nodeId: null,
+          framework: 'AWS Well-Architected – Security Pillar',
+        }];
+      }
+      return [];
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SEC-005 · ALB expuesto sin VPC o Subnet
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: 'SEC-005',
+    title: 'ALB internet-facing without subnet context',
+    severity: 'MEDIUM',
+    framework: 'AWS Well-Architected – Reliability',
+    evaluate(nodes, edges) {
+      return nodes
+        .filter(n => n.data?.cloudType === 'alb' && n.data?.config?.scheme === 'internet-facing')
+        .filter(alb => {
+          const connectedIds = edges
+            .filter(e => e.source === alb.id || e.target === alb.id)
+            .flatMap(e => [e.source, e.target]);
+          const connectedNodes = nodes.filter(n => connectedIds.includes(n.id));
+          return !connectedNodes.some(n => ['subnet','vpc'].includes(n.data?.cloudType));
+        })
+        .map(n => ({
+          ruleId: 'SEC-005',
+          severity: 'MEDIUM',
+          title: 'ALB internet-facing sin subnet conectada',
+          description: `El ALB "${n.data.label}" está configurado como internet-facing pero no está conectado a ninguna subnet o VPC en el diagrama.`,
+          recommendation: 'Conecta el ALB a subnets públicas dentro de una VPC para representar correctamente el aislamiento de red.',
+          nodeId: n.id,
+          framework: 'AWS Well-Architected – Reliability',
+        }));
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SEC-006 · RDS sin Multi-AZ (resiliencia)
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: 'SEC-006',
+    title: 'RDS without Multi-AZ (Single Point of Failure)',
+    severity: 'MEDIUM',
+    framework: 'AWS Well-Architected – Reliability',
+    evaluate(nodes) {
+      return nodes
+        .filter(n => n.data?.cloudType === 'rds' && n.data?.config?.multiAz !== true)
+        .map(n => ({
+          ruleId: 'SEC-006',
+          severity: 'MEDIUM',
+          title: 'RDS sin Multi-AZ (SPOF)',
+          description: `La instancia RDS "${n.data.label}" no tiene Multi-AZ habilitado, convirtiéndola en un Punto Único de Falla (SPOF).`,
+          recommendation: 'Habilita Multi-AZ en la configuración de RDS para garantizar alta disponibilidad y failover automático.',
+          nodeId: n.id,
+          framework: 'AWS Well-Architected – Reliability',
+        }));
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SEC-007 · Internet Gateway conectado directamente a RDS
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: 'SEC-007',
+    title: 'Internet Gateway directly connected to RDS',
+    severity: 'CRITICAL',
+    framework: 'CIS AWS Benchmark / Well-Architected Security',
+    evaluate(nodes, edges) {
+      const igwIds = nodes.filter(n => n.data?.cloudType === 'igw').map(n => n.id);
+      const rdsIds = nodes.filter(n => n.data?.cloudType === 'rds').map(n => n.id);
+      const directLinks = edges.filter(e =>
+        (igwIds.includes(e.source) && rdsIds.includes(e.target)) ||
+        (igwIds.includes(e.target) && rdsIds.includes(e.source))
+      );
+      return directLinks.map(e => {
+        const rdsNode = nodes.find(n => n.id === e.source || n.id === e.target && rdsIds.includes(n.id));
+        return {
+          ruleId: 'SEC-007',
+          severity: 'CRITICAL',
+          title: 'Internet Gateway conectado directamente a RDS',
+          description: 'Se detectó una conexión directa entre un Internet Gateway y una instancia RDS. Esto expone la base de datos directamente a internet.',
+          recommendation: 'Nunca conectes un IGW directamente a RDS. La base de datos debe estar en una subnet privada, accesible solo desde capas de aplicación internas.',
+          nodeId: rdsNode?.id ?? null,
+          framework: 'CIS AWS Benchmark / Well-Architected Security',
+        };
+      });
+    },
+  },
+];
+
+/**
+ * Severidad a color para la UI.
+ * @param {Severity} severity
+ */
+export function severityColor(severity) {
+  const map = {
+    CRITICAL: { text: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/30', dot: '#ef4444' },
+    HIGH:     { text: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/30', dot: '#f97316' },
+    MEDIUM:   { text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30', dot: '#f59e0b' },
+    LOW:      { text: 'text-sky-400', bg: 'bg-sky-500/10', border: 'border-sky-500/30', dot: '#38bdf8' },
+    INFO:     { text: 'text-slate-400', bg: 'bg-slate-500/10', border: 'border-slate-500/30', dot: '#94a3b8' },
+  };
+  return map[severity] ?? map.INFO;
+}
