@@ -1,10 +1,9 @@
 /**
- * DiagramCanvas – Lienzo interactivo principal de CloudScope.
- * Basado en ReactFlow con nodos personalizados AWS y soporte de conexiones.
- * El Drag & Drop se maneja en Editor.jsx (necesita acceso al contexto de ReactFlow).
+ * DiagramCanvas – Sprint 2: Soporte de Blast Radius (resaltado de nodos afectados).
+ * Los nodos y aristas afectadas por el blast radius se resaltan con colores especiales.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -15,28 +14,48 @@ import 'reactflow/dist/style.css';
 import CloudNodeComponent from './CloudNode.jsx';
 import { getNodeMeta } from '../../../domain/models/CloudNode.js';
 
-/** Tipos de nodos personalizados registrados en ReactFlow */
-const NODE_TYPES = {
-  cloudNode: CloudNodeComponent,
-};
+const NODE_TYPES = { cloudNode: CloudNodeComponent };
 
-/** Opciones de estilo para las aristas por defecto */
 const DEFAULT_EDGE_OPTIONS = {
   style: { stroke: '#475569', strokeWidth: 1.5 },
   markerEnd: { type: 'arrowclosed', color: '#475569' },
 };
 
 /**
- * @param {Object} props
- * @param {import('reactflow').Node[]} props.nodes
- * @param {import('reactflow').Edge[]} props.edges
- * @param {Function} props.onNodesChange
- * @param {Function} props.onEdgesChange
- * @param {Function} props.onConnect
- * @param {Function} props.onNodeClick
- * @param {Function} props.onPaneClick
- * @param {Function} props.onDragOver
+ * Aplica estilos de blast radius a nodos y aristas.
  */
+function applyBlastStyles(nodes, edges, blastResult) {
+  if (!blastResult || !blastResult.sourceNodeId) return { nodes, edges };
+
+  const { sourceNodeId, affectedNodeIds, affectedEdgeIds } = blastResult;
+  const affectedSet = new Set(affectedNodeIds);
+  const edgeSet = new Set(affectedEdgeIds);
+
+  const styledNodes = nodes.map(n => {
+    if (n.id === sourceNodeId) {
+      return { ...n, style: { ...n.style, filter: 'drop-shadow(0 0 12px #ef4444) drop-shadow(0 0 6px #ef4444)' } };
+    }
+    if (affectedSet.has(n.id)) {
+      return { ...n, style: { ...n.style, filter: 'drop-shadow(0 0 8px #f97316) opacity(0.9)' } };
+    }
+    return { ...n, style: { ...n.style, filter: 'opacity(0.25)', transition: 'filter 0.3s ease' } };
+  });
+
+  const styledEdges = edges.map(e => {
+    if (e.source === sourceNodeId || e.target === sourceNodeId || edgeSet.has(e.id)) {
+      return {
+        ...e,
+        animated: true,
+        style: { stroke: e.source === sourceNodeId ? '#ef4444' : '#f97316', strokeWidth: 2.5 },
+        markerEnd: { type: 'arrowclosed', color: e.source === sourceNodeId ? '#ef4444' : '#f97316' },
+      };
+    }
+    return { ...e, style: { ...e.style, opacity: 0.15 } };
+  });
+
+  return { nodes: styledNodes, edges: styledEdges };
+}
+
 export default function DiagramCanvas({
   nodes,
   edges,
@@ -46,11 +65,17 @@ export default function DiagramCanvas({
   onNodeClick,
   onPaneClick,
   onDragOver,
+  blastResult,
 }) {
+  const { nodes: displayNodes, edges: displayEdges } = useMemo(
+    () => applyBlastStyles(nodes, edges, blastResult),
+    [nodes, edges, blastResult]
+  );
+
   return (
     <ReactFlow
-      nodes={nodes}
-      edges={edges}
+      nodes={displayNodes}
+      edges={displayEdges}
       nodeTypes={NODE_TYPES}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
@@ -66,7 +91,6 @@ export default function DiagramCanvas({
       deleteKeyCode="Delete"
       proOptions={{ hideAttribution: true }}
     >
-      {/* Grid de puntos oscuro */}
       <Background
         variant="dots"
         gap={20}
@@ -74,13 +98,7 @@ export default function DiagramCanvas({
         color="#1e3a5f"
         style={{ backgroundColor: '#0b1120' }}
       />
-
-      {/* Controles de zoom */}
-      <Controls
-        showInteractive={false}
-      />
-
-      {/* Mini mapa */}
+      <Controls showInteractive={false} />
       <MiniMap
         nodeColor={(n) => {
           const meta = n.data?.cloudType ? getNodeMeta(n.data.cloudType) : null;

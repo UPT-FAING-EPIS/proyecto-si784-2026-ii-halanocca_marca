@@ -1,360 +1,346 @@
 /**
- * RightSidebar – Panel lateral derecho de CloudScope.
- * Contiene tres pestañas:
- *  - Properties: Inspector y configurador del nodo seleccionado
- *  - Audit: Lista de hallazgos de seguridad del motor de reglas
- *  - FinOps: Desglose de costos mensuales
+ * RightSidebar – Sprint 2: Añade pestaña "Blast" para simulación de radio de impacto.
+ * También mejora el panel de propiedades con estado de blast radius del nodo seleccionado.
  */
 
 import React, { useState } from 'react';
 import { getNodeMeta } from '../../../domain/models/CloudNode.js';
 import { severityColor } from '../../../domain/models/SecurityRule.js';
 import { formatUSD } from '../../../application/use-cases/calculateCost.js';
+import { impactColor } from '../../../application/use-cases/runBlastRadius.js';
 
-// ─── Sub-componentes ───────────────────────────────────────────────────────────
-
-/** Pestaña individual del header */
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
 function Tab({ label, badge, active, onClick, color }) {
   return (
-    <button
-      onClick={onClick}
-      className="flex-1 py-2.5 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all"
+    <button onClick={onClick}
+      className="flex-1 py-2 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all"
       style={{
         borderBottom: active ? `2px solid ${color}` : '2px solid transparent',
         color: active ? color : '#64748b',
-      }}
-    >
+      }}>
       {label}
       {badge != null && badge > 0 && (
-        <span
-          className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-          style={{ background: `${color}22`, color }}
-        >
-          {badge}
-        </span>
+        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+          style={{ background: `${color}22`, color }}>{badge}</span>
       )}
     </button>
   );
 }
 
-/** Campo de formulario de texto */
+// ─── Campo de formulario ──────────────────────────────────────────────────────
 function TextField({ label, value, onChange }) {
   return (
     <div className="space-y-1">
-      <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{label}</label>
-      <input
-        type="text"
-        value={value ?? ''}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-2.5 py-1.5 rounded-lg text-[12px] outline-none transition"
+      <label className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#475569' }}>{label}</label>
+      <input type="text" value={value ?? ''} onChange={(e) => onChange(e.target.value)}
+        className="w-full px-2.5 py-1.5 rounded-lg text-[12px] outline-none"
         style={{ background: '#1e293b', border: '1px solid #334155', color: '#e2e8f0' }}
-        onFocus={(e) => e.target.style.borderColor = '#f59e0b80'}
-        onBlur={(e) => e.target.style.borderColor = '#334155'}
-      />
+        onFocus={(e) => e.target.style.borderColor = '#f59e0b'}
+        onBlur={(e) => e.target.style.borderColor = '#334155'} />
     </div>
   );
 }
 
-/** Campo de formulario de select */
 function SelectField({ label, value, options, onChange }) {
   return (
     <div className="space-y-1">
-      <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{label}</label>
-      <select
-        value={value ?? ''}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-2.5 py-1.5 rounded-lg text-[12px] outline-none transition cursor-pointer"
-        style={{ background: '#1e293b', border: '1px solid #334155', color: '#e2e8f0' }}
-      >
-        {options.map((opt) => (
-          <option key={opt} value={opt}>{opt}</option>
-        ))}
+      <label className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#475569' }}>{label}</label>
+      <select value={value ?? ''} onChange={(e) => onChange(e.target.value)}
+        className="w-full px-2.5 py-1.5 rounded-lg text-[12px] outline-none cursor-pointer"
+        style={{ background: '#1e293b', border: '1px solid #334155', color: '#e2e8f0' }}>
+        {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
       </select>
     </div>
   );
 }
 
-/** Toggle booleano */
 function BoolField({ label, value, onChange }) {
   return (
     <div className="flex items-center justify-between py-1">
-      <label className="text-[11px] text-slate-400">{label}</label>
-      <button
-        onClick={() => onChange(!value)}
+      <label className="text-[11px]" style={{ color: '#94a3b8' }}>{label}</label>
+      <button onClick={() => onChange(!value)}
         className="relative w-10 h-5 rounded-full transition-all duration-200"
-        style={{
-          background: value ? '#f59e0b' : '#1e293b',
-          border: '1px solid #334155',
-        }}
-      >
-        <span
-          className="absolute top-0.5 w-4 h-4 rounded-full transition-all duration-200"
-          style={{
-            left: value ? '20px' : '2px',
-            background: value ? '#0f172a' : '#475569',
-          }}
-        />
+        style={{ background: value ? '#f59e0b' : '#1e293b', border: '1px solid #334155' }}>
+        <span className="absolute top-0.5 w-4 h-4 rounded-full transition-all duration-200"
+          style={{ left: value ? '20px' : '2px', background: value ? '#0f172a' : '#475569' }} />
       </button>
     </div>
   );
 }
 
-// ─── Panels ────────────────────────────────────────────────────────────────────
-
-/** Panel de propiedades del nodo seleccionado */
-function PropertiesPanel({ selectedNode, updateNodeConfig, updateNodeLabel, deleteNode }) {
-  if (!selectedNode) {
-    return (
-      <div className="h-48 flex flex-col items-center justify-center text-center px-4 opacity-50">
-        <div className="text-3xl mb-2">⬡</div>
-        <p className="text-[11px] text-slate-500">
-          Click on a component to inspect and configure its settings
-        </p>
-      </div>
-    );
-  }
+// ─── Panel Properties ─────────────────────────────────────────────────────────
+function PropertiesPanel({ selectedNode, updateNodeConfig, updateNodeLabel, deleteNode, onSimulateBlast }) {
+  if (!selectedNode) return (
+    <div className="h-48 flex flex-col items-center justify-center text-center px-4 opacity-40">
+      <div className="text-3xl mb-2">⬡</div>
+      <p className="text-[11px]" style={{ color: '#475569' }}>Click en un componente para configurarlo</p>
+    </div>
+  );
 
   const meta = getNodeMeta(selectedNode.data?.cloudType);
   if (!meta) return null;
-
   const config = selectedNode.data?.config ?? {};
   const schema = meta.configSchema ?? {};
 
-  const handleConfigChange = (key, value) => {
-    updateNodeConfig(selectedNode.id, { [key]: value });
-  };
-
   return (
     <div className="space-y-4">
-      {/* Identificación del nodo */}
-      <div
-        className="rounded-xl p-3 flex items-center gap-3"
-        style={{ background: meta.bgColor, border: `1px solid ${meta.borderColor}` }}
-      >
-        <div
-          style={{ background: `${meta.color}18`, borderColor: `${meta.color}40`, color: meta.color }}
-          className="w-10 h-10 rounded-xl border-2 flex items-center justify-center font-bold text-sm shrink-0"
-        >
+      <div className="rounded-xl p-3 flex items-center gap-3"
+        style={{ background: meta.bgColor, border: `1px solid ${meta.borderColor}` }}>
+        <div className="w-10 h-10 rounded-xl border-2 flex items-center justify-center font-bold text-sm shrink-0"
+          style={{ background: `${meta.color}18`, borderColor: `${meta.color}40`, color: meta.color }}>
           {meta.icon}
         </div>
         <div>
-          <div className="text-[12px] font-bold text-slate-100">{meta.label}</div>
-          <div className="text-[10px] text-slate-400">{meta.category}</div>
-          <div className="text-[10px] font-mono text-slate-500">{meta.framework}</div>
+          <div className="text-[12px] font-bold" style={{ color: '#f1f5f9' }}>{meta.label}</div>
+          <div className="text-[10px]" style={{ color: '#64748b' }}>{meta.category}</div>
         </div>
       </div>
 
-      {/* Label editable */}
-      <TextField
-        label="Name / Label"
-        value={selectedNode.data?.label}
-        onChange={(v) => updateNodeLabel(selectedNode.id, v)}
-      />
+      <TextField label="Name / Label" value={selectedNode.data?.label}
+        onChange={(v) => updateNodeLabel(selectedNode.id, v)} />
 
-      {/* Config dinámica según schema */}
-      {Object.entries(schema).map(([key, fieldSchema]) => {
-        const val = config[key] ?? fieldSchema.default;
-        if (fieldSchema.type === 'boolean') {
-          return (
-            <BoolField
-              key={key}
-              label={fieldSchema.label}
-              value={!!val}
-              onChange={(v) => handleConfigChange(key, v)}
-            />
-          );
-        }
-        if (fieldSchema.type === 'select') {
-          return (
-            <SelectField
-              key={key}
-              label={fieldSchema.label}
-              value={val}
-              options={fieldSchema.options}
-              onChange={(v) => handleConfigChange(key, v)}
-            />
-          );
-        }
-        return (
-          <TextField
-            key={key}
-            label={fieldSchema.label}
-            value={val}
-            onChange={(v) => handleConfigChange(key, v)}
-          />
-        );
+      {Object.entries(schema).map(([key, fs]) => {
+        const val = config[key] ?? fs.default;
+        if (fs.type === 'boolean') return <BoolField key={key} label={fs.label} value={!!val} onChange={v => updateNodeConfig(selectedNode.id, { [key]: v })} />;
+        if (fs.type === 'select') return <SelectField key={key} label={fs.label} value={val} options={fs.options} onChange={v => updateNodeConfig(selectedNode.id, { [key]: v })} />;
+        return <TextField key={key} label={fs.label} value={val} onChange={v => updateNodeConfig(selectedNode.id, { [key]: v })} />;
       })}
 
-      {/* Acción de eliminar */}
-      <button
-        onClick={() => deleteNode(selectedNode.id)}
-        className="w-full mt-2 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
-        style={{
-          background: 'rgba(239,68,68,0.08)',
-          border: '1px solid rgba(239,68,68,0.25)',
-          color: '#f87171',
-        }}
+      {/* Botón Blast Radius */}
+      <button onClick={() => onSimulateBlast(selectedNode.id)}
+        className="w-full py-1.5 rounded-lg text-[11px] font-semibold transition-all mt-1"
+        style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171' }}
         onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.18)'}
-        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
-      >
-        🗑 Delete Node
+        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}>
+        ⚡ Simular Blast Radius
+      </button>
+
+      <button onClick={() => deleteNode(selectedNode.id)}
+        className="w-full py-1.5 rounded-lg text-[11px] font-semibold transition-all"
+        style={{ background: 'rgba(71,85,105,0.1)', border: '1px solid #1e293b', color: '#475569' }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.25)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = '#475569'; e.currentTarget.style.borderColor = '#1e293b'; }}>
+        🗑 Eliminar nodo
       </button>
     </div>
   );
 }
 
-/** Panel de auditoría de seguridad */
-function AuditPanel({ auditResult }) {
-  const { findings, score, critical, high, medium, total } = auditResult;
+// ─── Panel Blast Radius ───────────────────────────────────────────────────────
+function BlastPanel({ blastResult, nodes, onSimulateBlast, onClearBlast }) {
+  if (!blastResult?.sourceNodeId) return (
+    <div className="space-y-4">
+      <div className="p-4 rounded-xl text-center" style={{ background: '#0b1120', border: '1px solid #1e293b' }}>
+        <div className="text-3xl mb-2">⚡</div>
+        <p className="text-xs" style={{ color: '#475569' }}>
+          Selecciona un componente en el canvas y haz click en "Simular Blast Radius" para ver los nodos afectados.
+        </p>
+      </div>
+      <div className="space-y-1">
+        {nodes.filter(n => n.data?.cloudType).map(n => {
+          const meta = getNodeMeta(n.data.cloudType);
+          return (
+            <button key={n.id} onClick={() => onSimulateBlast(n.id)}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all"
+              style={{ background: '#0f172a', border: '1px solid #1e293b' }}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = '#ef444440'}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = '#1e293b'}>
+              <span className="text-xs font-bold px-1.5 py-0.5 rounded" style={{ background: meta?.bgColor, color: meta?.color }}>{meta?.icon}</span>
+              <span className="text-[11px]" style={{ color: '#94a3b8' }}>{n.data.label}</span>
+              <span className="ml-auto text-[10px]" style={{ color: '#334155' }}>⚡</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 
-  const scoreColor =
-    score >= 80 ? '#34d399' :
-    score >= 60 ? '#f59e0b' :
-    score >= 40 ? '#f97316' : '#ef4444';
+  const { sourceNodeId, affectedNodeIds, directNodeIds, impactScore } = blastResult;
+  const sourceNode = nodes.find(n => n.id === sourceNodeId);
+  const impact = impactColor(impactScore);
 
   return (
-    <div className="space-y-4">
-      {/* Score */}
-      <div
-        className="rounded-xl p-3.5 flex items-center justify-between"
-        style={{ background: '#0b1120', border: '1px solid #1e293b' }}
-      >
-        <div>
-          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-0.5">Audit Score</div>
-          <div className="text-[11px] text-slate-400">
-            {total === 0 ? 'No issues found ✅' : `${total} issue${total !== 1 ? 's' : ''} detected`}
+    <div className="space-y-3">
+      {/* Score de impacto */}
+      <div className="rounded-xl p-4" style={{ background: '#0b1120', border: `1px solid ${impact.glow}30` }}>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#475569' }}>
+              Blast Radius Score
+            </div>
+            <div className="text-[11px]" style={{ color: '#64748b' }}>
+              Nodo origen: <span style={{ color: '#e2e8f0' }}>{sourceNode?.data?.label}</span>
+            </div>
+          </div>
+          <div className="text-3xl font-black font-mono" style={{ color: impact.glow }}>
+            {impactScore}%
           </div>
         </div>
-        <div className="text-3xl font-black font-mono" style={{ color: scoreColor }}>
-          {score}
+        <div className="flex gap-3 text-[11px]">
+          <div className="flex-1 text-center p-2 rounded-lg" style={{ background: '#0f172a', border: '1px solid #1e293b' }}>
+            <div className="font-black text-lg" style={{ color: '#ef4444' }}>{directNodeIds.length}</div>
+            <div style={{ color: '#475569' }}>Directos</div>
+          </div>
+          <div className="flex-1 text-center p-2 rounded-lg" style={{ background: '#0f172a', border: '1px solid #1e293b' }}>
+            <div className="font-black text-lg" style={{ color: '#f97316' }}>{affectedNodeIds.length}</div>
+            <div style={{ color: '#475569' }}>Afectados</div>
+          </div>
+          <div className="flex-1 text-center p-2 rounded-lg" style={{ background: '#0f172a', border: '1px solid #1e293b' }}>
+            <div className="font-black text-lg" style={{ color: impact.glow }}>{impact.label}</div>
+            <div style={{ color: '#475569' }}>Impacto</div>
+          </div>
         </div>
       </div>
 
-      {/* Conteo por severidad */}
-      {total > 0 && (
-        <div className="grid grid-cols-3 gap-1.5">
-          {[
-            { label: 'Critical', count: critical, sev: 'CRITICAL' },
-            { label: 'High', count: high, sev: 'HIGH' },
-            { label: 'Medium', count: medium, sev: 'MEDIUM' },
-          ].map(({ label, count, sev }) => {
-            const c = severityColor(sev);
+      {/* Lista de nodos afectados */}
+      <div>
+        <div className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: '#475569' }}>
+          Nodos afectados
+        </div>
+        <div className="space-y-1">
+          {affectedNodeIds.map(id => {
+            const n = nodes.find(x => x.id === id);
+            if (!n) return null;
+            const meta = getNodeMeta(n.data?.cloudType);
+            const isDirect = directNodeIds.includes(id);
             return (
-              <div key={sev} className="rounded-lg p-2 text-center" style={{ background: '#0b1120', border: `1px solid ${c.dot}30` }}>
-                <div className="text-lg font-black font-mono" style={{ color: c.dot }}>{count}</div>
-                <div className="text-[9px] font-semibold" style={{ color: c.dot }}>{label}</div>
+              <div key={id} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg"
+                style={{ background: '#0f172a', border: `1px solid ${isDirect ? '#ef444430' : '#1e293b'}` }}>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                  style={{ background: meta?.bgColor ?? '#1e293b', color: meta?.color ?? '#64748b' }}>
+                  {meta?.icon ?? '?'}
+                </span>
+                <span className="text-[11px] flex-1" style={{ color: '#94a3b8' }}>{n.data?.label}</span>
+                <span className="text-[9px]" style={{ color: isDirect ? '#ef4444' : '#f97316' }}>
+                  {isDirect ? '● Directo' : '○ Transitivo'}
+                </span>
               </div>
             );
           })}
+          {affectedNodeIds.length === 0 && (
+            <div className="text-center text-[11px] py-4" style={{ color: '#334155' }}>
+              No hay nodos downstream. Este componente es un nodo hoja (sin dependientes).
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
-      {/* Lista de hallazgos */}
-      {findings.length === 0 ? (
-        <div className="text-center py-6 text-slate-600 text-[11px]">
-          <div className="text-2xl mb-1">🛡️</div>
-          All security rules passed.<br />Add components to evaluate the architecture.
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {findings.map((f, i) => {
-            const c = severityColor(f.severity);
-            return (
-              <div
-                key={`${f.ruleId}-${i}`}
-                className="rounded-xl p-3 space-y-1.5"
-                style={{ background: '#0b1120', border: `1px solid ${c.dot}30` }}
-              >
-                <div className="flex items-start gap-2">
-                  <span
-                    className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 mt-0.5"
-                    style={{ background: `${c.dot}20`, color: c.dot }}
-                  >
-                    {f.severity}
-                  </span>
-                  <div className="text-[11px] font-semibold text-slate-200 leading-tight">{f.title}</div>
-                </div>
-                <p className="text-[10px] text-slate-400 leading-relaxed">{f.description}</p>
-                <div
-                  className="text-[10px] px-2 py-1 rounded leading-relaxed"
-                  style={{ background: '#0f172a', color: '#34d399', border: '1px solid #0d3226' }}
-                >
-                  💡 {f.recommendation}
-                </div>
-                <div className="text-[9px] text-slate-600">{f.framework} · {f.ruleId}</div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <button onClick={onClearBlast}
+        className="w-full py-1.5 rounded-lg text-[11px] font-semibold transition-all"
+        style={{ background: '#1e293b', color: '#64748b', border: '1px solid #334155' }}
+        onMouseEnter={(e) => e.currentTarget.style.color = '#f8fafc'}
+        onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>
+        ✕ Limpiar simulación
+      </button>
     </div>
   );
 }
 
-/** Panel de FinOps */
-function FinOpsPanel({ costBreakdown }) {
-  const { total, lineItems } = costBreakdown;
+// ─── Panel Audit ──────────────────────────────────────────────────────────────
+function AuditPanel({ auditResult }) {
+  const { findings = [], score = 100, critical = 0, high = 0, medium = 0, total = 0 } = auditResult ?? {};
+  const scoreColor = score >= 80 ? '#34d399' : score >= 60 ? '#f59e0b' : score >= 40 ? '#f97316' : '#ef4444';
 
   return (
-    <div className="space-y-4">
-      {/* Total */}
-      <div
-        className="rounded-xl p-4 flex items-center justify-between"
-        style={{ background: '#0b1120', border: '1px solid #1e293b' }}
-      >
+    <div className="space-y-3">
+      <div className="rounded-xl p-3.5 flex items-center justify-between"
+        style={{ background: '#0b1120', border: '1px solid #1e293b' }}>
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-0.5">Monthly Estimate</div>
-          <div className="text-[11px] text-slate-400">AWS us-east-1 pricing</div>
+          <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#475569' }}>Audit Score</div>
+          <div className="text-[11px] mt-0.5" style={{ color: '#64748b' }}>
+            {total === 0 ? 'No issues ✅' : `${total} issue${total !== 1 ? 's' : ''} found`}
+          </div>
         </div>
-        <div className="text-2xl font-black font-mono text-emerald-400">
-          {formatUSD(total)}
-        </div>
+        <div className="text-3xl font-black font-mono" style={{ color: scoreColor }}>{score}</div>
       </div>
 
-      {/* Anual estimado */}
       {total > 0 && (
-        <div
-          className="rounded-lg p-2.5 flex items-center justify-between text-[11px]"
-          style={{ background: '#0f1f12', border: '1px solid #166534' }}
-        >
-          <span className="text-slate-400">Annual estimate</span>
-          <span className="font-mono font-bold text-emerald-300">{formatUSD(total * 12)}/yr</span>
+        <div className="grid grid-cols-3 gap-1">
+          {[['Critical', critical, 'CRITICAL'], ['High', high, 'HIGH'], ['Medium', medium, 'MEDIUM']].map(([l, c, s]) => {
+            const col = severityColor(s);
+            return (
+              <div key={s} className="rounded-lg p-2 text-center" style={{ background: '#0b1120', border: `1px solid ${col.dot}30` }}>
+                <div className="text-lg font-black font-mono" style={{ color: col.dot }}>{c}</div>
+                <div className="text-[9px] font-semibold" style={{ color: col.dot }}>{l}</div>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {/* Desglose */}
+      <div className="space-y-2">
+        {findings.length === 0 ? (
+          <div className="text-center py-6 text-[11px]" style={{ color: '#334155' }}>
+            <div className="text-2xl mb-1">🛡️</div>
+            All security rules passed.
+          </div>
+        ) : findings.map((f, i) => {
+          const c = severityColor(f.severity);
+          return (
+            <div key={i} className="rounded-xl p-3 space-y-1.5"
+              style={{ background: '#0b1120', border: `1px solid ${c.dot}30` }}>
+              <div className="flex items-start gap-2">
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 mt-0.5"
+                  style={{ background: `${c.dot}20`, color: c.dot }}>{f.severity}</span>
+                <div className="text-[11px] font-semibold leading-tight" style={{ color: '#e2e8f0' }}>{f.title}</div>
+              </div>
+              <p className="text-[10px] leading-relaxed" style={{ color: '#64748b' }}>{f.description}</p>
+              <div className="text-[10px] px-2 py-1 rounded leading-relaxed"
+                style={{ background: '#0f172a', color: '#34d399', border: '1px solid #0d3226' }}>
+                💡 {f.recommendation}
+              </div>
+              <div className="text-[9px]" style={{ color: '#334155' }}>{f.framework} · {f.ruleId}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Panel FinOps ─────────────────────────────────────────────────────────────
+function FinOpsPanel({ costBreakdown }) {
+  const { total = 0, lineItems = [] } = costBreakdown ?? {};
+  return (
+    <div className="space-y-3">
+      <div className="rounded-xl p-4 flex items-center justify-between"
+        style={{ background: '#0b1120', border: '1px solid #1e293b' }}>
+        <div>
+          <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#475569' }}>Monthly Estimate</div>
+          <div className="text-[11px] mt-0.5" style={{ color: '#64748b' }}>AWS us-east-1</div>
+        </div>
+        <div className="text-2xl font-black font-mono" style={{ color: '#34d399' }}>{formatUSD(total)}</div>
+      </div>
+      {total > 0 && (
+        <div className="rounded-lg p-2.5 flex items-center justify-between text-[11px]"
+          style={{ background: '#0f1f12', border: '1px solid #166534' }}>
+          <span style={{ color: '#64748b' }}>Annual estimate</span>
+          <span className="font-mono font-bold" style={{ color: '#34d399' }}>{formatUSD(total * 12)}/yr</span>
+        </div>
+      )}
       {lineItems.length === 0 ? (
-        <div className="text-center py-6 text-slate-600 text-[11px]">
-          <div className="text-2xl mb-1">💰</div>
-          Add billable components to see the cost breakdown.
+        <div className="text-center py-6 text-[11px]" style={{ color: '#334155' }}>
+          <div className="text-2xl mb-1">💰</div>Add billable components to see breakdown.
         </div>
       ) : (
-        <div>
-          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">
-            Cost Breakdown
-          </div>
-          <div className="space-y-1.5">
-            {lineItems
-              .sort((a, b) => b.cost - a.cost)
-              .map((item) => {
-                const pct = total > 0 ? (item.cost / total) * 100 : 0;
-                const meta = getNodeMeta(item.type);
-                return (
-                  <div key={item.nodeId} className="space-y-0.5">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[11px] text-slate-300 truncate max-w-[130px]">{item.label}</span>
-                      <span className="text-[11px] font-mono text-emerald-400">{formatUSD(item.cost)}</span>
-                    </div>
-                    <div className="h-1 rounded-full bg-slate-800 overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${pct}%`, background: meta?.color ?? '#34d399' }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
+        <div className="space-y-2">
+          <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#475569' }}>Breakdown</div>
+          {lineItems.sort((a, b) => b.cost - a.cost).map(item => {
+            const pct = total > 0 ? (item.cost / total) * 100 : 0;
+            const meta = getNodeMeta(item.type);
+            return (
+              <div key={item.nodeId} className="space-y-0.5">
+                <div className="flex justify-between items-center">
+                  <span className="text-[11px] truncate max-w-[130px]" style={{ color: '#94a3b8' }}>{item.label}</span>
+                  <span className="text-[11px] font-mono" style={{ color: '#34d399' }}>{formatUSD(item.cost)}</span>
+                </div>
+                <div className="h-1 rounded-full overflow-hidden" style={{ background: '#1e293b' }}>
+                  <div className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${pct}%`, background: meta?.color ?? '#34d399' }} />
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -362,7 +348,6 @@ function FinOpsPanel({ costBreakdown }) {
 }
 
 // ─── Componente principal ─────────────────────────────────────────────────────
-
 export default function RightSidebar({
   selectedNode,
   updateNodeConfig,
@@ -370,49 +355,42 @@ export default function RightSidebar({
   deleteNode,
   auditResult,
   costBreakdown,
+  blastResult,
+  nodes,
+  onSimulateBlast,
+  onClearBlast,
 }) {
   const [activeTab, setActiveTab] = useState('properties');
 
   const tabs = [
-    { id: 'properties', label: 'Properties', badge: null, color: '#f59e0b' },
+    { id: 'properties', label: 'Props', badge: null, color: '#f59e0b' },
+    { id: 'blast', label: 'Blast', badge: blastResult?.affectedNodeIds?.length ?? null, color: '#ef4444' },
     { id: 'audit', label: 'Security', badge: auditResult?.total ?? 0, color: auditResult?.critical > 0 ? '#ef4444' : auditResult?.high > 0 ? '#f97316' : '#34d399' },
     { id: 'finops', label: 'FinOps', badge: null, color: '#34d399' },
   ];
 
   return (
-    <aside
-      className="w-72 flex flex-col shrink-0 z-20 overflow-hidden"
-      style={{ background: '#0f172a', borderLeft: '1px solid #1e293b' }}
-    >
-      {/* Header con pestañas */}
+    <aside className="w-72 flex flex-col shrink-0 z-20 overflow-hidden"
+      style={{ background: '#0f172a', borderLeft: '1px solid #1e293b' }}>
       <div className="flex" style={{ borderBottom: '1px solid #1e293b' }}>
-        {tabs.map((tab) => (
-          <Tab
-            key={tab.id}
-            label={tab.label}
-            badge={tab.badge}
-            active={activeTab === tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            color={tab.color}
-          />
+        {tabs.map(tab => (
+          <Tab key={tab.id} {...tab} active={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} />
         ))}
       </div>
-
-      {/* Contenido de la pestaña activa */}
       <div className="flex-1 overflow-y-auto p-3.5 space-y-3">
         {activeTab === 'properties' && (
-          <PropertiesPanel
-            selectedNode={selectedNode}
-            updateNodeConfig={updateNodeConfig}
-            updateNodeLabel={updateNodeLabel}
-            deleteNode={deleteNode}
-          />
+          <PropertiesPanel selectedNode={selectedNode} updateNodeConfig={updateNodeConfig}
+            updateNodeLabel={updateNodeLabel} deleteNode={deleteNode} onSimulateBlast={onSimulateBlast} />
+        )}
+        {activeTab === 'blast' && (
+          <BlastPanel blastResult={blastResult} nodes={nodes ?? []}
+            onSimulateBlast={onSimulateBlast} onClearBlast={onClearBlast} />
         )}
         {activeTab === 'audit' && (
-          <AuditPanel auditResult={auditResult ?? { findings: [], score: 100, critical: 0, high: 0, medium: 0, total: 0 }} />
+          <AuditPanel auditResult={auditResult} />
         )}
         {activeTab === 'finops' && (
-          <FinOpsPanel costBreakdown={costBreakdown ?? { total: 0, lineItems: [] }} />
+          <FinOpsPanel costBreakdown={costBreakdown} />
         )}
       </div>
     </aside>

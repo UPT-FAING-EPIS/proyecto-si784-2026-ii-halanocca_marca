@@ -1,26 +1,24 @@
 /**
- * Editor – Página principal de CloudScope Studio.
- * Monta el layout completo: Header + LeftSidebar + Canvas + RightSidebar.
- * Gestiona el estado centralizado del diagrama a través de useDiagram.
+ * Editor – Sprint 2: Blast Radius + Save modal + keyboard shortcut Ctrl+S.
  */
 
-import React, { useRef, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { ReactFlowProvider, useReactFlow } from 'reactflow';
+import { useNavigate } from 'react-router-dom';
 
 import Header from '../components/layout/Header.jsx';
 import LeftSidebar from '../components/sidebar/LeftSidebar.jsx';
 import RightSidebar from '../components/sidebar/RightSidebar.jsx';
 import DiagramCanvas from '../components/canvas/DiagramCanvas.jsx';
+import SaveProjectModal from '../components/modals/SaveProjectModal.jsx';
 
 import { useDiagram } from '../hooks/useDiagram.js';
 import { getNodeMeta } from '../../domain/models/CloudNode.js';
+import { runBlastRadius } from '../../application/use-cases/runBlastRadius.js';
 
-/**
- * Inner component that has access to the ReactFlow context.
- * Needed so that onDrop can use useReactFlow().
- */
 function EditorInner() {
   const rfInstance = useReactFlow();
+  const navigate = useNavigate();
 
   const {
     nodes, edges,
@@ -33,7 +31,32 @@ function EditorInner() {
     exportTerraform,
   } = useDiagram();
 
-  /** Drop handler – necesita rfInstance para convertir coordenadas */
+  // ─── Estado de Blast Radius ───────────────────────────────────────────────
+  const [blastResult, setBlastResult] = useState(null);
+
+  const handleSimulateBlast = useCallback((nodeId) => {
+    const result = runBlastRadius(nodeId, nodes, edges);
+    setBlastResult(result);
+  }, [nodes, edges]);
+
+  const handleClearBlast = useCallback(() => setBlastResult(null), []);
+
+  // ─── Estado del modal de guardado ─────────────────────────────────────────
+  const [showSaveModal, setShowSaveModal] = useState(false);
+
+  // Ctrl+S → abrir modal
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        setShowSaveModal(true);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  // ─── Drop handler ─────────────────────────────────────────────────────────
   const handleDrop = useCallback(
     (event) => {
       event.preventDefault();
@@ -59,33 +82,37 @@ function EditorInner() {
         position,
         data: { cloudType, label: meta.label, config: defaultConfig },
       });
+
+      // Limpiar blast cuando se agrega un nodo
+      setBlastResult(null);
     },
     [rfInstance, addNode]
   );
 
+  // Limpiar blast cuando cambia la topología
+  useEffect(() => {
+    if (blastResult) setBlastResult(null);
+  }, [nodes.length, edges.length]);
+
   return (
-    <div
-      className="flex flex-col overflow-hidden select-none"
-      style={{ height: '100vh', background: '#0b1120', color: '#f8fafc' }}
-    >
-      {/* ── Header ── */}
+    <div className="flex flex-col overflow-hidden select-none"
+      style={{ height: '100vh', background: '#0b1120', color: '#f8fafc' }}>
+
       <Header
         costBreakdown={costBreakdown}
         auditResult={auditResult}
         onExportIaC={exportTerraform}
+        onSave={() => setShowSaveModal(true)}
+        blastActive={!!blastResult}
+        onClearBlast={handleClearBlast}
       />
 
-      {/* ── Workspace ── */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Paleta izquierda */}
         <LeftSidebar />
 
-        {/* Canvas central */}
-        <main
-          className="flex-1 relative overflow-hidden"
+        <main className="flex-1 relative overflow-hidden"
           onDrop={handleDrop}
-          onDragOver={onDragOver}
-        >
+          onDragOver={onDragOver}>
           <DiagramCanvas
             nodes={nodes}
             edges={edges}
@@ -95,22 +122,19 @@ function EditorInner() {
             onNodeClick={onNodeClick}
             onPaneClick={onPaneClick}
             onDragOver={onDragOver}
+            blastResult={blastResult}
           />
 
-          {/* Hint flotante cuando el canvas está vacío */}
           {nodes.length === 0 && (
-            <div
-              className="absolute inset-0 flex items-center justify-center pointer-events-none"
-            >
-              <div className="text-center opacity-30">
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-center opacity-25">
                 <div className="text-5xl mb-3">⬡</div>
-                <p className="text-sm text-slate-400">Drag services from the left panel</p>
+                <p className="text-sm" style={{ color: '#64748b' }}>Arrastra servicios desde el panel izquierdo</p>
               </div>
             </div>
           )}
         </main>
 
-        {/* Panel derecho */}
         <RightSidebar
           selectedNode={selectedNode}
           updateNodeConfig={updateNodeConfig}
@@ -118,15 +142,26 @@ function EditorInner() {
           deleteNode={deleteNode}
           auditResult={auditResult}
           costBreakdown={costBreakdown}
+          blastResult={blastResult}
+          nodes={nodes}
+          onSimulateBlast={handleSimulateBlast}
+          onClearBlast={handleClearBlast}
         />
       </div>
+
+      {/* Modal de guardado */}
+      {showSaveModal && (
+        <SaveProjectModal
+          nodes={nodes}
+          edges={edges}
+          onClose={() => setShowSaveModal(false)}
+          onSaved={() => setShowSaveModal(false)}
+        />
+      )}
     </div>
   );
 }
 
-/**
- * Editor – envuelto en ReactFlowProvider para proveer el contexto.
- */
 export default function Editor() {
   return (
     <ReactFlowProvider>
