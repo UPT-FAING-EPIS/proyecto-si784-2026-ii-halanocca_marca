@@ -1,0 +1,14 @@
+com\cloudscope\application\ports\in\ProjectUseCase.class
+com\cloudscope\infrastructure\adapters\in\web\AuthController.class
+com\cloudscope\infrastructure\adapters\out\persistence\jpa\UserEntity.class
+com\cloudscope\application\ports\out\ProjectRepositoryPort.class
+com\cloudscope\infrastructure\adapters\out\persistence\InMemoryProjectRepository.class
+com\cloudscope\CloudscopeApplication.class
+com\cloudscope\infrastructure\adapters\out\persistence\jpa\ProjectEntity.class
+com\cloudscope\domain\models\Project.class
+com\cloudscope\infrastructure\adapters\out\persistence\jpa\SpringDataProjectRepository.class
+com\cloudscope\infrastructure\config\DatabaseInitializer.class
+com\cloudscope\application\services\ProjectService.class
+com\cloudscope\infrastructure\adapters\out\persistence\jpa\PostgresProjectRepository.class
+com\cloudscope\infrastructure\adapters\out\persistence\jpa\SpringDataUserRepository.class
+com\cloudscope\infrastructure\adapters\in\web\ProjectController.class

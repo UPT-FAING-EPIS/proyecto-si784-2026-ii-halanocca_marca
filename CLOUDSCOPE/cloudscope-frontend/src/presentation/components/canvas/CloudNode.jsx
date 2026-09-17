@@ -3,8 +3,10 @@ import { Handle, Position } from 'reactflow';
 import { getNodeMeta } from '../../../domain/models/CloudNode.js';
 import { getNodeCost } from '../../../domain/models/CloudNode.js';
 import { getServiceIcon, AwsLogo, AzureLogo, OracleLogo, GcpLogo } from '../icons/CloudIcons.jsx';
+import { useEditorTheme } from '../../context/EditorThemeContext.jsx';
 
 const CloudNodeComponent = memo(({ data, selected }) => {
+  const { isLight } = useEditorTheme();
   const meta = getNodeMeta(data.cloudType);
   if (!meta) return null;
 
@@ -14,17 +16,20 @@ const CloudNodeComponent = memo(({ data, selected }) => {
   return (
     <div
       style={{
-        borderColor: selected ? meta.color : meta.borderColor,
+        borderColor: selected ? meta.color : (isLight ? '#cbd5e1' : meta.borderColor),
         boxShadow: selected
           ? `0 0 0 2px ${meta.color}55, 0 4px 20px ${meta.color}22`
-          : `0 2px 8px rgba(0,0,0,0.3)`,
+          : (isLight ? '0 4px 12px rgba(0,0,0,0.06)' : '0 2px 8px rgba(0,0,0,0.3)'),
         transition: 'all 0.15s ease',
       }}
-      className="min-w-[145px] rounded-xl border-2 bg-slate-900 overflow-hidden"
+      className={`min-w-[145px] rounded-xl border-2 overflow-hidden transition-colors ${isLight ? 'bg-white shadow-md' : 'bg-slate-900'}`}
     >
       {/* Header del nodo */}
       <div
-        style={{ backgroundColor: meta.bgColor, borderBottom: `1px solid ${meta.borderColor}` }}
+        style={{
+          backgroundColor: meta.bgColor,
+          borderBottom: `1px solid ${isLight ? '#e2e8f0' : meta.borderColor}`
+        }}
         className="px-3 py-2 flex items-center gap-2.5"
       >
         {/* Icono Vectorial Oficial del Servicio */}
@@ -42,7 +47,7 @@ const CloudNodeComponent = memo(({ data, selected }) => {
 
         {/* Nombre y tipo con Logo Oficial del Proveedor */}
         <div className="flex-1 min-w-0">
-          <div className="text-[11px] font-bold text-slate-100 truncate leading-tight">
+          <div className={`text-[11px] font-bold truncate leading-tight ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
             {data.label}
           </div>
           <div className="flex items-center gap-1 mt-0.5">
@@ -55,7 +60,7 @@ const CloudNodeComponent = memo(({ data, selected }) => {
             ) : meta.provider === 'gcp' ? (
               <GcpLogo className="w-2.5 h-2.5 shrink-0 opacity-90" />
             ) : null}
-            <span className="text-[8px] text-slate-400 truncate leading-tight uppercase font-medium">
+            <span className={`text-[8px] truncate leading-tight uppercase font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
               {meta.provider} • {meta.category}
             </span>
           </div>
@@ -64,10 +69,10 @@ const CloudNodeComponent = memo(({ data, selected }) => {
 
       {/* Footer con costo */}
       {hasFinOps && (
-        <div className="px-3 py-1.5 flex items-center justify-between bg-slate-950/60">
-          <span className="text-[9px] text-slate-500 uppercase tracking-wider">FinOps</span>
+        <div className={`px-3 py-1.5 flex items-center justify-between ${isLight ? 'bg-slate-50/95 border-t border-slate-100' : 'bg-slate-950/60'}`}>
+          <span className={`text-[9px] uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>FinOps</span>
           <span
-            style={{ color: '#34d399' }}
+            style={{ color: isLight ? '#059669' : '#34d399' }}
             className="text-[10px] font-mono font-semibold"
           >
             ${cost.toFixed(2)}/mo
@@ -81,7 +86,7 @@ const CloudNodeComponent = memo(({ data, selected }) => {
         position={Position.Top}
         style={{
           background: meta.color,
-          border: `2px solid #1e293b`,
+          border: `2px solid ${isLight ? '#ffffff' : '#1e293b'}`,
           width: 10,
           height: 10,
         }}
@@ -91,7 +96,7 @@ const CloudNodeComponent = memo(({ data, selected }) => {
         position={Position.Bottom}
         style={{
           background: meta.color,
-          border: `2px solid #1e293b`,
+          border: `2px solid ${isLight ? '#ffffff' : '#1e293b'}`,
           width: 10,
           height: 10,
         }}
@@ -102,7 +107,7 @@ const CloudNodeComponent = memo(({ data, selected }) => {
         id="left"
         style={{
           background: meta.color,
-          border: `2px solid #1e293b`,
+          border: `2px solid ${isLight ? '#ffffff' : '#1e293b'}`,
           width: 10,
           height: 10,
         }}
@@ -113,7 +118,7 @@ const CloudNodeComponent = memo(({ data, selected }) => {
         id="right"
         style={{
           background: meta.color,
-          border: `2px solid #1e293b`,
+          border: `2px solid ${isLight ? '#ffffff' : '#1e293b'}`,
           width: 10,
           height: 10,
         }}

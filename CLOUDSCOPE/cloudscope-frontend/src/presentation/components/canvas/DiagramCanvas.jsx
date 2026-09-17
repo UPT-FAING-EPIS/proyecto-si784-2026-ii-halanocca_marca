@@ -14,13 +14,9 @@ import 'reactflow/dist/style.css';
 
 import CloudNodeComponent from './CloudNode.jsx';
 import { getNodeMeta } from '../../../domain/models/CloudNode.js';
+import { useEditorTheme } from '../../context/EditorThemeContext.jsx';
 
 const NODE_TYPES = { cloudNode: CloudNodeComponent };
-
-const DEFAULT_EDGE_OPTIONS = {
-  style: { stroke: '#475569', strokeWidth: 1.5 },
-  markerEnd: { type: 'arrowclosed', color: '#475569' },
-};
 
 /**
  * Aplica estilos de blast radius a nodos y aristas.
@@ -69,6 +65,13 @@ export default function DiagramCanvas({
   blastResult,
   onClearBlast,
 }) {
+  const { theme, isDark, isLight } = useEditorTheme();
+
+  const defaultEdgeOptions = useMemo(() => ({
+    style: { stroke: isLight ? '#94a3b8' : '#475569', strokeWidth: 1.5 },
+    markerEnd: { type: 'arrowclosed', color: isLight ? '#94a3b8' : '#475569' },
+  }), [isLight]);
+
   const { nodes: displayNodes, edges: displayEdges } = useMemo(
     () => applyBlastStyles(nodes, edges, blastResult),
     [nodes, edges, blastResult]
@@ -90,7 +93,7 @@ export default function DiagramCanvas({
         onNodeClick={onNodeClick}
         onPaneClick={onPaneClick}
         onDragOver={onDragOver}
-        defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
+        defaultEdgeOptions={defaultEdgeOptions}
         fitView
         fitViewOptions={{ padding: 0.2 }}
         minZoom={0.25}
@@ -101,9 +104,9 @@ export default function DiagramCanvas({
         <Background
           variant="dots"
           gap={20}
-          size={1}
-          color="#1e3a5f"
-          style={{ backgroundColor: '#0b1120' }}
+          size={isLight ? 1.2 : 1}
+          color={isLight ? '#cbd5e1' : '#1e3a5f'}
+          style={{ backgroundColor: isLight ? '#f8fafc' : '#0b1120' }}
         />
         <Controls showInteractive={false} />
         <MiniMap
@@ -111,27 +114,34 @@ export default function DiagramCanvas({
             const meta = n.data?.cloudType ? getNodeMeta(n.data.cloudType) : null;
             return meta?.color ?? '#64748b';
           }}
-          maskColor="rgba(11,17,32,0.75)"
-          style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 10 }}
+          maskColor={isLight ? 'rgba(241,245,249,0.75)' : 'rgba(11,17,32,0.75)'}
+          style={{
+            background: isLight ? '#ffffff' : '#0f172a',
+            border: `1px solid ${isLight ? '#cbd5e1' : '#1e293b'}`,
+            borderRadius: 10,
+            boxShadow: isLight ? '0 4px 12px rgba(0,0,0,0.06)' : undefined,
+          }}
         />
       </ReactFlow>
 
       {/* Floating HUD: Parar Simulación en Vivo */}
       {blastResult?.sourceNodeId && (
         <div
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-4 py-2 rounded-2xl shadow-2xl"
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-4 py-2 rounded-2xl shadow-2xl transition-all"
           style={{
-            background: 'rgba(15,23,42,0.94)',
+            background: isLight ? 'rgba(255,255,255,0.95)' : 'rgba(15,23,42,0.94)',
             border: '1px solid rgba(239,68,68,0.5)',
             backdropFilter: 'blur(16px)',
-            boxShadow: '0 0 25px rgba(239,68,68,0.25)',
+            boxShadow: isLight ? '0 10px 25px rgba(239,68,68,0.15)' : '0 0 25px rgba(239,68,68,0.25)',
           }}
         >
           <span className="w-2.5 h-2.5 rounded-full bg-red-400 animate-ping shrink-0" />
           <div className="text-xs">
-            <span className="text-slate-400">Simulación: </span>
-            <span className="font-bold text-slate-100">{sourceNode?.data?.label ?? 'Componente'}</span>
-            <span className="text-red-400 font-semibold ml-1.5">
+            <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Simulación: </span>
+            <span className={`font-bold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+              {sourceNode?.data?.label ?? 'Componente'}
+            </span>
+            <span className="text-red-500 font-semibold ml-1.5">
               ({blastResult.affectedNodeIds?.length ?? 0} nodos afectados)
             </span>
           </div>
@@ -139,12 +149,12 @@ export default function DiagramCanvas({
             onClick={onClearBlast}
             className="px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 shadow-md"
             style={{
-              background: 'rgba(239,68,68,0.25)',
-              color: '#fca5a5',
-              border: '1px solid rgba(239,68,68,0.5)',
+              background: 'rgba(239,68,68,0.15)',
+              color: '#ef4444',
+              border: '1px solid rgba(239,68,68,0.4)',
             }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.4)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.25)'}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.25)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.15)'}
             title="Detener y limpiar la simulación de impacto"
           >
             <StopIcon className="w-3.5 h-3.5" /> Parar Simulación

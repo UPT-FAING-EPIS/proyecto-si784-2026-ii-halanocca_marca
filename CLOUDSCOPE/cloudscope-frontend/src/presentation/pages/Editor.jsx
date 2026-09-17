@@ -11,6 +11,7 @@ import LeftSidebar from '../components/sidebar/LeftSidebar.jsx';
 import RightSidebar from '../components/sidebar/RightSidebar.jsx';
 import DiagramCanvas from '../components/canvas/DiagramCanvas.jsx';
 import SaveProjectModal from '../components/modals/SaveProjectModal.jsx';
+import { EditorThemeProvider, useEditorTheme } from '../context/EditorThemeContext.jsx';
 
 import { useDiagram } from '../hooks/useDiagram.js';
 import { getNodeMeta } from '../../domain/models/CloudNode.js';
@@ -21,6 +22,7 @@ import { ARCHITECTURE_PRESETS } from '../../domain/models/ArchitecturePresets.js
 function EditorInner() {
   const rfInstance = useReactFlow();
   const navigate = useNavigate();
+  const { theme, isDark, isLight } = useEditorTheme();
 
   const {
     nodes, edges,
@@ -117,9 +119,14 @@ function EditorInner() {
   }, [nodes, edges, auditResult, costBreakdown]);
 
   return (
-    <div className="flex flex-col overflow-hidden select-none"
-      style={{ height: '100vh', background: '#0b1120', color: '#f8fafc' }}>
-
+    <div
+      className="flex flex-col overflow-hidden select-none transition-colors duration-200"
+      style={{
+        height: '100vh',
+        background: isLight ? '#f8fafc' : '#0b1120',
+        color: isLight ? '#0f172a' : '#f8fafc',
+      }}
+    >
       <Header
         costBreakdown={costBreakdown}
         auditResult={auditResult}
@@ -158,21 +165,24 @@ function EditorInner() {
           {nodes.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center p-6 pointer-events-none z-10">
               <div
-                className="max-w-xl w-full p-6 rounded-2xl text-center pointer-events-auto shadow-2xl"
+                className="max-w-xl w-full p-6 rounded-2xl text-center pointer-events-auto shadow-2xl transition-all"
                 style={{
-                  background: 'rgba(15,23,42,0.92)',
-                  border: '1px solid #1e293b',
+                  background: isLight ? 'rgba(255,255,255,0.96)' : 'rgba(15,23,42,0.92)',
+                  border: isLight ? '1px solid #e2e8f0' : '1px solid #1e293b',
                   backdropFilter: 'blur(16px)',
+                  boxShadow: isLight ? '0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.05)' : undefined,
                 }}
               >
                 <div
                   className="w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center font-black text-xl shadow-lg"
-                  style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)', color: '#0b1120' }}
+                  style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)', color: '#ffffff' }}
                 >
                   CS
                 </div>
-                <h2 className="text-base font-bold text-white mb-1">Diseña tu Arquitectura Cloud</h2>
-                <p className="text-xs text-slate-400 mb-5 max-w-md mx-auto leading-relaxed">
+                <h2 className={`text-base font-bold mb-1 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  Diseña tu Arquitectura Cloud
+                </h2>
+                <p className={`text-xs mb-5 max-w-md mx-auto leading-relaxed ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                   Arrastra servicios desde el panel izquierdo o carga una plantilla empresarial para explorar costos y auditoría en tiempo real:
                 </p>
 
@@ -181,19 +191,20 @@ function EditorInner() {
                     <button
                       key={p.id}
                       onClick={() => loadDiagram(p.nodes, p.edges)}
-                      className="p-3 rounded-xl text-left transition-all border group"
-                      style={{ background: '#0b1120', borderColor: '#1e293b' }}
+                      className={`p-3 rounded-xl text-left transition-all border group shadow-sm ${
+                        isLight
+                          ? 'bg-white hover:bg-slate-50 border-slate-200'
+                          : 'bg-[#0b1120] hover:bg-slate-800/80 border-slate-800'
+                      }`}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.borderColor = p.color;
-                        e.currentTarget.style.background = '#1e293b';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = '#1e293b';
-                        e.currentTarget.style.background = '#0b1120';
+                        e.currentTarget.style.borderColor = isLight ? '#e2e8f0' : '#1e293b';
                       }}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[11px] font-bold text-slate-200 group-hover:text-white truncate">
+                        <span className={`text-[11px] font-bold truncate ${isLight ? 'text-slate-800 group-hover:text-blue-600' : 'text-slate-200 group-hover:text-white'}`}>
                           {p.name}
                         </span>
                         <span
@@ -203,7 +214,7 @@ function EditorInner() {
                           {p.badge ?? p.provider}
                         </span>
                       </div>
-                      <p className="text-[10px] text-slate-400 line-clamp-2 leading-relaxed">
+                      <p className={`text-[10px] line-clamp-2 leading-relaxed ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                         {p.description}
                       </p>
                     </button>
@@ -245,8 +256,10 @@ function EditorInner() {
 
 export default function Editor() {
   return (
-    <ReactFlowProvider>
-      <EditorInner />
-    </ReactFlowProvider>
+    <EditorThemeProvider>
+      <ReactFlowProvider>
+        <EditorInner />
+      </ReactFlowProvider>
+    </EditorThemeProvider>
   );
 }

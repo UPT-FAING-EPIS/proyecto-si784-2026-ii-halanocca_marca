@@ -1,0 +1,14 @@
+C:\Calidad\proyecto-si784-2026-ii-halanocca_marca\CLOUDSCOPE\cloudscope-backend\src\main\java\com\cloudscope\application\ports\in\ProjectUseCase.java
+C:\Calidad\proyecto-si784-2026-ii-halanocca_marca\CLOUDSCOPE\cloudscope-backend\src\main\java\com\cloudscope\application\ports\out\ProjectRepositoryPort.java
+C:\Calidad\proyecto-si784-2026-ii-halanocca_marca\CLOUDSCOPE\cloudscope-backend\src\main\java\com\cloudscope\application\services\ProjectService.java
+C:\Calidad\proyecto-si784-2026-ii-halanocca_marca\CLOUDSCOPE\cloudscope-backend\src\main\java\com\cloudscope\CloudscopeApplication.java
+C:\Calidad\proyecto-si784-2026-ii-halanocca_marca\CLOUDSCOPE\cloudscope-backend\src\main\java\com\cloudscope\domain\models\Project.java
+C:\Calidad\proyecto-si784-2026-ii-halanocca_marca\CLOUDSCOPE\cloudscope-backend\src\main\java\com\cloudscope\infrastructure\adapters\in\web\AuthController.java
+C:\Calidad\proyecto-si784-2026-ii-halanocca_marca\CLOUDSCOPE\cloudscope-backend\src\main\java\com\cloudscope\infrastructure\adapters\in\web\ProjectController.java
+C:\Calidad\proyecto-si784-2026-ii-halanocca_marca\CLOUDSCOPE\cloudscope-backend\src\main\java\com\cloudscope\infrastructure\adapters\out\persistence\InMemoryProjectRepository.java
+C:\Calidad\proyecto-si784-2026-ii-halanocca_marca\CLOUDSCOPE\cloudscope-backend\src\main\java\com\cloudscope\infrastructure\adapters\out\persistence\jpa\PostgresProjectRepository.java
+C:\Calidad\proyecto-si784-2026-ii-halanocca_marca\CLOUDSCOPE\cloudscope-backend\src\main\java\com\cloudscope\infrastructure\adapters\out\persistence\jpa\ProjectEntity.java
+C:\Calidad\proyecto-si784-2026-ii-halanocca_marca\CLOUDSCOPE\cloudscope-backend\src\main\java\com\cloudscope\infrastructure\adapters\out\persistence\jpa\SpringDataProjectRepository.java
+C:\Calidad\proyecto-si784-2026-ii-halanocca_marca\CLOUDSCOPE\cloudscope-backend\src\main\java\com\cloudscope\infrastructure\adapters\out\persistence\jpa\SpringDataUserRepository.java
+C:\Calidad\proyecto-si784-2026-ii-halanocca_marca\CLOUDSCOPE\cloudscope-backend\src\main\java\com\cloudscope\infrastructure\adapters\out\persistence\jpa\UserEntity.java
+C:\Calidad\proyecto-si784-2026-ii-halanocca_marca\CLOUDSCOPE\cloudscope-backend\src\main\java\com\cloudscope\infrastructure\config\DatabaseInitializer.java

@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { formatUSD } from '../../../application/use-cases/calculateCost.js';
 import { ARCHITECTURE_PRESETS } from '../../../domain/models/ArchitecturePresets.js';
 import { getCurrentProject } from '../../../infrastructure/api/projectStorage.js';
+import { useEditorTheme } from '../../context/EditorThemeContext.jsx';
 import {
   CloudScopeLogo, AwsLogo, AzureLogo, OracleLogo, GcpLogo,
   SaveIcon, PDFIcon, BlastIcon, StopIcon, XIcon, CheckIcon,
   UndoIcon, RedoIcon, ArrowLeftIcon, LockIcon, UserIcon,
   CreditCardIcon, UsersIcon, KeyIcon, SparkleIcon,
   PlayCircleIcon, HelpCircleIcon, HeadsetIcon, PowerIcon,
-  ChevronDownIcon
+  ChevronDownIcon, SunIcon, MoonIcon
 } from '../icons/CloudIcons.jsx';
 
 export default function Header({
@@ -28,6 +29,7 @@ export default function Header({
   canRedo = false,
 }) {
   const navigate = useNavigate();
+  const { theme, isDark, isLight, toggleTheme } = useEditorTheme();
   const [exported, setExported] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -103,12 +105,12 @@ export default function Header({
   return (
     <>
       <header
-        className="flex items-center justify-between px-3 md:px-4 z-40 shrink-0 gap-2"
+        className="flex items-center justify-between px-3 md:px-4 z-40 shrink-0 gap-2 transition-colors duration-200"
         style={{
           height: '52px',
-          background: '#0a0f1e',
-          borderBottom: '1px solid #1e293b',
-          boxShadow: '0 1px 0 rgba(255,255,255,0.04)',
+          background: isLight ? '#ffffff' : '#0a0f1e',
+          borderBottom: `1px solid ${isLight ? '#e2e8f0' : '#1e293b'}`,
+          boxShadow: isLight ? '0 1px 3px rgba(0,0,0,0.04)' : '0 1px 0 rgba(255,255,255,0.04)',
         }}
       >
         {/* ── Izquierda: Logo + Breadcrumb Proyectos + Historial Deshacer/Rehacer ── */}
@@ -120,18 +122,21 @@ export default function Header({
             title="Ir al Dashboard de Proyectos"
           >
             <CloudScopeLogo className="w-6 h-6 shrink-0" />
-            <span className="font-black text-sm tracking-tight hidden sm:block" style={{ color: '#f8fafc' }}>
+            <span className="font-black text-sm tracking-tight hidden sm:block" style={{ color: isLight ? '#0f172a' : '#f8fafc' }}>
               Cloud<span style={{ color: '#f59e0b' }}>Scope</span>
             </span>
           </button>
 
-          <span className="text-slate-700 text-xs select-none">/</span>
+          <span className={`text-xs select-none ${isLight ? 'text-slate-300' : 'text-slate-700'}`}>/</span>
 
           {/* Volver a Proyectos */}
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-300 hover:text-white transition-all"
-            style={{ background: '#1e293b', border: '1px solid #334155' }}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${
+              isLight
+                ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 shadow-sm'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700'
+            }`}
             title="Volver a la lista de proyectos"
           >
             <ArrowLeftIcon className="w-3 h-3 shrink-0" />
@@ -139,24 +144,28 @@ export default function Header({
           </button>
 
           {currentProject?.name && (
-            <div className="hidden lg:flex items-center gap-1.5 pl-2 border-l border-slate-800 text-xs">
-              <span className="text-slate-500 font-mono text-[10px]">PROYECTO:</span>
-              <span className="font-bold text-amber-400 truncate max-w-[200px]" title={currentProject.name}>
+            <div className={`hidden lg:flex items-center gap-1.5 pl-2 border-l ${isLight ? 'border-slate-200' : 'border-slate-800'} text-xs`}>
+              <span className={`font-mono text-[10px] ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>PROYECTO:</span>
+              <span className={`font-bold truncate max-w-[200px] ${isLight ? 'text-amber-600' : 'text-amber-400'}`} title={currentProject.name}>
                 {currentProject.name}
               </span>
             </div>
           )}
 
           {/* Controles de Historial del Lienzo: Deshacer / Rehacer */}
-          <div className="flex items-center gap-1 ml-1 pl-2 border-l border-slate-800">
+          <div className={`flex items-center gap-1 ml-1 pl-2 border-l ${isLight ? 'border-slate-200' : 'border-slate-800'}`}>
             <button
               onClick={onUndo}
               disabled={!canUndo}
               className="p-1.5 rounded-lg text-[11px] transition-all"
               style={{
-                background: canUndo ? '#1e293b' : 'rgba(30,41,59,0.4)',
-                color: canUndo ? '#cbd5e1' : '#475569',
-                border: '1px solid #334155',
+                background: isLight
+                  ? (canUndo ? '#f1f5f9' : 'rgba(241,245,249,0.5)')
+                  : (canUndo ? '#1e293b' : 'rgba(30,41,59,0.4)'),
+                color: isLight
+                  ? (canUndo ? '#1e293b' : '#94a3b8')
+                  : (canUndo ? '#cbd5e1' : '#475569'),
+                border: `1px solid ${isLight ? '#cbd5e1' : '#334155'}`,
                 cursor: canUndo ? 'pointer' : 'not-allowed',
               }}
               title="Deshacer (Ctrl+Z)"
@@ -169,9 +178,13 @@ export default function Header({
               disabled={!canRedo}
               className="p-1.5 rounded-lg text-[11px] transition-all"
               style={{
-                background: canRedo ? '#1e293b' : 'rgba(30,41,59,0.4)',
-                color: canRedo ? '#cbd5e1' : '#475569',
-                border: '1px solid #334155',
+                background: isLight
+                  ? (canRedo ? '#f1f5f9' : 'rgba(241,245,249,0.5)')
+                  : (canRedo ? '#1e293b' : 'rgba(30,41,59,0.4)'),
+                color: isLight
+                  ? (canRedo ? '#1e293b' : '#94a3b8')
+                  : (canRedo ? '#cbd5e1' : '#475569'),
+                border: `1px solid ${isLight ? '#cbd5e1' : '#334155'}`,
                 cursor: canRedo ? 'pointer' : 'not-allowed',
               }}
               title="Rehacer (Ctrl+Y)"
@@ -196,22 +209,25 @@ export default function Header({
         {/* Status bar central */}
         <div
           className="hidden md:flex items-center gap-3 px-3 py-1.5 rounded-xl text-[11px]"
-          style={{ background: '#0f172a', border: '1px solid #1e293b' }}
+          style={{
+            background: isLight ? '#f8fafc' : '#0f172a',
+            border: `1px solid ${isLight ? '#e2e8f0' : '#1e293b'}`,
+          }}
         >
           <div className="flex items-center gap-1.5">
-            <span style={{ color: '#475569' }}>FinOps</span>
-            <span className="font-black font-mono" style={{ color: '#34d399' }}>
-              {formatUSD(total)}<span className="text-[9px] font-normal" style={{ color: '#475569' }}>/mo</span>
+            <span style={{ color: isLight ? '#64748b' : '#475569' }}>FinOps</span>
+            <span className="font-black font-mono" style={{ color: '#10b981' }}>
+              {formatUSD(total)}<span className="text-[9px] font-normal" style={{ color: isLight ? '#94a3b8' : '#475569' }}>/mo</span>
             </span>
           </div>
-          <div className="w-px h-4" style={{ background: '#1e293b' }} />
+          <div className="w-px h-4" style={{ background: isLight ? '#e2e8f0' : '#1e293b' }} />
           <div className="flex items-center gap-1.5">
-            <span style={{ color: '#475569' }}>Score</span>
+            <span style={{ color: isLight ? '#64748b' : '#475569' }}>Score</span>
             <span className="font-black font-mono" style={{ color: scoreColor }}>
-              {score}<span className="text-[9px] font-normal" style={{ color: '#475569' }}>/100</span>
+              {score}<span className="text-[9px] font-normal" style={{ color: isLight ? '#94a3b8' : '#475569' }}>/100</span>
             </span>
           </div>
-          <div className="w-px h-4" style={{ background: '#1e293b' }} />
+          <div className="w-px h-4" style={{ background: isLight ? '#e2e8f0' : '#1e293b' }} />
           <span
             className="font-bold px-2 py-0.5 rounded-full text-[10px]"
             style={{
@@ -234,13 +250,11 @@ export default function Header({
               onClick={() => setShowPresets(!showPresets)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all"
               style={{
-                background: '#1e293b',
-                color: '#c084fc',
-                border: '1px solid rgba(192,132,252,0.35)',
+                background: isLight ? '#fdf4ff' : '#1e293b',
+                color: isLight ? '#9333ea' : '#c084fc',
+                border: `1px solid ${isLight ? '#f0abfc' : 'rgba(192,132,252,0.35)'}`,
                 boxShadow: '0 2px 6px rgba(192,132,252,0.1)',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#c084fc'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(192,132,252,0.35)'; }}
               title="Cargar arquitecturas empresariales de referencia"
             >
               <BlastIcon className="w-3.5 h-3.5" />
@@ -251,9 +265,13 @@ export default function Header({
             {showPresets && (
               <div
                 className="absolute right-0 sm:left-0 mt-2 w-72 rounded-2xl p-2 z-50 shadow-2xl space-y-1"
-                style={{ background: '#0b1120', border: '1px solid #1e293b', backdropFilter: 'blur(16px)' }}
+                style={{
+                  background: isLight ? '#ffffff' : '#0b1120',
+                  border: `1px solid ${isLight ? '#e2e8f0' : '#1e293b'}`,
+                  backdropFilter: 'blur(16px)',
+                }}
               >
-                <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                <div className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
                   Arquitecturas de Referencia
                 </div>
                 {ARCHITECTURE_PRESETS.map((p) => (
@@ -263,12 +281,16 @@ export default function Header({
                       onLoadPreset?.(p);
                       setShowPresets(false);
                     }}
-                    className="w-full text-left p-2.5 rounded-xl transition-colors hover:bg-slate-800/80 border border-transparent hover:border-slate-700/50 flex flex-col gap-1"
+                    className={`w-full text-left p-2.5 rounded-xl transition-colors border border-transparent flex flex-col gap-1 ${
+                      isLight
+                        ? 'hover:bg-slate-100 hover:border-slate-200'
+                        : 'hover:bg-slate-800/80 hover:border-slate-700/50'
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 min-w-0">
                         {p.provider === 'aws' ? <AwsLogo className="w-3.5 h-3.5 shrink-0" /> : p.provider === 'azure' ? <AzureLogo className="w-3.5 h-3.5 shrink-0" /> : p.provider === 'oracle' ? <OracleLogo className="w-3.5 h-3.5 shrink-0" /> : <GcpLogo className="w-3.5 h-3.5 shrink-0" />}
-                        <span className="text-[11px] font-bold text-slate-200 truncate">{p.name}</span>
+                        <span className={`text-[11px] font-bold truncate ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>{p.name}</span>
                       </div>
                       <span
                         className="text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0"
@@ -277,18 +299,18 @@ export default function Header({
                         {p.badge ?? p.provider}
                       </span>
                     </div>
-                    <p className="text-[10px] text-slate-400 line-clamp-2 leading-relaxed">
+                    <p className={`text-[10px] line-clamp-2 leading-relaxed ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                       {p.description}
                     </p>
                   </button>
                 ))}
-                <div className="pt-1 border-t border-slate-800/80">
+                <div className={`pt-1 border-t ${isLight ? 'border-slate-100' : 'border-slate-800/80'}`}>
                   <button
                     onClick={() => {
                       onClearCanvas?.();
                       setShowPresets(false);
                     }}
-                    className="w-full text-center py-1 text-[10px] font-semibold text-slate-500 hover:text-red-400 transition-colors flex items-center justify-center gap-1"
+                    className="w-full text-center py-1 text-[10px] font-semibold text-slate-500 hover:text-red-500 transition-colors flex items-center justify-center gap-1"
                   >
                     <XIcon className="w-3 h-3" /> Limpiar lienzo
                   </button>
@@ -300,14 +322,52 @@ export default function Header({
           {/* Guardar */}
           <button
             onClick={onSave}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all"
-            style={{ background: '#1e293b', color: '#94a3b8', border: '1px solid #334155' }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = '#f8fafc'; e.currentTarget.style.borderColor = '#475569'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = '#334155'; }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all shadow-sm"
+            style={{
+              background: isLight ? '#f1f5f9' : '#1e293b',
+              color: isLight ? '#334155' : '#94a3b8',
+              border: `1px solid ${isLight ? '#cbd5e1' : '#334155'}`,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = isLight ? '#0f172a' : '#f8fafc';
+              e.currentTarget.style.borderColor = isLight ? '#94a3b8' : '#475569';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = isLight ? '#334155' : '#94a3b8';
+              e.currentTarget.style.borderColor = isLight ? '#cbd5e1' : '#334155';
+            }}
             title="Guardar proyecto (Ctrl+S)"
           >
             <SaveIcon className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Guardar</span>
+          </button>
+
+          {/* ── SELECTOR MODO VISUAL: BLANCO / OSCURO ── */}
+          <button
+            onClick={toggleTheme}
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all shadow-sm"
+            style={isDark ? {
+              background: '#1e293b',
+              color: '#facc15',
+              border: '1px solid #334155',
+            } : {
+              background: '#f8fafc',
+              color: '#334155',
+              border: '1px solid #cbd5e1',
+            }}
+            title={isDark ? 'Cambiar a modo visual blanco (Lienzo claro)' : 'Cambiar a modo visual oscuro'}
+          >
+            {isDark ? (
+              <>
+                <SunIcon className="w-3.5 h-3.5 text-yellow-400" />
+                <span className="hidden sm:inline">Visual Blanco</span>
+              </>
+            ) : (
+              <>
+                <MoonIcon className="w-3.5 h-3.5 text-slate-700" />
+                <span className="hidden sm:inline">Visual Oscuro</span>
+              </>
+            )}
           </button>
 
           {/* ── BOTÓN BLANCO: Share & Export (Estilo Brainboard del Screenshot) ── */}
@@ -334,7 +394,7 @@ export default function Header({
           </button>
 
           {/* Separador */}
-          <div className="w-px h-5 mx-0.5" style={{ background: '#1e293b' }} />
+          <div className="w-px h-5 mx-0.5" style={{ background: isLight ? '#e2e8f0' : '#1e293b' }} />
 
           {/* ── PERFIL DE USUARIO CON AVATAR ROJO Y DROPDOWN BLANCO ── */}
           <div className="relative" ref={userMenuRef}>

@@ -74,17 +74,16 @@ export function getProjectCategory(project) {
 function KpiCard({ label, value, sub, color = '#f59e0b', icon }) {
   return (
     <div
-      className="rounded-2xl p-4 md:p-5 flex flex-col gap-1.5 transition-all shadow-sm"
-      style={{ background: '#0f172a', border: '1px solid #1e293b' }}
+      className="rounded-2xl p-4 md:p-5 flex flex-col gap-1.5 transition-all shadow-sm bg-white border border-slate-200 hover:shadow-md hover:border-slate-300"
     >
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-slate-400">{label}</span>
-        <span className="opacity-80" style={{ color }}>{icon}</span>
+        <span className="text-xs font-bold text-slate-500">{label}</span>
+        <span className="opacity-90" style={{ color }}>{icon}</span>
       </div>
       <div className="text-2xl md:text-3xl font-black font-mono tracking-tight" style={{ color }}>
         {value}
       </div>
-      {sub && <div className="text-[11px] text-slate-500 font-medium">{sub}</div>}
+      {sub && <div className="text-[11px] text-slate-400 font-medium">{sub}</div>}
     </div>
   );
 }
@@ -93,7 +92,7 @@ function KpiCard({ label, value, sub, color = '#f59e0b', icon }) {
 function ProjectCard({ project, onOpen, onDelete, onExport }) {
   const cost = calculateCost(project.nodes ?? []);
   const audit = runAudit(project.nodes ?? [], project.edges ?? []);
-  const scoreColor = audit.score >= 80 ? '#34d399' : audit.score >= 60 ? '#f59e0b' : '#ef4444';
+  const scoreColor = audit.score >= 80 ? '#10b981' : audit.score >= 60 ? '#f59e0b' : '#ef4444';
   const updatedAt = new Date(project.updatedAt).toLocaleDateString('es-PE', {
     day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   });
@@ -103,14 +102,13 @@ function ProjectCard({ project, onOpen, onDelete, onExport }) {
 
   return (
     <div
-      className="rounded-2xl overflow-hidden group transition-all duration-200 cursor-pointer flex flex-col justify-between"
-      style={{ background: '#0f172a', border: '1px solid #1e293b' }}
+      className="rounded-2xl overflow-hidden group transition-all duration-200 cursor-pointer flex flex-col justify-between border border-slate-200 bg-white hover:shadow-md shadow-sm"
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = cat.isMulti ? '#a855f7' : '#334155';
+        e.currentTarget.style.borderColor = cat.isMulti ? '#a855f7' : '#94a3b8';
         e.currentTarget.style.transform = 'translateY(-2px)';
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = '#1e293b';
+        e.currentTarget.style.borderColor = '#e2e8f0';
         e.currentTarget.style.transform = 'translateY(0)';
       }}
     >
@@ -118,15 +116,15 @@ function ProjectCard({ project, onOpen, onDelete, onExport }) {
       <div className="p-5 pb-3 flex-1" onClick={() => onOpen(project)}>
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-base text-slate-100 group-hover:text-white truncate" title={project.name}>
+            <h3 className="font-bold text-base text-slate-800 group-hover:text-blue-600 truncate" title={project.name}>
               {project.name}
             </h3>
             {project.description ? (
-              <p className="text-xs text-slate-400 truncate mt-0.5" title={project.description}>
+              <p className="text-xs text-slate-500 truncate mt-0.5" title={project.description}>
                 {project.description}
               </p>
             ) : (
-              <p className="text-xs text-slate-600 italic mt-0.5">Sin descripción</p>
+              <p className="text-xs text-slate-400 italic mt-0.5">Sin descripción</p>
             )}
           </div>
 
@@ -135,10 +133,10 @@ function ProjectCard({ project, onOpen, onDelete, onExport }) {
             <span
               className="text-[10px] ml-2 px-2.5 py-0.5 rounded-full font-black shrink-0 flex items-center gap-1.5 uppercase tracking-wider"
               style={{
-                background: 'linear-gradient(135deg, rgba(0,132,255,0.25), rgba(168,85,247,0.25))',
-                color: '#38bdf8',
-                border: '1px solid rgba(168,85,247,0.4)',
-                boxShadow: '0 0 12px rgba(168,85,247,0.15)',
+                background: 'linear-gradient(135deg, rgba(0,132,255,0.1), rgba(168,85,247,0.15))',
+                color: '#7c3aed',
+                border: '1px solid rgba(168,85,247,0.3)',
+                boxShadow: '0 0 12px rgba(168,85,247,0.1)',
               }}
             >
               <div className="flex items-center -space-x-1">
@@ -154,17 +152,17 @@ function ProjectCard({ project, onOpen, onDelete, onExport }) {
               className="text-[10px] ml-2 px-2 py-0.5 rounded font-bold shrink-0 flex items-center gap-1 uppercase tracking-wider"
               style={{
                 background:
-                  cat.type === 'azure' ? 'rgba(56,189,248,0.12)' :
-                  cat.type === 'oracle' ? 'rgba(248,0,0,0.12)' :
-                  cat.type === 'gcp' ? 'rgba(248,113,113,0.12)' : 'rgba(245,158,11,0.12)',
+                  cat.type === 'azure' ? 'rgba(56,189,248,0.1)' :
+                  cat.type === 'oracle' ? 'rgba(248,0,0,0.08)' :
+                  cat.type === 'gcp' ? 'rgba(59,130,246,0.08)' : 'rgba(245,158,11,0.1)',
                 color:
-                  cat.type === 'azure' ? '#38bdf8' :
-                  cat.type === 'oracle' ? '#f80000' :
-                  cat.type === 'gcp' ? '#f87171' : '#f59e0b',
+                  cat.type === 'azure' ? '#0284c7' :
+                  cat.type === 'oracle' ? '#dc2626' :
+                  cat.type === 'gcp' ? '#2563eb' : '#d97706',
                 border: `1px solid ${
-                  cat.type === 'azure' ? 'rgba(56,189,248,0.25)' :
-                  cat.type === 'oracle' ? 'rgba(248,0,0,0.25)' :
-                  cat.type === 'gcp' ? 'rgba(248,113,113,0.25)' : 'rgba(245,158,11,0.25)'
+                  cat.type === 'azure' ? 'rgba(56,189,248,0.3)' :
+                  cat.type === 'oracle' ? 'rgba(248,0,0,0.2)' :
+                  cat.type === 'gcp' ? 'rgba(59,130,246,0.2)' : 'rgba(245,158,11,0.3)'
                 }`,
               }}
             >
@@ -178,34 +176,33 @@ function ProjectCard({ project, onOpen, onDelete, onExport }) {
         </div>
 
         {/* Métricas inline */}
-        <div className="flex items-center gap-4 mt-4 pt-3 border-t border-slate-800/80">
+        <div className="flex items-center gap-4 mt-4 pt-3 border-t border-slate-100">
           <div>
-            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">FinOps</div>
-            <div className="text-sm font-mono font-bold text-emerald-400">{formatUSD(cost.total)}/mo</div>
+            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">FinOps</div>
+            <div className="text-sm font-mono font-bold text-emerald-600">{formatUSD(cost.total)}/mo</div>
           </div>
           <div>
-            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Score</div>
+            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Score</div>
             <div className="text-sm font-mono font-bold" style={{ color: scoreColor }}>{audit.score}/100</div>
           </div>
           <div>
-            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Nodos</div>
-            <div className="text-sm font-mono font-bold text-slate-300">{project.nodes?.length ?? 0}</div>
+            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Nodos</div>
+            <div className="text-sm font-mono font-bold text-slate-700">{project.nodes?.length ?? 0}</div>
           </div>
         </div>
       </div>
 
       {/* Footer */}
       <div
-        className="px-5 py-3 flex items-center justify-between"
-        style={{ borderTop: '1px solid #1e293b', background: '#0b1120' }}
+        className="px-5 py-3 flex items-center justify-between border-t border-slate-100 bg-slate-50/80"
       >
-        <span className="text-[10px] text-slate-500 font-medium">
+        <span className="text-[10px] text-slate-400 font-medium">
           {updatedAt}
         </span>
         <div className="flex items-center gap-1.5">
           <button
             onClick={(e) => { e.stopPropagation(); onExport(project); }}
-            className="text-[11px] px-2.5 py-1 rounded font-medium transition-colors text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700"
+            className="text-[11px] px-2.5 py-1 rounded font-medium transition-colors text-slate-600 hover:text-slate-900 bg-slate-200/70 hover:bg-slate-300"
             title="Exportar archivo JSON"
           >
             JSON
@@ -213,14 +210,14 @@ function ProjectCard({ project, onOpen, onDelete, onExport }) {
           {confirmDelete ? (
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(project.id); setConfirmDelete(false); }}
-              className="text-[11px] px-2.5 py-1 rounded font-bold text-red-300 bg-red-950/80 border border-red-700"
+              className="text-[11px] px-2.5 py-1 rounded font-bold text-red-700 bg-red-100 border border-red-300"
             >
               ¿Confirmar?
             </button>
           ) : (
             <button
               onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); setTimeout(() => setConfirmDelete(false), 3000); }}
-              className="p-1.5 rounded transition-colors text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+              className="p-1.5 rounded transition-colors text-slate-400 hover:text-red-600 hover:bg-red-50"
               title="Eliminar proyecto"
             >
               <TrashIcon className="w-3.5 h-3.5" />
@@ -238,15 +235,14 @@ function TemplateCard({ preset, onSelect }) {
 
   return (
     <div
-      className="rounded-2xl p-4 flex flex-col justify-between transition-all group border cursor-pointer"
-      style={{ background: '#0f172a', borderColor: '#1e293b' }}
+      className="rounded-2xl p-4 flex flex-col justify-between transition-all group border border-slate-200 bg-white hover:shadow-md cursor-pointer shadow-sm"
       onClick={() => onSelect(preset)}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = preset.color;
         e.currentTarget.style.transform = 'translateY(-2px)';
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = '#1e293b';
+        e.currentTarget.style.borderColor = '#e2e8f0';
         e.currentTarget.style.transform = 'translateY(0)';
       }}
     >
@@ -262,21 +258,21 @@ function TemplateCard({ preset, onSelect }) {
             {preset.provider === 'gcp' && <GcpLogo className="w-2.5 h-2.5 shrink-0" />}
             <span>{preset.badge ?? preset.provider}</span>
           </span>
-          <span className="text-xs text-slate-500 font-mono font-medium">{preset.nodes.length} nodos</span>
+          <span className="text-xs text-slate-400 font-mono font-medium">{preset.nodes.length} nodos</span>
         </div>
 
-        <h3 className="text-sm font-bold text-slate-100 group-hover:text-white mb-1.5 transition-colors line-clamp-1">
+        <h3 className="text-sm font-bold text-slate-800 group-hover:text-blue-600 mb-1.5 transition-colors line-clamp-1">
           {preset.name}
         </h3>
-        <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed mb-3">
+        <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed mb-3">
           {preset.description}
         </p>
       </div>
 
-      <div className="flex items-center justify-between pt-2.5 border-t border-slate-800/80 text-[11px]">
+      <div className="flex items-center justify-between pt-2.5 border-t border-slate-100 text-[11px]">
         <div>
-          <span className="text-[10px] text-slate-500">FinOps: </span>
-          <span className="font-bold font-mono text-emerald-400">{formatUSD(cost.total)}</span>
+          <span className="text-[10px] text-slate-400">FinOps: </span>
+          <span className="font-bold font-mono text-emerald-600">{formatUSD(cost.total)}</span>
         </div>
         <span className="font-bold flex items-center gap-1 transition-transform group-hover:translate-x-0.5" style={{ color: preset.color }}>
           <span>Crear y editar</span>
@@ -294,17 +290,16 @@ function NewProjectModal({ onClose, onCreate }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in"
     >
       <div
-        className="w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4"
-        style={{ background: '#0f172a', border: '1px solid #334155' }}
+        className="w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4 bg-white border border-slate-200"
       >
-        <h3 className="text-xl font-black text-white">Nuevo Proyecto</h3>
+        <h3 className="text-xl font-black text-slate-900">Nuevo Proyecto</h3>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-slate-400">
+            <label className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-slate-600">
               Nombre del proyecto *
             </label>
             <input
@@ -312,14 +307,11 @@ function NewProjectModal({ onClose, onCreate }) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Mi Arquitectura Multi-Cloud"
-              className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none text-white transition-colors"
-              style={{ background: '#1e293b', border: '1px solid #334155' }}
-              onFocus={(e) => e.target.style.borderColor = '#0084ff'}
-              onBlur={(e) => e.target.style.borderColor = '#334155'}
+              className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none text-slate-900 placeholder:text-slate-400 bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 transition-colors"
             />
           </div>
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-slate-400">
+            <label className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-slate-600">
               Descripción (opcional)
             </label>
             <textarea
@@ -327,10 +319,7 @@ function NewProjectModal({ onClose, onCreate }) {
               onChange={(e) => setDesc(e.target.value)}
               placeholder="Topología empresarial de alta disponibilidad, FinOps y CIS benchmarks..."
               rows={3}
-              className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none resize-none text-white transition-colors"
-              style={{ background: '#1e293b', border: '1px solid #334155' }}
-              onFocus={(e) => e.target.style.borderColor = '#0084ff'}
-              onBlur={(e) => e.target.style.borderColor = '#334155'}
+              className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none resize-none text-slate-900 placeholder:text-slate-400 bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 transition-colors"
             />
           </div>
         </div>
@@ -338,7 +327,7 @@ function NewProjectModal({ onClose, onCreate }) {
         <div className="flex gap-3 pt-2">
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors bg-slate-800 text-slate-400 hover:text-white border border-slate-700"
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200"
           >
             Cancelar
           </button>
@@ -347,8 +336,8 @@ function NewProjectModal({ onClose, onCreate }) {
             disabled={!name.trim()}
             className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md"
             style={{
-              background: name.trim() ? '#0084ff' : '#1e293b',
-              color: name.trim() ? '#ffffff' : '#475569',
+              background: name.trim() ? '#0084ff' : '#e2e8f0',
+              color: name.trim() ? '#ffffff' : '#94a3b8',
             }}
           >
             <span className="flex items-center justify-center gap-1.5">
@@ -437,8 +426,8 @@ export default function Dashboard() {
         if (!nameMatches && !descMatches && !nodeMatches) return false;
       }
 
-      // Filtro por Proveedor en la barra lateral
-      if (selectedProvider !== 'all') {
+      // Filtro por Proveedor en la barra lateral (aplica si no hay filtro de categoría específico que lo sobreescriba)
+      if (selectedProvider !== 'all' && projectCategoryFilter === 'all') {
         const cat = getProjectCategory(p);
         if (!cat.providers.includes(selectedProvider)) return false;
       }
@@ -537,7 +526,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#080d18] text-[#f8fafc] font-sans">
+    <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans">
 
       {/* ══════════════════════════════════════════════════════════════════════
           1. BARRA LATERAL IZQUIERDA (PANEL BLANCO - ESTILO BRAINBOARD)
@@ -725,6 +714,7 @@ export default function Dashboard() {
               onClick={() => {
                 setActiveNavTab('projects');
                 setProjectCategoryFilter('all');
+                setSelectedProvider('all');
               }}
               className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 activeNavTab === 'projects' && projectCategoryFilter === 'all'
@@ -740,6 +730,7 @@ export default function Dashboard() {
               onClick={() => {
                 setActiveNavTab('projects');
                 setProjectCategoryFilter('multi');
+                setSelectedProvider('all');
               }}
               className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 activeNavTab === 'projects' && projectCategoryFilter === 'multi'
@@ -760,6 +751,7 @@ export default function Dashboard() {
               onClick={() => {
                 setActiveNavTab('projects');
                 setProjectCategoryFilter('azure');
+                setSelectedProvider('all');
               }}
               className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 activeNavTab === 'projects' && projectCategoryFilter === 'azure'
@@ -778,6 +770,7 @@ export default function Dashboard() {
               onClick={() => {
                 setActiveNavTab('projects');
                 setProjectCategoryFilter('aws');
+                setSelectedProvider('all');
               }}
               className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 activeNavTab === 'projects' && projectCategoryFilter === 'aws'
@@ -796,6 +789,7 @@ export default function Dashboard() {
               onClick={() => {
                 setActiveNavTab('projects');
                 setProjectCategoryFilter('oracle');
+                setSelectedProvider('all');
               }}
               className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 activeNavTab === 'projects' && projectCategoryFilter === 'oracle'
@@ -814,6 +808,7 @@ export default function Dashboard() {
               onClick={() => {
                 setActiveNavTab('projects');
                 setProjectCategoryFilter('gcp');
+                setSelectedProvider('all');
               }}
               className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 activeNavTab === 'projects' && projectCategoryFilter === 'gcp'
@@ -894,26 +889,19 @@ export default function Dashboard() {
       <div className="flex-1 min-w-0 flex flex-col min-h-screen overflow-y-auto">
 
         {/* ── Top Bar del Dashboard ──────────────────────────────────────── */}
-        <header
-          className="sticky top-0 z-30 flex items-center justify-between px-6 md:px-8 py-3.5 shrink-0"
-          style={{
-            background: 'rgba(8,13,24,0.94)',
-            borderBottom: '1px solid #1e293b',
-            backdropFilter: 'blur(12px)',
-          }}
-        >
+        <header className="sticky top-0 z-30 flex items-center justify-between px-6 md:px-8 py-3.5 shrink-0 bg-white/90 border-b border-slate-200 backdrop-blur-md shadow-sm">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-400">Workspace:</span>
-              <span className="text-xs font-extrabold text-white px-2.5 py-0.5 rounded-lg bg-slate-800 border border-slate-700">
+              <span className="text-xs font-bold text-slate-500">Workspace:</span>
+              <span className="text-xs font-bold text-slate-800 px-2.5 py-0.5 rounded-lg bg-slate-100 border border-slate-200">
                 Multi-Cloud Architecture
               </span>
             </div>
 
             {/* Píldora de estado de vista activa */}
-            <div className="flex items-center gap-1.5 pl-2 border-l border-slate-800">
-              <span className="text-xs text-slate-500 font-mono text-[11px]">VISTA:</span>
-              <span className="text-xs font-bold text-amber-400">
+            <div className="flex items-center gap-1.5 pl-2 border-l border-slate-200">
+              <span className="text-xs text-slate-400 font-mono text-[11px]">VISTA:</span>
+              <span className="text-xs font-bold text-amber-600">
                 {activeNavTab === 'overview' && 'Vista General'}
                 {activeNavTab === 'projects' && 'Directorio de Proyectos'}
                 {activeNavTab === 'templates' && 'Buscador de Plantillas'}
@@ -922,12 +910,7 @@ export default function Dashboard() {
 
             {selectedProvider !== 'all' && (
               <span
-                className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1"
-                style={{
-                  background: 'rgba(0,132,255,0.15)',
-                  color: '#38bdf8',
-                  border: '1px solid rgba(56,189,248,0.3)',
-                }}
+                className="text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 bg-sky-50 text-sky-700 border border-sky-200"
               >
                 Nube: {selectedProvider}
               </span>
@@ -938,10 +921,9 @@ export default function Dashboard() {
             {/* Ir al Editor */}
             <button
               onClick={() => navigate('/editor')}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 shadow-sm"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 shadow-sm text-white"
               style={{
                 background: 'linear-gradient(135deg, #f59e0b, #f97316)',
-                color: '#080d18',
                 boxShadow: '0 2px 10px rgba(245,158,11,0.25)',
               }}
               title="Abrir editor de topologías"
@@ -961,17 +943,17 @@ export default function Dashboard() {
           {activeNavTab === 'projects' && (
             <div className="space-y-6 animate-in fade-in duration-200">
               {/* Cabecera de la Sección de Proyectos */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    <span className="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200">
                       <FolderIcon className="w-5 h-5" />
                     </span>
-                    <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+                    <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
                       Mis Proyectos de Arquitectura
                     </h1>
                   </div>
-                  <p className="text-xs md:text-sm text-slate-400">
+                  <p className="text-xs md:text-sm text-slate-500">
                     Directorio completo de arquitecturas. Filtra por nombre, categoría mono-nube (Azure, AWS, Oracle, GCP) o Multi-Cloud.
                   </p>
                 </div>
@@ -979,13 +961,13 @@ export default function Dashboard() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleImport}
-                    className="px-3 py-2 rounded-xl text-xs font-semibold transition-all bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+                    className="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm"
                   >
                     Importar JSON
                   </button>
                   <button
                     onClick={() => setShowNewModal(true)}
-                    className="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 text-slate-950 shadow-md"
+                    className="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 text-white shadow-md"
                     style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)' }}
                   >
                     <span>+ Nuevo Proyecto</span>
@@ -994,7 +976,7 @@ export default function Dashboard() {
               </div>
 
               {/* Barra de Filtros: Buscador por Nombre + Filtros de Categoría Multi-Cloud/Azure/AWS + Orden */}
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-2xl bg-[#0f172a] border border-slate-800 shadow-sm">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
                 {/* 1. Buscador por Nombre o Descripción */}
                 <div className="relative flex-1 min-w-[260px]">
                   <input
@@ -1002,13 +984,7 @@ export default function Dashboard() {
                     value={projectSearch}
                     onChange={(e) => setProjectSearch(e.target.value)}
                     placeholder="Buscar por nombre de proyecto o descripción..."
-                    className="w-full pl-9 pr-8 py-2.5 rounded-xl text-xs outline-none text-white transition-all"
-                    style={{
-                      background: '#1e293b',
-                      border: '1px solid #334155',
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = '#0084ff'}
-                    onBlur={(e) => e.target.style.borderColor = '#334155'}
+                    className="w-full pl-9 pr-8 py-2.5 rounded-xl text-xs outline-none bg-slate-50 hover:bg-white focus:bg-white text-slate-900 border border-slate-200 focus:border-blue-500 transition-all placeholder:text-slate-400"
                   />
                   <svg
                     className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
@@ -1022,7 +998,7 @@ export default function Dashboard() {
                   {projectSearch && (
                     <button
                       onClick={() => setProjectSearch('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-slate-400 hover:text-white"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-slate-400 hover:text-slate-600"
                       title="Limpiar búsqueda"
                     >
                       ×
@@ -1032,91 +1008,91 @@ export default function Dashboard() {
 
                 {/* 2. Píldoras de Filtro por Categoría (Multi-Cloud / Solo Azure / Solo AWS / etc.) */}
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[11px] font-bold text-slate-400 mr-1 hidden sm:inline">
+                  <span className="text-[11px] font-bold text-slate-500 mr-1 hidden sm:inline">
                     Categoría:
                   </span>
 
                   <button
-                    onClick={() => setProjectCategoryFilter('all')}
+                    onClick={() => { setProjectCategoryFilter('all'); setSelectedProvider('all'); }}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                       projectCategoryFilter === 'all'
-                        ? 'bg-[#0084ff] text-white shadow-sm'
-                        : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200/80'
                     }`}
                   >
                     Todos ({categoryCounts.all})
                   </button>
 
                   <button
-                    onClick={() => setProjectCategoryFilter('multi')}
+                    onClick={() => { setProjectCategoryFilter('multi'); setSelectedProvider('all'); }}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                       projectCategoryFilter === 'multi'
                         ? 'bg-purple-600 text-white shadow-sm'
-                        : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                        : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200/80'
                     }`}
                   >
                     <span>🌐 Multi-Cloud</span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-black/20 font-mono">
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${projectCategoryFilter === 'multi' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
                       {categoryCounts.multi}
                     </span>
                   </button>
 
                   <button
-                    onClick={() => setProjectCategoryFilter('azure')}
+                    onClick={() => { setProjectCategoryFilter('azure'); setSelectedProvider('all'); }}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                       projectCategoryFilter === 'azure'
                         ? 'bg-sky-600 text-white shadow-sm'
-                        : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                        : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200/80'
                     }`}
                   >
                     <AzureLogo className="w-3 h-3" />
                     <span>Solo Azure</span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-black/20 font-mono">
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${projectCategoryFilter === 'azure' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
                       {categoryCounts.azure}
                     </span>
                   </button>
 
                   <button
-                    onClick={() => setProjectCategoryFilter('aws')}
+                    onClick={() => { setProjectCategoryFilter('aws'); setSelectedProvider('all'); }}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                       projectCategoryFilter === 'aws'
                         ? 'bg-amber-600 text-white shadow-sm'
-                        : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                        : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200/80'
                     }`}
                   >
                     <AwsLogo className="w-3 h-3" />
                     <span>Solo AWS</span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-black/20 font-mono">
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${projectCategoryFilter === 'aws' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
                       {categoryCounts.aws}
                     </span>
                   </button>
 
                   <button
-                    onClick={() => setProjectCategoryFilter('oracle')}
+                    onClick={() => { setProjectCategoryFilter('oracle'); setSelectedProvider('all'); }}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                       projectCategoryFilter === 'oracle'
                         ? 'bg-red-600 text-white shadow-sm'
-                        : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                        : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200/80'
                     }`}
                   >
                     <OracleLogo className="w-3 h-3" />
                     <span>Solo Oracle</span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-black/20 font-mono">
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${projectCategoryFilter === 'oracle' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
                       {categoryCounts.oracle}
                     </span>
                   </button>
 
                   <button
-                    onClick={() => setProjectCategoryFilter('gcp')}
+                    onClick={() => { setProjectCategoryFilter('gcp'); setSelectedProvider('all'); }}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                       projectCategoryFilter === 'gcp'
                         ? 'bg-blue-600 text-white shadow-sm'
-                        : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                        : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200/80'
                     }`}
                   >
                     <GcpLogo className="w-3 h-3" />
                     <span>Solo GCP</span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-black/20 font-mono">
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${projectCategoryFilter === 'gcp' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
                       {categoryCounts.gcp}
                     </span>
                   </button>
@@ -1124,11 +1100,11 @@ export default function Dashboard() {
 
                 {/* 3. Ordenamiento */}
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[11px] font-bold text-slate-400">Orden:</span>
+                  <span className="text-[11px] font-bold text-slate-500">Orden:</span>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="px-2.5 py-1.5 rounded-xl text-xs outline-none bg-slate-800 text-white border border-slate-700"
+                    className="px-2.5 py-1.5 rounded-xl text-xs outline-none bg-slate-50 text-slate-800 border border-slate-200 focus:border-blue-500"
                   >
                     <option value="recent">Más Recientes</option>
                     <option value="cost-desc">Mayor Costo FinOps</option>
@@ -1140,20 +1116,20 @@ export default function Dashboard() {
               </div>
 
               {/* Contador de resultados */}
-              <div className="flex items-center justify-between text-xs text-slate-400 px-1">
+              <div className="flex items-center justify-between text-xs text-slate-500 px-1">
                 <span>
-                  Mostrando <strong className="text-white">{filteredProjects.length}</strong> de {projects.length} proyectos
+                  Mostrando <strong className="text-slate-800">{filteredProjects.length}</strong> de {projects.length} proyectos
                   {projectCategoryFilter !== 'all' && (
-                    <span> en categoría <strong className="text-amber-400">{projectCategoryFilter.toUpperCase()}</strong></span>
+                    <span> en categoría <strong className="text-amber-600">{projectCategoryFilter.toUpperCase()}</strong></span>
                   )}
                   {projectSearch && (
-                    <span> para "<strong className="text-amber-400">{projectSearch}</strong>"</span>
+                    <span> para "<strong className="text-amber-600">{projectSearch}</strong>"</span>
                   )}
                 </span>
-                {(projectSearch || projectCategoryFilter !== 'all') && (
+                {(projectSearch || projectCategoryFilter !== 'all' || selectedProvider !== 'all') && (
                   <button
-                    onClick={() => { setProjectSearch(''); setProjectCategoryFilter('all'); }}
-                    className="text-xs text-blue-400 hover:underline font-bold"
+                    onClick={() => { setProjectSearch(''); setProjectCategoryFilter('all'); setSelectedProvider('all'); }}
+                    className="text-xs text-blue-600 hover:underline font-bold"
                   >
                     Restablecer filtros
                   </button>
@@ -1162,12 +1138,12 @@ export default function Dashboard() {
 
               {/* Grid de Proyectos */}
               {filteredProjects.length === 0 ? (
-                <div className="text-center py-20 rounded-2xl border-2 border-dashed border-slate-800 p-8 space-y-4">
-                  <div className="w-14 h-14 mx-auto rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500">
+                <div className="text-center py-20 rounded-2xl border-2 border-dashed border-slate-200 bg-white/60 p-8 space-y-4 shadow-sm">
+                  <div className="w-14 h-14 mx-auto rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
                     <HexagonIcon className="w-8 h-8" />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-base font-bold text-slate-200">
+                    <h3 className="text-base font-bold text-slate-800">
                       No se encontraron proyectos con estos criterios
                     </h3>
                     <p className="text-xs text-slate-500 max-w-md mx-auto">
@@ -1176,14 +1152,14 @@ export default function Dashboard() {
                   </div>
                   <div className="flex justify-center gap-3 pt-2">
                     <button
-                      onClick={() => { setProjectSearch(''); setProjectCategoryFilter('all'); }}
-                      className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
+                      onClick={() => { setProjectSearch(''); setProjectCategoryFilter('all'); setSelectedProvider('all'); }}
+                      className="px-4 py-2 rounded-xl text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm"
                     >
                       Ver todos los proyectos
                     </button>
                     <button
                       onClick={() => setShowNewModal(true)}
-                      className="px-4 py-2 rounded-xl text-xs font-bold text-slate-950"
+                      className="px-4 py-2 rounded-xl text-xs font-bold text-white shadow-md"
                       style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)' }}
                     >
                       + Crear Nuevo Proyecto
@@ -1212,34 +1188,31 @@ export default function Dashboard() {
           {activeNavTab === 'templates' && (
             <div className="space-y-6 animate-in fade-in duration-200">
               {/* Cabecera de la Galería de Plantillas */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <span className="p-1.5 rounded-lg bg-amber-50 text-amber-600 border border-amber-200">
                       <BlastIcon className="w-5 h-5" />
                     </span>
-                    <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+                    <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
                       Galería y Buscador de Plantillas
                     </h1>
                   </div>
-                  <p className="text-xs md:text-sm text-slate-400">
+                  <p className="text-xs md:text-sm text-slate-500">
                     Topologías empresariales de referencia probadas para AWS, Azure, Oracle y Google Cloud.
                   </p>
                 </div>
               </div>
 
               {/* Barra de Búsqueda de Plantillas */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-[#0f172a] border border-slate-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
                 <div className="relative flex-1">
                   <input
                     type="text"
                     value={templateSearch}
                     onChange={(e) => setTemplateSearch(e.target.value)}
                     placeholder="Buscar plantillas por nombre, servicio o nube (ej. 3-tier, serverless, oracle, sql, kubernetes)..."
-                    className="w-full pl-9 pr-8 py-2.5 rounded-xl text-xs outline-none text-white"
-                    style={{ background: '#1e293b', border: '1px solid #334155' }}
-                    onFocus={(e) => e.target.style.borderColor = '#0084ff'}
-                    onBlur={(e) => e.target.style.borderColor = '#334155'}
+                    className="w-full pl-9 pr-8 py-2.5 rounded-xl text-xs outline-none bg-slate-50 hover:bg-white focus:bg-white text-slate-900 border border-slate-200 focus:border-blue-500 transition-all placeholder:text-slate-400"
                   />
                   <svg
                     className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
@@ -1253,15 +1226,15 @@ export default function Dashboard() {
                   {templateSearch && (
                     <button
                       onClick={() => setTemplateSearch('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-slate-400 hover:text-white"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-slate-400 hover:text-slate-600"
                     >
                       ×
                     </button>
                   )}
                 </div>
 
-                <div className="text-xs text-slate-400 shrink-0">
-                  Mostrando <strong className="text-white">{filteredTemplates.length}</strong> de {ARCHITECTURE_PRESETS.length} plantillas
+                <div className="text-xs text-slate-500 shrink-0">
+                  Mostrando <strong className="text-slate-800">{filteredTemplates.length}</strong> de {ARCHITECTURE_PRESETS.length} plantillas
                 </div>
               </div>
 
@@ -1285,10 +1258,10 @@ export default function Dashboard() {
             <div className="space-y-10 animate-in fade-in duration-200">
               {/* Bienvenida y Resumen */}
               <div>
-                <h1 className="text-3xl md:text-4xl font-black mb-1 tracking-tight">
-                  Hola, <span style={{ color: '#f59e0b' }}>{displayName.split(' ')[0]}</span>
+                <h1 className="text-3xl md:text-4xl font-black mb-1 tracking-tight text-slate-900">
+                  Hola, <span style={{ color: '#d97706' }}>{displayName.split(' ')[0]}</span>
                 </h1>
-                <p className="text-xs md:text-sm text-slate-400">
+                <p className="text-xs md:text-sm text-slate-500">
                   Panel de control general de topologías cloud, presupuestos FinOps y auditorías de seguridad.
                 </p>
               </div>
@@ -1305,21 +1278,21 @@ export default function Dashboard() {
                   label="Costo FinOps Total"
                   value={formatUSD(totalCost)}
                   icon={<DollarIcon className="w-5 h-5" />}
-                  color="#34d399"
+                  color="#10b981"
                   sub="estimado mensual"
                 />
                 <KpiCard
                   label="Score de Auditoría"
                   value={`${avgScore}/100`}
                   icon={<ShieldIcon className="w-5 h-5" />}
-                  color={avgScore >= 80 ? '#34d399' : avgScore >= 60 ? '#f59e0b' : '#ef4444'}
+                  color={avgScore >= 80 ? '#10b981' : avgScore >= 60 ? '#d97706' : '#ef4444'}
                   sub="promedio de seguridad"
                 />
                 <KpiCard
                   label="Issues de Seguridad"
                   value={totalIssues}
                   icon={<WarningIcon className="w-5 h-5" />}
-                  color={totalIssues > 0 ? '#f87171' : '#34d399'}
+                  color={totalIssues > 0 ? '#ef4444' : '#10b981'}
                   sub="reglas CIS detectadas"
                 />
               </div>
@@ -1328,17 +1301,17 @@ export default function Dashboard() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-lg font-black text-slate-100 flex items-center gap-2">
-                      <BlastIcon className="w-4 h-4 text-amber-400" />
+                    <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                      <BlastIcon className="w-4 h-4 text-amber-500" />
                       <span>Plantillas de Arquitectura de Referencia</span>
                     </h2>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-500">
                       Topologías preconfiguradas y optimizadas
                     </p>
                   </div>
                   <button
                     onClick={() => setActiveNavTab('templates')}
-                    className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                    className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
                   >
                     <span>Ver y buscar todas ({ARCHITECTURE_PRESETS.length})</span>
                     <ArrowRightIcon className="w-3 h-3" />
@@ -1357,20 +1330,20 @@ export default function Dashboard() {
               </div>
 
               {/* Proyectos Recientes */}
-              <div className="space-y-4 pt-4 border-t border-slate-800">
+              <div className="space-y-4 pt-4 border-t border-slate-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-lg font-black text-slate-100 flex items-center gap-2">
-                      <FolderIcon className="w-4 h-4 text-blue-400" />
+                    <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                      <FolderIcon className="w-4 h-4 text-blue-600" />
                       <span>Proyectos Recientes</span>
                     </h2>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-500">
                       Últimos proyectos guardados o editados
                     </p>
                   </div>
                   <button
                     onClick={() => setActiveNavTab('projects')}
-                    className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                    className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
                   >
                     <span>Ver directorio de proyectos ({projects.length})</span>
                     <ArrowRightIcon className="w-3 h-3" />
