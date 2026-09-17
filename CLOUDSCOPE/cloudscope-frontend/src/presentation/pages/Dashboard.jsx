@@ -1,27 +1,95 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { listProjects, deleteProject, exportProjectJSON, importProjectJSON, saveProject } from '../../infrastructure/api/projectStorage.js';
+import { listProjects, deleteProject, exportProjectJSON, importProjectJSON, saveProject, loadProject } from '../../infrastructure/api/projectStorage.js';
 import { calculateCost, formatUSD } from '../../application/use-cases/calculateCost.js';
 import { runAudit } from '../../application/use-cases/runAudit.js';
 import { ARCHITECTURE_PRESETS } from '../../domain/models/ArchitecturePresets.js';
-import { CloudScopeLogo, AwsLogo, AzureLogo, GcpLogo, TerraformLogo, DockerLogo, KubernetesLogo, FolderIcon, DollarIcon, ShieldIcon, WarningIcon, TrashIcon, HexagonIcon, BlastIcon, ArrowRightIcon } from '../components/icons/CloudIcons.jsx';
+import {
+  CloudScopeLogo, AwsLogo, AzureLogo, OracleLogo, GcpLogo,
+  TerraformLogo, DockerLogo, KubernetesLogo, FolderIcon, DollarIcon,
+  ShieldIcon, WarningIcon, TrashIcon, HexagonIcon, BlastIcon,
+  ArrowRightIcon, LockIcon, UserIcon, CreditCardIcon, UsersIcon,
+  KeyIcon, SparkleIcon, PlayCircleIcon, HelpCircleIcon, PowerIcon,
+  ChevronDownIcon, BlockIcon
+} from '../components/icons/CloudIcons.jsx';
+
+// ─── Clasificador de Categoría de Proyecto (Multi-Cloud vs Mono-Nube) ─────────
+export function getProjectCategory(project) {
+  const nodes = project.nodes ?? [];
+  if (nodes.length === 0) {
+    return {
+      type: 'empty',
+      label: 'Sin Nodos',
+      isMulti: false,
+      providers: [],
+    };
+  }
+
+  const cloudSet = new Set();
+  for (const n of nodes) {
+    const t = n.data?.cloudType ?? '';
+    if (t.startsWith('azure_')) cloudSet.add('azure');
+    else if (t.startsWith('oci_')) cloudSet.add('oracle');
+    else if (t.startsWith('gcp_')) cloudSet.add('gcp');
+    else if (t.startsWith('block') || t.startsWith('text_') || t.startsWith('icon') || t.startsWith('image') || t.startsWith('area')) {
+      // formas comunes, no se computan como proveedor exclusivo
+    } else {
+      cloudSet.add('aws');
+    }
+  }
+
+  const providers = Array.from(cloudSet);
+  if (providers.length > 1) {
+    return {
+      type: 'multi',
+      label: 'Multi-Cloud',
+      isMulti: true,
+      providers,
+    };
+  } else if (providers.length === 1) {
+    const p = providers[0];
+    const labels = {
+      aws: 'Solo AWS',
+      azure: 'Solo Azure',
+      oracle: 'Solo Oracle',
+      gcp: 'Solo Google Cloud',
+    };
+    return {
+      type: p,
+      label: labels[p] || 'Solo ' + p.toUpperCase(),
+      isMulti: false,
+      providers: [p],
+    };
+  }
+
+  return {
+    type: 'aws',
+    label: 'Solo AWS',
+    isMulti: false,
+    providers: ['aws'],
+  };
+}
 
 // ─── Tarjeta de KPI ────────────────────────────────────────────────────────────
 function KpiCard({ label, value, sub, color = '#f59e0b', icon }) {
   return (
-    <div className="rounded-2xl p-5 flex flex-col gap-2"
-      style={{ background: '#0f172a', border: '1px solid #1e293b' }}>
+    <div
+      className="rounded-2xl p-4 md:p-5 flex flex-col gap-1.5 transition-all shadow-sm"
+      style={{ background: '#0f172a', border: '1px solid #1e293b' }}
+    >
       <div className="flex items-center justify-between">
-        <span className="text-sm" style={{ color: '#64748b' }}>{label}</span>
+        <span className="text-xs font-semibold text-slate-400">{label}</span>
         <span className="opacity-80" style={{ color }}>{icon}</span>
       </div>
-      <div className="text-3xl font-black font-mono" style={{ color }}>{value}</div>
-      {sub && <div className="text-xs" style={{ color: '#475569' }}>{sub}</div>}
+      <div className="text-2xl md:text-3xl font-black font-mono tracking-tight" style={{ color }}>
+        {value}
+      </div>
+      {sub && <div className="text-[11px] text-slate-500 font-medium">{sub}</div>}
     </div>
   );
 }
 
-// ─── Tarjeta de proyecto ───────────────────────────────────────────────────────
+// ─── Tarjeta de Proyecto ───────────────────────────────────────────────────────
 function ProjectCard({ project, onOpen, onDelete, onExport }) {
   const cost = calculateCost(project.nodes ?? []);
   const audit = runAudit(project.nodes ?? [], project.edges ?? []);
@@ -31,89 +99,130 @@ function ProjectCard({ project, onOpen, onDelete, onExport }) {
   });
 
   const [confirmDelete, setConfirmDelete] = useState(false);
-
-  // Detectar proveedor primario del proyecto
-  const providers = (project.nodes ?? []).map((n) => {
-    const t = n.data?.cloudType ?? '';
-    if (t.startsWith('azure_')) return 'azure';
-    if (t.startsWith('gcp_')) return 'gcp';
-    return 'aws';
-  });
-  const primaryProvider = providers[0] ?? 'aws';
+  const cat = getProjectCategory(project);
 
   return (
-    <div className="rounded-2xl overflow-hidden group transition-all duration-200 cursor-pointer"
+    <div
+      className="rounded-2xl overflow-hidden group transition-all duration-200 cursor-pointer flex flex-col justify-between"
       style={{ background: '#0f172a', border: '1px solid #1e293b' }}
-      onMouseEnter={(e) => e.currentTarget.style.borderColor = '#334155'}
-      onMouseLeave={(e) => e.currentTarget.style.borderColor = '#1e293b'}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = cat.isMulti ? '#a855f7' : '#334155';
+        e.currentTarget.style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = '#1e293b';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
     >
       {/* Header del proyecto */}
-      <div className="p-5 pb-3" onClick={() => onOpen(project)}>
+      <div className="p-5 pb-3 flex-1" onClick={() => onOpen(project)}>
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-base truncate" style={{ color: '#f8fafc' }}>{project.name}</h3>
-            {project.description && (
-              <p className="text-xs truncate mt-0.5" style={{ color: '#475569' }}>{project.description}</p>
+            <h3 className="font-bold text-base text-slate-100 group-hover:text-white truncate" title={project.name}>
+              {project.name}
+            </h3>
+            {project.description ? (
+              <p className="text-xs text-slate-400 truncate mt-0.5" title={project.description}>
+                {project.description}
+              </p>
+            ) : (
+              <p className="text-xs text-slate-600 italic mt-0.5">Sin descripción</p>
             )}
           </div>
-          <span
-            className="text-[10px] ml-2 px-2 py-0.5 rounded font-semibold shrink-0 flex items-center gap-1"
-            style={{
-              background: primaryProvider === 'azure' ? 'rgba(56,189,248,0.12)' : primaryProvider === 'gcp' ? 'rgba(248,113,113,0.12)' : 'rgba(245,158,11,0.12)',
-              color: primaryProvider === 'azure' ? '#38bdf8' : primaryProvider === 'gcp' ? '#f87171' : '#f59e0b',
-              border: `1px solid ${primaryProvider === 'azure' ? 'rgba(56,189,248,0.25)' : primaryProvider === 'gcp' ? 'rgba(248,113,113,0.25)' : 'rgba(245,158,11,0.25)'}`,
-            }}
-          >
-            {primaryProvider === 'azure' ? <AzureLogo className="w-2.5 h-2.5 shrink-0" /> : primaryProvider === 'gcp' ? <GcpLogo className="w-2.5 h-2.5 shrink-0" /> : <AwsLogo className="w-2.5 h-2.5 shrink-0" />}
-            <span className="uppercase">{primaryProvider}</span>
-          </span>
+
+          {/* Badge de Categoría (Multi-Cloud vs Mono-Nube) */}
+          {cat.isMulti ? (
+            <span
+              className="text-[10px] ml-2 px-2.5 py-0.5 rounded-full font-black shrink-0 flex items-center gap-1.5 uppercase tracking-wider"
+              style={{
+                background: 'linear-gradient(135deg, rgba(0,132,255,0.25), rgba(168,85,247,0.25))',
+                color: '#38bdf8',
+                border: '1px solid rgba(168,85,247,0.4)',
+                boxShadow: '0 0 12px rgba(168,85,247,0.15)',
+              }}
+            >
+              <div className="flex items-center -space-x-1">
+                {cat.providers.includes('aws') && <AwsLogo className="w-3 h-3" />}
+                {cat.providers.includes('azure') && <AzureLogo className="w-3 h-3" />}
+                {cat.providers.includes('oracle') && <OracleLogo className="w-3 h-3" />}
+                {cat.providers.includes('gcp') && <GcpLogo className="w-3 h-3" />}
+              </div>
+              <span>Multi-Cloud</span>
+            </span>
+          ) : (
+            <span
+              className="text-[10px] ml-2 px-2 py-0.5 rounded font-bold shrink-0 flex items-center gap-1 uppercase tracking-wider"
+              style={{
+                background:
+                  cat.type === 'azure' ? 'rgba(56,189,248,0.12)' :
+                  cat.type === 'oracle' ? 'rgba(248,0,0,0.12)' :
+                  cat.type === 'gcp' ? 'rgba(248,113,113,0.12)' : 'rgba(245,158,11,0.12)',
+                color:
+                  cat.type === 'azure' ? '#38bdf8' :
+                  cat.type === 'oracle' ? '#f80000' :
+                  cat.type === 'gcp' ? '#f87171' : '#f59e0b',
+                border: `1px solid ${
+                  cat.type === 'azure' ? 'rgba(56,189,248,0.25)' :
+                  cat.type === 'oracle' ? 'rgba(248,0,0,0.25)' :
+                  cat.type === 'gcp' ? 'rgba(248,113,113,0.25)' : 'rgba(245,158,11,0.25)'
+                }`,
+              }}
+            >
+              {cat.type === 'azure' && <AzureLogo className="w-2.5 h-2.5 shrink-0" />}
+              {cat.type === 'oracle' && <OracleLogo className="w-2.5 h-2.5 shrink-0" />}
+              {cat.type === 'gcp' && <GcpLogo className="w-2.5 h-2.5 shrink-0" />}
+              {cat.type === 'aws' && <AwsLogo className="w-2.5 h-2.5 shrink-0" />}
+              <span>{cat.label}</span>
+            </span>
+          )}
         </div>
 
         {/* Métricas inline */}
-        <div className="flex items-center gap-4 mt-3">
+        <div className="flex items-center gap-4 mt-4 pt-3 border-t border-slate-800/80">
           <div>
-            <div className="text-[10px] uppercase tracking-wider" style={{ color: '#475569' }}>FinOps</div>
-            <div className="text-sm font-mono font-bold" style={{ color: '#34d399' }}>{formatUSD(cost.total)}/mo</div>
+            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">FinOps</div>
+            <div className="text-sm font-mono font-bold text-emerald-400">{formatUSD(cost.total)}/mo</div>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-wider" style={{ color: '#475569' }}>Score</div>
+            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Score</div>
             <div className="text-sm font-mono font-bold" style={{ color: scoreColor }}>{audit.score}/100</div>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-wider" style={{ color: '#475569' }}>Nodos</div>
-            <div className="text-sm font-mono font-bold" style={{ color: '#94a3b8' }}>{project.nodes?.length ?? 0}</div>
+            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Nodos</div>
+            <div className="text-sm font-mono font-bold text-slate-300">{project.nodes?.length ?? 0}</div>
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3 flex items-center justify-between"
-        style={{ borderTop: '1px solid #1e293b', background: '#0b1120' }}>
-        <span className="text-[10px]" style={{ color: '#334155' }}>
+      <div
+        className="px-5 py-3 flex items-center justify-between"
+        style={{ borderTop: '1px solid #1e293b', background: '#0b1120' }}
+      >
+        <span className="text-[10px] text-slate-500 font-medium">
           {updatedAt}
         </span>
-        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={(e) => { e.stopPropagation(); onExport(project); }}
-            className="text-[10px] px-2 py-1 rounded transition-colors"
-            style={{ color: '#64748b', background: '#1e293b' }}
-            onMouseEnter={(e) => e.currentTarget.style.color = '#94a3b8'}
-            onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
-            title="Exportar JSON">
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={(e) => { e.stopPropagation(); onExport(project); }}
+            className="text-[11px] px-2.5 py-1 rounded font-medium transition-colors text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700"
+            title="Exportar archivo JSON"
+          >
             JSON
           </button>
           {confirmDelete ? (
-            <button onClick={(e) => { e.stopPropagation(); onDelete(project.id); setConfirmDelete(false); }}
-              className="text-[10px] px-2 py-1 rounded font-bold"
-              style={{ color: '#f87171', background: 'rgba(239,68,68,0.15)' }}>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(project.id); setConfirmDelete(false); }}
+              className="text-[11px] px-2.5 py-1 rounded font-bold text-red-300 bg-red-950/80 border border-red-700"
+            >
               ¿Confirmar?
             </button>
           ) : (
-            <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); setTimeout(() => setConfirmDelete(false), 3000); }}
-              className="text-[10px] px-2 py-1 rounded transition-colors"
-              style={{ color: '#64748b', background: '#1e293b' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#f87171'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
-            title="Eliminar">
+            <button
+              onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); setTimeout(() => setConfirmDelete(false), 3000); }}
+              className="p-1.5 rounded transition-colors text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+              title="Eliminar proyecto"
+            >
               <TrashIcon className="w-3.5 h-3.5" />
             </button>
           )}
@@ -123,58 +232,125 @@ function ProjectCard({ project, onOpen, onDelete, onExport }) {
   );
 }
 
-// ─── Modal de nuevo proyecto ──────────────────────────────────────────────────
+// ─── Tarjeta de Plantilla (Preset) ─────────────────────────────────────────────
+function TemplateCard({ preset, onSelect }) {
+  const cost = calculateCost(preset.nodes ?? []);
+
+  return (
+    <div
+      className="rounded-2xl p-4 flex flex-col justify-between transition-all group border cursor-pointer"
+      style={{ background: '#0f172a', borderColor: '#1e293b' }}
+      onClick={() => onSelect(preset)}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = preset.color;
+        e.currentTarget.style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = '#1e293b';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
+    >
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <span
+            className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1"
+            style={{ color: preset.color, background: `${preset.color}15`, border: `1px solid ${preset.color}40` }}
+          >
+            {preset.provider === 'aws' && <AwsLogo className="w-2.5 h-2.5 shrink-0" />}
+            {preset.provider === 'azure' && <AzureLogo className="w-2.5 h-2.5 shrink-0" />}
+            {preset.provider === 'oracle' && <OracleLogo className="w-2.5 h-2.5 shrink-0" />}
+            {preset.provider === 'gcp' && <GcpLogo className="w-2.5 h-2.5 shrink-0" />}
+            <span>{preset.badge ?? preset.provider}</span>
+          </span>
+          <span className="text-xs text-slate-500 font-mono font-medium">{preset.nodes.length} nodos</span>
+        </div>
+
+        <h3 className="text-sm font-bold text-slate-100 group-hover:text-white mb-1.5 transition-colors line-clamp-1">
+          {preset.name}
+        </h3>
+        <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed mb-3">
+          {preset.description}
+        </p>
+      </div>
+
+      <div className="flex items-center justify-between pt-2.5 border-t border-slate-800/80 text-[11px]">
+        <div>
+          <span className="text-[10px] text-slate-500">FinOps: </span>
+          <span className="font-bold font-mono text-emerald-400">{formatUSD(cost.total)}</span>
+        </div>
+        <span className="font-bold flex items-center gap-1 transition-transform group-hover:translate-x-0.5" style={{ color: preset.color }}>
+          <span>Crear y editar</span>
+          <ArrowRightIcon className="w-3 h-3" />
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal de Nuevo Proyecto ──────────────────────────────────────────────────
 function NewProjectModal({ onClose, onCreate }) {
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}>
-      <div className="w-full max-w-md rounded-2xl p-6"
-        style={{ background: '#0f172a', border: '1px solid #334155' }}>
-        <h3 className="text-xl font-bold mb-6" style={{ color: '#f8fafc' }}>Nuevo Proyecto</h3>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in"
+    >
+      <div
+        className="w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4"
+        style={{ background: '#0f172a', border: '1px solid #334155' }}
+      >
+        <h3 className="text-xl font-black text-white">Nuevo Proyecto</h3>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#64748b' }}>
+            <label className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-slate-400">
               Nombre del proyecto *
             </label>
-            <input autoFocus value={name} onChange={(e) => setName(e.target.value)}
-              placeholder="Mi Arquitectura AWS"
-              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-              style={{ background: '#1e293b', border: '1px solid #334155', color: '#f8fafc' }}
-              onFocus={(e) => e.target.style.borderColor = '#f59e0b'}
+            <input
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Mi Arquitectura Multi-Cloud"
+              className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none text-white transition-colors"
+              style={{ background: '#1e293b', border: '1px solid #334155' }}
+              onFocus={(e) => e.target.style.borderColor = '#0084ff'}
               onBlur={(e) => e.target.style.borderColor = '#334155'}
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#64748b' }}>
+            <label className="block text-xs font-bold uppercase tracking-wider mb-1.5 text-slate-400">
               Descripción (opcional)
             </label>
-            <textarea value={desc} onChange={(e) => setDesc(e.target.value)}
-              placeholder="Arquitectura de microservicios para producción..."
+            <textarea
+              value={desc}
+              onChange={(e) => setDesc(e.target.value)}
+              placeholder="Topología empresarial de alta disponibilidad, FinOps y CIS benchmarks..."
               rows={3}
-              className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none"
-              style={{ background: '#1e293b', border: '1px solid #334155', color: '#f8fafc' }}
-              onFocus={(e) => e.target.style.borderColor = '#f59e0b'}
+              className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none resize-none text-white transition-colors"
+              style={{ background: '#1e293b', border: '1px solid #334155' }}
+              onFocus={(e) => e.target.style.borderColor = '#0084ff'}
               onBlur={(e) => e.target.style.borderColor = '#334155'}
             />
           </div>
         </div>
 
-        <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-            style={{ background: '#1e293b', color: '#64748b', border: '1px solid #334155' }}>
+        <div className="flex gap-3 pt-2">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors bg-slate-800 text-slate-400 hover:text-white border border-slate-700"
+          >
             Cancelar
           </button>
-          <button onClick={() => name.trim() && onCreate(name, desc)}
+          <button
+            onClick={() => name.trim() && onCreate(name, desc)}
             disabled={!name.trim()}
-            className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all"
+            className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md"
             style={{
-              background: name.trim() ? 'linear-gradient(135deg, #f59e0b, #f97316)' : '#1e293b',
-              color: name.trim() ? '#080d18' : '#334155',
-            }}>
+              background: name.trim() ? '#0084ff' : '#1e293b',
+              color: name.trim() ? '#ffffff' : '#475569',
+            }}
+          >
             <span className="flex items-center justify-center gap-1.5">
               <span>Crear proyecto</span>
               <ArrowRightIcon className="w-4 h-4" />
@@ -186,16 +362,27 @@ function NewProjectModal({ onClose, onCreate }) {
   );
 }
 
-// ─── Dashboard principal ───────────────────────────────────────────────────────
+// ─── Dashboard Principal ───────────────────────────────────────────────────────
 export default function Dashboard() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [showNewModal, setShowNewModal] = useState(false);
-  const [search, setSearch] = useState('');
 
-  // Datos del usuario (mock)
+  // Estados de navegación y filtros
+  const [activeNavTab, setActiveNavTab] = useState('overview'); // 'overview' | 'projects' | 'templates'
+  const [projectSearch, setProjectSearch] = useState('');
+  const [templateSearch, setTemplateSearch] = useState('');
+  const [selectedProvider, setSelectedProvider] = useState('all'); // 'all' | 'aws' | 'azure' | 'oracle' | 'gcp'
+  const [projectCategoryFilter, setProjectCategoryFilter] = useState('all'); // 'all' | 'multi' | 'azure' | 'aws' | 'oracle' | 'gcp'
+  const [sortBy, setSortBy] = useState('recent'); // 'recent' | 'cost-desc' | 'cost-asc' | 'score-desc' | 'name-asc'
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
+  const [templateCategory, setTemplateCategory] = useState('all');
+
+  // Sesión de usuario
   const userRaw = localStorage.getItem('cs_user');
-  const user = userRaw ? JSON.parse(userRaw) : { name: 'Usuario', email: '' };
+  const user = userRaw ? JSON.parse(userRaw) : { name: 'Stevie Marca', email: 'raziel@gmail.com' };
+  const displayName = (user?.name || user?.username || 'STEVIE MARCA').toUpperCase();
+  const userInitials = displayName.split(' ').map(n => n[0]).filter(Boolean).join('').slice(0, 2) || 'SM';
 
   const loadProjects = () => setProjects(listProjects());
 
@@ -204,32 +391,112 @@ export default function Dashboard() {
   }, []);
 
   // KPIs globales
-  const allNodes = projects.flatMap(p => p.nodes ?? []);
-  const allEdges = projects.flatMap(p => p.edges ?? []);
   const totalCost = projects.reduce((sum, p) => {
     const c = calculateCost(p.nodes ?? []);
     return sum + c.total;
   }, 0);
+
   const avgScore = projects.length > 0
     ? Math.round(projects.reduce((sum, p) => {
         const a = runAudit(p.nodes ?? [], p.edges ?? []);
         return sum + a.score;
       }, 0) / projects.length)
     : 100;
+
   const totalIssues = projects.reduce((sum, p) => {
     const a = runAudit(p.nodes ?? [], p.edges ?? []);
     return sum + a.total;
   }, 0);
 
+  // Conteo de proyectos por categoría
+  const categoryCounts = useMemo(() => {
+    const counts = { all: projects.length, multi: 0, azure: 0, aws: 0, oracle: 0, gcp: 0 };
+    for (const p of projects) {
+      const cat = getProjectCategory(p);
+      if (cat.isMulti) {
+        counts.multi++;
+      } else if (counts[cat.type] !== undefined) {
+        counts[cat.type]++;
+      }
+    }
+    return counts;
+  }, [projects]);
+
+  // Filtrado y Ordenamiento dinámico de Proyectos
+  const filteredProjects = useMemo(() => {
+    return projects.filter(p => {
+      // Búsqueda por texto (nombre, descripción, o nombres de nodos)
+      const q = projectSearch.toLowerCase().trim();
+      if (q) {
+        const nameMatches = p.name.toLowerCase().includes(q);
+        const descMatches = (p.description ?? '').toLowerCase().includes(q);
+        const nodeMatches = (p.nodes ?? []).some(n =>
+          (n.data?.label ?? '').toLowerCase().includes(q) ||
+          (n.data?.cloudType ?? '').toLowerCase().includes(q)
+        );
+        if (!nameMatches && !descMatches && !nodeMatches) return false;
+      }
+
+      // Filtro por Proveedor en la barra lateral
+      if (selectedProvider !== 'all') {
+        const cat = getProjectCategory(p);
+        if (!cat.providers.includes(selectedProvider)) return false;
+      }
+
+      // Filtro por Categoría de Arquitectura (Solo Azure vs Multi-Cloud vs Solo AWS...)
+      if (projectCategoryFilter !== 'all') {
+        const cat = getProjectCategory(p);
+        if (projectCategoryFilter === 'multi' && !cat.isMulti) return false;
+        if (projectCategoryFilter !== 'multi' && (cat.isMulti || cat.type !== projectCategoryFilter)) return false;
+      }
+
+      return true;
+    }).sort((a, b) => {
+      if (sortBy === 'recent') return new Date(b.updatedAt) - new Date(a.updatedAt);
+      if (sortBy === 'cost-desc') return calculateCost(b.nodes ?? []).total - calculateCost(a.nodes ?? []).total;
+      if (sortBy === 'cost-asc') return calculateCost(a.nodes ?? []).total - calculateCost(b.nodes ?? []).total;
+      if (sortBy === 'score-desc') return runAudit(b.nodes ?? [], b.edges ?? []).score - runAudit(a.nodes ?? [], a.edges ?? []).score;
+      if (sortBy === 'name-asc') return a.name.localeCompare(b.name);
+      return 0;
+    });
+  }, [projects, projectSearch, selectedProvider, projectCategoryFilter, sortBy]);
+
+  // Filtrado dinámico de Plantillas (Buscar plantillas)
+  const filteredTemplates = useMemo(() => {
+    return ARCHITECTURE_PRESETS.filter(preset => {
+      const q = templateSearch.toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        preset.name.toLowerCase().includes(q) ||
+        preset.description.toLowerCase().includes(q) ||
+        preset.provider.toLowerCase().includes(q) ||
+        (preset.badge ?? '').toLowerCase().includes(q);
+
+      if (!matchesSearch) return false;
+
+      if (selectedProvider !== 'all' && preset.provider !== selectedProvider) {
+        return false;
+      }
+
+      if (templateCategory !== 'all') {
+        if (templateCategory === 'web' && !preset.name.toLowerCase().includes('web') && !preset.name.toLowerCase().includes('tier')) return false;
+        if (templateCategory === 'serverless' && !preset.name.toLowerCase().includes('serverless')) return false;
+        if (templateCategory === 'database' && !preset.name.toLowerCase().includes('sql') && !preset.name.toLowerCase().includes('database') && !preset.name.toLowerCase().includes('stack')) return false;
+      }
+
+      return true;
+    });
+  }, [templateSearch, selectedProvider, templateCategory]);
+
   const handleOpenProject = (project) => {
-    localStorage.setItem('cs_current_project', JSON.stringify(project));
+    loadProject(project.id);
     navigate('/editor');
   };
 
   const handleCreateProject = (name, desc) => {
     const saved = saveProject(null, name, desc, [], []);
     setShowNewModal(false);
-    localStorage.setItem('cs_current_project', JSON.stringify(saved));
+    loadProject(saved.id);
     navigate('/editor');
   };
 
@@ -247,7 +514,7 @@ export default function Dashboard() {
       preset.edges
     );
     loadProjects();
-    localStorage.setItem('cs_current_project', JSON.stringify(saved));
+    loadProject(saved.id);
     navigate('/editor');
   };
 
@@ -269,229 +536,873 @@ export default function Dashboard() {
     navigate('/login');
   };
 
-  const filtered = projects.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    (p.description ?? '').toLowerCase().includes(search.toLowerCase())
-  );
-
   return (
-    <div className="min-h-screen" style={{ background: '#080d18', fontFamily: "'Inter', sans-serif", color: '#f8fafc' }}>
+    <div className="flex min-h-screen bg-[#080d18] text-[#f8fafc] font-sans">
 
-      {/* ── Header ─────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 flex items-center justify-between px-6 md:px-8 py-3.5"
-        style={{ background: 'rgba(8,13,24,0.92)', borderBottom: '1px solid #1e293b', backdropFilter: 'blur(12px)' }}>
-        <div className="flex items-center gap-3">
-          {/* Logo oficial CloudScope */}
-          <div className="flex items-center gap-2.5">
-            <CloudScopeLogo className="w-7 h-7 shrink-0" />
-            <span className="font-black text-lg tracking-tight">Cloud<span style={{ color: '#f59e0b' }}>Scope</span></span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider"
-              style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)' }}>
-              Studio
+      {/* ══════════════════════════════════════════════════════════════════════
+          1. BARRA LATERAL IZQUIERDA (PANEL BLANCO - ESTILO BRAINBOARD)
+         ══════════════════════════════════════════════════════════════════════ */}
+      <aside
+        className="w-64 lg:w-72 shrink-0 bg-white text-slate-800 border-r border-slate-200 flex flex-col justify-between shadow-xl z-20 sticky top-0 h-screen"
+        style={{ fontFamily: "'Inter', sans-serif" }}
+      >
+        {/* Cabecera superior del Sidebar */}
+        <div className="p-4 border-b border-slate-100">
+          <div className="flex items-center justify-between mb-3">
+            <button
+              onClick={() => setActiveNavTab('overview')}
+              className="flex items-center gap-2 hover:opacity-90 transition-opacity text-left"
+            >
+              <CloudScopeLogo className="w-6 h-6 shrink-0" />
+              <div className="flex flex-col">
+                <span className="font-black text-sm tracking-tight text-slate-900 leading-none">
+                  Cloud<span style={{ color: '#0084ff' }}>Scope</span>
+                </span>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">
+                  Dashboard Studio
+                </span>
+              </div>
+            </button>
+            <span
+              className="text-[10px] font-black px-2 py-0.5 rounded text-white shadow-sm"
+              style={{ background: '#0084ff' }}
+            >
+              PRO
             </span>
           </div>
 
-          {/* Badges de soporte oficial Multi-Cloud */}
-          <div className="hidden lg:flex items-center gap-2 ml-3 px-2.5 py-1 rounded-xl"
-            style={{ background: '#0b1120', border: '1px solid #1e293b' }}>
-            <span className="text-[10px] text-slate-500 font-semibold">Oficial:</span>
-            <div className="flex items-center gap-1.5" title="Soporte oficial AWS, Azure y Google Cloud Platform">
-              <AwsLogo className="w-3.5 h-3.5" />
-              <AzureLogo className="w-3.5 h-3.5" />
-              <GcpLogo className="w-3.5 h-3.5" />
-              <TerraformLogo className="w-3.5 h-3.5 ml-1" />
+          {/* Selector rápido de Nubes Multi-Cloud */}
+          <div className="pt-1">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+              <span>Filtrar por Nube</span>
+              {selectedProvider !== 'all' && (
+                <button
+                  onClick={() => setSelectedProvider('all')}
+                  className="text-[9px] text-blue-600 hover:underline capitalize font-bold"
+                >
+                  Limpiar
+                </button>
+              )}
             </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* Botón directo para ir al Editor */}
-          <button
-            onClick={() => navigate('/editor')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200"
-            style={{
-              background: 'linear-gradient(135deg, #f59e0b, #f97316)',
-              color: '#080d18',
-              boxShadow: '0 2px 10px rgba(245,158,11,0.25)',
-            }}
-            title="Ir al lienzo interactivo del editor"
-          >
-            <span>Ir al Editor</span>
-            <ArrowRightIcon className="w-3.5 h-3.5" />
-          </button>
-
-          <div className="text-right hidden sm:block">
-            <div className="text-xs font-semibold" style={{ color: '#e2e8f0' }}>{user.name}</div>
-            <div className="text-[10px]" style={{ color: '#475569' }}>{user.email}</div>
-          </div>
-          <button onClick={handleLogout}
-            className="text-xs px-3 py-1.5 rounded-lg transition-colors"
-            style={{ background: '#1e293b', color: '#64748b', border: '1px solid #334155' }}
-            onMouseEnter={(e) => e.currentTarget.style.color = '#f87171'}
-            onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>
-            Cerrar sesión
-          </button>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-8 py-10">
-
-        {/* ── Bienvenida ─────────────────────────────────────────────────── */}
-        <div className="mb-10">
-          <h1 className="text-4xl font-black mb-2">
-            Hola, <span style={{ color: '#f59e0b' }}>{user.name.split(' ')[0]}</span>
-          </h1>
-          <p className="text-sm" style={{ color: '#475569' }}>
-            Aquí están tus proyectos de arquitectura cloud guardados en este dispositivo.
-          </p>
-        </div>
-
-        {/* ── KPIs ──────────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-          <KpiCard label="Proyectos" value={projects.length} icon={<FolderIcon className="w-5 h-5" />} sub="guardados localmente" />
-          <KpiCard label="Costo Total" value={formatUSD(totalCost)} icon={<DollarIcon className="w-5 h-5" />} color="#34d399" sub="estimado /mes" />
-          <KpiCard label="Audit Score" value={`${avgScore}/100`} icon={<ShieldIcon className="w-5 h-5" />}
-            color={avgScore >= 80 ? '#34d399' : avgScore >= 60 ? '#f59e0b' : '#ef4444'} sub="promedio" />
-          <KpiCard label="Issues" value={totalIssues} icon={<WarningIcon className="w-5 h-5" />} color={totalIssues > 0 ? '#f87171' : '#34d399'} sub="seguridad activos" />
-        </div>
-
-        {/* ── Plantillas de Arquitectura ──────────────────────────────────── */}
-        <div className="mb-10">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-                <BlastIcon className="w-4 h-4 text-amber-400" /> Plantillas de Arquitectura de Referencia
-              </h2>
-              <p className="text-xs text-slate-500">Comienza rápidamente con topologías probadas y optimizadas</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {ARCHITECTURE_PRESETS.map(preset => (
-              <div
-                key={preset.id}
-                className="rounded-2xl p-4 flex flex-col justify-between transition-all group border cursor-pointer"
-                style={{ background: '#0f172a', borderColor: '#1e293b' }}
-                onClick={() => handleCreateFromPreset(preset)}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = preset.color;
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#1e293b';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
+            <div className="grid grid-cols-5 gap-1 p-1 bg-slate-100 rounded-xl">
+              <button
+                onClick={() => setSelectedProvider('all')}
+                className={`py-1 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center ${
+                  selectedProvider === 'all'
+                    ? 'bg-white text-slate-900 shadow-sm font-black'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+                title="Todas las nubes"
               >
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span
-                      className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1"
-                      style={{ color: preset.color, background: `${preset.color}15`, border: `1px solid ${preset.color}40` }}
-                    >
-                      {preset.provider === 'aws' && <AwsLogo className="w-2.5 h-2.5 shrink-0" />}
-                      {preset.provider === 'azure' && <AzureLogo className="w-2.5 h-2.5 shrink-0" />}
-                      {preset.provider === 'gcp' && <GcpLogo className="w-2.5 h-2.5 shrink-0" />}
-                      <span>{preset.badge ?? preset.provider}</span>
-                    </span>
-                    <span className="text-xs text-slate-600 font-mono">{preset.nodes.length} nodos</span>
-                  </div>
-                  <h3 className="text-sm font-bold text-slate-200 group-hover:text-white mb-1.5 transition-colors">
-                    {preset.name}
-                  </h3>
-                  <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed mb-4">
-                    {preset.description}
-                  </p>
-                </div>
-                <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[11px]">
-                  <span className="text-slate-500 capitalize">{preset.provider}</span>
-                  <span className="font-bold flex items-center gap-1" style={{ color: preset.color }}>
-                    Crear y editar <ArrowRightIcon className="w-3 h-3" />
-                  </span>
-                </div>
-              </div>
-            ))}
+                All
+              </button>
+              <button
+                onClick={() => setSelectedProvider('aws')}
+                className={`py-1 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center ${
+                  selectedProvider === 'aws'
+                    ? 'bg-white text-amber-600 shadow-sm font-black'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+                title="Amazon Web Services"
+              >
+                <AwsLogo className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setSelectedProvider('azure')}
+                className={`py-1 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center ${
+                  selectedProvider === 'azure'
+                    ? 'bg-white text-blue-600 shadow-sm font-black'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+                title="Microsoft Azure"
+              >
+                <AzureLogo className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setSelectedProvider('oracle')}
+                className={`py-1 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center ${
+                  selectedProvider === 'oracle'
+                    ? 'bg-white text-red-600 shadow-sm font-black'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+                title="Oracle Cloud Infrastructure"
+              >
+                <OracleLogo className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setSelectedProvider('gcp')}
+                className={`py-1 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center ${
+                  selectedProvider === 'gcp'
+                    ? 'bg-white text-blue-500 shadow-sm font-black'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+                title="Google Cloud Platform"
+              >
+                <GcpLogo className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* ── Acciones + búsqueda ───────────────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-          <div className="relative">
-            <input value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar proyectos..."
-              className="pl-9 pr-4 py-2 rounded-xl text-sm outline-none w-64"
-              style={{ background: '#0f172a', border: '1px solid #1e293b', color: '#f8fafc' }}
-              onFocus={(e) => e.target.style.borderColor = '#f59e0b'}
-              onBlur={(e) => e.target.style.borderColor = '#1e293b'} />
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: '#475569' }}
-              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-            </svg>
+        {/* Navegación y Menú Central */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-5">
+          {/* Bloque: Vistas Principales */}
+          <div className="space-y-1">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2.5 mb-1.5">
+              Vistas del Workspace
+            </div>
+
+            {/* Vista General */}
+            <button
+              onClick={() => setActiveNavTab('overview')}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeNavTab === 'overview'
+                  ? 'bg-[#0084ff] text-white shadow-sm'
+                  : 'text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <SparkleIcon className="w-4 h-4" />
+                <span>Vista General</span>
+              </div>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${activeNavTab === 'overview' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                Inicio
+              </span>
+            </button>
+
+            {/* Mis Proyectos (Lugar dedicado para ver todos los proyectos) */}
+            <button
+              onClick={() => setActiveNavTab('projects')}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeNavTab === 'projects'
+                  ? 'bg-[#0084ff] text-white shadow-sm'
+                  : 'text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <FolderIcon className="w-4 h-4" />
+                <span>Mis Proyectos</span>
+              </div>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${activeNavTab === 'projects' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                {projects.length}
+              </span>
+            </button>
+
+            {/* Buscar Plantillas (Galería dedicada) */}
+            <button
+              onClick={() => setActiveNavTab('templates')}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeNavTab === 'templates'
+                  ? 'bg-[#0084ff] text-white shadow-sm'
+                  : 'text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <BlastIcon className="w-4 h-4" />
+                <span>Buscar Plantillas</span>
+              </div>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${activeNavTab === 'templates' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                {ARCHITECTURE_PRESETS.length}
+              </span>
+            </button>
           </div>
 
-          <div className="flex gap-2">
-            <button onClick={handleImport}
-              className="px-3 py-2 rounded-xl text-sm font-semibold transition-all"
-              style={{ background: '#1e293b', color: '#94a3b8', border: '1px solid #334155' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#f8fafc'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}>
-              Importar JSON
+          {/* Bloque: Categoría de Proyectos (Multi-Cloud vs Solo Azure / AWS / OCI) */}
+          <div className="space-y-1 pt-2 border-t border-slate-100">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2.5 mb-1.5 flex items-center justify-between">
+              <span>Categoría Cloud</span>
+              {projectCategoryFilter !== 'all' && (
+                <button
+                  onClick={() => setProjectCategoryFilter('all')}
+                  className="text-[9px] text-blue-600 hover:underline font-bold"
+                >
+                  Todas
+                </button>
+              )}
+            </div>
+
+            <button
+              onClick={() => {
+                setActiveNavTab('projects');
+                setProjectCategoryFilter('all');
+              }}
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                activeNavTab === 'projects' && projectCategoryFilter === 'all'
+                  ? 'text-blue-600 font-bold bg-blue-50'
+                  : 'text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <span>• Todos los proyectos</span>
+              <span className="text-[10px] text-slate-400 font-mono">{categoryCounts.all}</span>
             </button>
-            <button onClick={() => navigate('/editor')}
-              className="px-3 py-2 rounded-xl text-sm font-semibold transition-all"
-              style={{ background: '#1e293b', color: '#94a3b8', border: '1px solid #334155' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#f8fafc'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
-              title="Abrir editor con lienzo en blanco">
-              Lienzo en blanco
+
+            <button
+              onClick={() => {
+                setActiveNavTab('projects');
+                setProjectCategoryFilter('multi');
+              }}
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                activeNavTab === 'projects' && projectCategoryFilter === 'multi'
+                  ? 'text-purple-600 font-bold bg-purple-50'
+                  : 'text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <span className="flex items-center gap-1">
+                <span>🌐</span>
+                <span className="font-bold">Multi-Cloud</span>
+              </span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-100 text-purple-700 font-mono font-bold">
+                {categoryCounts.multi}
+              </span>
             </button>
-            <button onClick={() => setShowNewModal(true)}
-              className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-1.5"
-              style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)', color: '#080d18', boxShadow: '0 4px 14px rgba(245,158,11,0.25)' }}>
+
+            <button
+              onClick={() => {
+                setActiveNavTab('projects');
+                setProjectCategoryFilter('azure');
+              }}
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                activeNavTab === 'projects' && projectCategoryFilter === 'azure'
+                  ? 'text-blue-600 font-bold bg-blue-50'
+                  : 'text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <AzureLogo className="w-3 h-3" />
+                <span>Solo Azure</span>
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">{categoryCounts.azure}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveNavTab('projects');
+                setProjectCategoryFilter('aws');
+              }}
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                activeNavTab === 'projects' && projectCategoryFilter === 'aws'
+                  ? 'text-amber-600 font-bold bg-amber-50'
+                  : 'text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <AwsLogo className="w-3 h-3" />
+                <span>Solo AWS</span>
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">{categoryCounts.aws}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveNavTab('projects');
+                setProjectCategoryFilter('oracle');
+              }}
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                activeNavTab === 'projects' && projectCategoryFilter === 'oracle'
+                  ? 'text-red-600 font-bold bg-red-50'
+                  : 'text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <OracleLogo className="w-3 h-3" />
+                <span>Solo Oracle</span>
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">{categoryCounts.oracle}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveNavTab('projects');
+                setProjectCategoryFilter('gcp');
+              }}
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                activeNavTab === 'projects' && projectCategoryFilter === 'gcp'
+                  ? 'text-blue-500 font-bold bg-blue-50'
+                  : 'text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <GcpLogo className="w-3 h-3" />
+                <span>Solo Google Cloud</span>
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">{categoryCounts.gcp}</span>
+            </button>
+          </div>
+
+          {/* Bloque: Acciones de Creación */}
+          <div className="space-y-2 pt-2 border-t border-slate-100">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2.5 mb-1">
+              Acciones Rápidas
+            </div>
+            <button
+              onClick={() => setShowNewModal(true)}
+              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold text-white shadow-md transition-all"
+              style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)' }}
+            >
               <span>+ Nuevo Proyecto</span>
             </button>
+
+            <button
+              onClick={() => navigate('/editor')}
+              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold transition-all bg-slate-100 hover:bg-slate-200 text-slate-800"
+            >
+              <BlockIcon className="w-3.5 h-3.5 text-slate-600" />
+              <span>Lienzo en blanco</span>
+            </button>
+
+            <button
+              onClick={handleImport}
+              className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-xl text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+            >
+              <span>Importar archivo JSON</span>
+            </button>
           </div>
         </div>
 
-        {/* ── Grid de proyectos ─────────────────────────────────────────── */}
-        {filtered.length === 0 ? (
-          <div className="text-center py-24 rounded-2xl" style={{ border: '2px dashed #1e293b' }}>
-            <div className="mb-4 flex justify-center" style={{ color: '#334155' }}><HexagonIcon className="w-12 h-12" /></div>
-            <h3 className="text-lg font-bold mb-2" style={{ color: '#334155' }}>
-              {projects.length === 0 ? 'No tienes proyectos aún' : 'Sin resultados'}
-            </h3>
-            <p className="text-sm mb-6" style={{ color: '#1e293b' }}>
-              {projects.length === 0
-                ? 'Crea tu primer proyecto de arquitectura cloud'
-                : 'Prueba con otro término de búsqueda'}
-            </p>
-            {projects.length === 0 && (
-              <button onClick={() => setShowNewModal(true)}
-                className="px-6 py-2.5 rounded-xl font-bold text-sm"
-                style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)', color: '#080d18' }}>
-                Crear primer proyecto
-              </button>
+        {/* Pie del Sidebar: Perfil de Usuario y Logout */}
+        <div className="p-3 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs text-white shadow-sm shrink-0"
+              style={{ background: '#ef4444' }}
+            >
+              {userInitials}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="font-extrabold text-xs text-slate-800 truncate" title={displayName}>
+                {displayName}
+              </span>
+              <span className="text-[10px] text-slate-400 truncate" title={user.email}>
+                {user.email}
+              </span>
+            </div>
+          </div>
+
+          <button
+            onClick={handleLogout}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+            title="Cerrar sesión"
+          >
+            <PowerIcon className="w-4 h-4" />
+          </button>
+        </div>
+      </aside>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          2. ÁREA DERECHA PRINCIPAL: VISTA GENERAL / PROYECTOS / PLANTILLAS
+         ══════════════════════════════════════════════════════════════════════ */}
+      <div className="flex-1 min-w-0 flex flex-col min-h-screen overflow-y-auto">
+
+        {/* ── Top Bar del Dashboard ──────────────────────────────────────── */}
+        <header
+          className="sticky top-0 z-30 flex items-center justify-between px-6 md:px-8 py-3.5 shrink-0"
+          style={{
+            background: 'rgba(8,13,24,0.94)',
+            borderBottom: '1px solid #1e293b',
+            backdropFilter: 'blur(12px)',
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-400">Workspace:</span>
+              <span className="text-xs font-extrabold text-white px-2.5 py-0.5 rounded-lg bg-slate-800 border border-slate-700">
+                Multi-Cloud Architecture
+              </span>
+            </div>
+
+            {/* Píldora de estado de vista activa */}
+            <div className="flex items-center gap-1.5 pl-2 border-l border-slate-800">
+              <span className="text-xs text-slate-500 font-mono text-[11px]">VISTA:</span>
+              <span className="text-xs font-bold text-amber-400">
+                {activeNavTab === 'overview' && 'Vista General'}
+                {activeNavTab === 'projects' && 'Directorio de Proyectos'}
+                {activeNavTab === 'templates' && 'Buscador de Plantillas'}
+              </span>
+            </div>
+
+            {selectedProvider !== 'all' && (
+              <span
+                className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1"
+                style={{
+                  background: 'rgba(0,132,255,0.15)',
+                  color: '#38bdf8',
+                  border: '1px solid rgba(56,189,248,0.3)',
+                }}
+              >
+                Nube: {selectedProvider}
+              </span>
             )}
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filtered
-              .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
-              .map(p => (
-                <ProjectCard
-                  key={p.id}
-                  project={p}
-                  onOpen={handleOpenProject}
-                  onDelete={handleDelete}
-                  onExport={handleExport}
-                />
-              ))}
-          </div>
-        )}
-      </main>
 
-      {/* ── Modal nuevo proyecto ──────────────────────────────────────── */}
+          <div className="flex items-center gap-3">
+            {/* Ir al Editor */}
+            <button
+              onClick={() => navigate('/editor')}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 shadow-sm"
+              style={{
+                background: 'linear-gradient(135deg, #f59e0b, #f97316)',
+                color: '#080d18',
+                boxShadow: '0 2px 10px rgba(245,158,11,0.25)',
+              }}
+              title="Abrir editor de topologías"
+            >
+              <span>Ir al Editor</span>
+              <ArrowRightIcon className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </header>
+
+        {/* ── CONTENIDO PRINCIPAL SEGÚN LA VISTA SELECCIONADA ────────────── */}
+        <main className="max-w-7xl w-full mx-auto px-6 md:px-8 py-8 space-y-8 flex-1">
+
+          {/* ────────────────────────────────────────────────────────────────
+              A. VISTA DEDICADA: MIS PROYECTOS (activeNavTab === 'projects')
+             ──────────────────────────────────────────────────────────────── */}
+          {activeNavTab === 'projects' && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              {/* Cabecera de la Sección de Proyectos */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                      <FolderIcon className="w-5 h-5" />
+                    </span>
+                    <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+                      Mis Proyectos de Arquitectura
+                    </h1>
+                  </div>
+                  <p className="text-xs md:text-sm text-slate-400">
+                    Directorio completo de arquitecturas. Filtra por nombre, categoría mono-nube (Azure, AWS, Oracle, GCP) o Multi-Cloud.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleImport}
+                    className="px-3 py-2 rounded-xl text-xs font-semibold transition-all bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+                  >
+                    Importar JSON
+                  </button>
+                  <button
+                    onClick={() => setShowNewModal(true)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 text-slate-950 shadow-md"
+                    style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)' }}
+                  >
+                    <span>+ Nuevo Proyecto</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Barra de Filtros: Buscador por Nombre + Filtros de Categoría Multi-Cloud/Azure/AWS + Orden */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-2xl bg-[#0f172a] border border-slate-800 shadow-sm">
+                {/* 1. Buscador por Nombre o Descripción */}
+                <div className="relative flex-1 min-w-[260px]">
+                  <input
+                    type="text"
+                    value={projectSearch}
+                    onChange={(e) => setProjectSearch(e.target.value)}
+                    placeholder="Buscar por nombre de proyecto o descripción..."
+                    className="w-full pl-9 pr-8 py-2.5 rounded-xl text-xs outline-none text-white transition-all"
+                    style={{
+                      background: '#1e293b',
+                      border: '1px solid #334155',
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#0084ff'}
+                    onBlur={(e) => e.target.style.borderColor = '#334155'}
+                  />
+                  <svg
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+                  </svg>
+                  {projectSearch && (
+                    <button
+                      onClick={() => setProjectSearch('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-slate-400 hover:text-white"
+                      title="Limpiar búsqueda"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+
+                {/* 2. Píldoras de Filtro por Categoría (Multi-Cloud / Solo Azure / Solo AWS / etc.) */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[11px] font-bold text-slate-400 mr-1 hidden sm:inline">
+                    Categoría:
+                  </span>
+
+                  <button
+                    onClick={() => setProjectCategoryFilter('all')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      projectCategoryFilter === 'all'
+                        ? 'bg-[#0084ff] text-white shadow-sm'
+                        : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                    }`}
+                  >
+                    Todos ({categoryCounts.all})
+                  </button>
+
+                  <button
+                    onClick={() => setProjectCategoryFilter('multi')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      projectCategoryFilter === 'multi'
+                        ? 'bg-purple-600 text-white shadow-sm'
+                        : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                    }`}
+                  >
+                    <span>🌐 Multi-Cloud</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-black/20 font-mono">
+                      {categoryCounts.multi}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setProjectCategoryFilter('azure')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      projectCategoryFilter === 'azure'
+                        ? 'bg-sky-600 text-white shadow-sm'
+                        : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                    }`}
+                  >
+                    <AzureLogo className="w-3 h-3" />
+                    <span>Solo Azure</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-black/20 font-mono">
+                      {categoryCounts.azure}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setProjectCategoryFilter('aws')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      projectCategoryFilter === 'aws'
+                        ? 'bg-amber-600 text-white shadow-sm'
+                        : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                    }`}
+                  >
+                    <AwsLogo className="w-3 h-3" />
+                    <span>Solo AWS</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-black/20 font-mono">
+                      {categoryCounts.aws}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setProjectCategoryFilter('oracle')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      projectCategoryFilter === 'oracle'
+                        ? 'bg-red-600 text-white shadow-sm'
+                        : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                    }`}
+                  >
+                    <OracleLogo className="w-3 h-3" />
+                    <span>Solo Oracle</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-black/20 font-mono">
+                      {categoryCounts.oracle}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setProjectCategoryFilter('gcp')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      projectCategoryFilter === 'gcp'
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                    }`}
+                  >
+                    <GcpLogo className="w-3 h-3" />
+                    <span>Solo GCP</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-black/20 font-mono">
+                      {categoryCounts.gcp}
+                    </span>
+                  </button>
+                </div>
+
+                {/* 3. Ordenamiento */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[11px] font-bold text-slate-400">Orden:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="px-2.5 py-1.5 rounded-xl text-xs outline-none bg-slate-800 text-white border border-slate-700"
+                  >
+                    <option value="recent">Más Recientes</option>
+                    <option value="cost-desc">Mayor Costo FinOps</option>
+                    <option value="cost-asc">Menor Costo FinOps</option>
+                    <option value="score-desc">Mayor Score Seguridad</option>
+                    <option value="name-asc">Nombre (A-Z)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Contador de resultados */}
+              <div className="flex items-center justify-between text-xs text-slate-400 px-1">
+                <span>
+                  Mostrando <strong className="text-white">{filteredProjects.length}</strong> de {projects.length} proyectos
+                  {projectCategoryFilter !== 'all' && (
+                    <span> en categoría <strong className="text-amber-400">{projectCategoryFilter.toUpperCase()}</strong></span>
+                  )}
+                  {projectSearch && (
+                    <span> para "<strong className="text-amber-400">{projectSearch}</strong>"</span>
+                  )}
+                </span>
+                {(projectSearch || projectCategoryFilter !== 'all') && (
+                  <button
+                    onClick={() => { setProjectSearch(''); setProjectCategoryFilter('all'); }}
+                    className="text-xs text-blue-400 hover:underline font-bold"
+                  >
+                    Restablecer filtros
+                  </button>
+                )}
+              </div>
+
+              {/* Grid de Proyectos */}
+              {filteredProjects.length === 0 ? (
+                <div className="text-center py-20 rounded-2xl border-2 border-dashed border-slate-800 p-8 space-y-4">
+                  <div className="w-14 h-14 mx-auto rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500">
+                    <HexagonIcon className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-base font-bold text-slate-200">
+                      No se encontraron proyectos con estos criterios
+                    </h3>
+                    <p className="text-xs text-slate-500 max-w-md mx-auto">
+                      Intenta buscando con otro nombre o cambiando el filtro de categoría (ej. Multi-Cloud, Solo Azure, Solo AWS).
+                    </p>
+                  </div>
+                  <div className="flex justify-center gap-3 pt-2">
+                    <button
+                      onClick={() => { setProjectSearch(''); setProjectCategoryFilter('all'); }}
+                      className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
+                    >
+                      Ver todos los proyectos
+                    </button>
+                    <button
+                      onClick={() => setShowNewModal(true)}
+                      className="px-4 py-2 rounded-xl text-xs font-bold text-slate-950"
+                      style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)' }}
+                    >
+                      + Crear Nuevo Proyecto
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {filteredProjects.map(p => (
+                    <ProjectCard
+                      key={p.id}
+                      project={p}
+                      onOpen={handleOpenProject}
+                      onDelete={handleDelete}
+                      onExport={handleExport}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ────────────────────────────────────────────────────────────────
+              B. VISTA DEDICADA: BUSCAR PLANTILLAS (activeNavTab === 'templates')
+             ──────────────────────────────────────────────────────────────── */}
+          {activeNavTab === 'templates' && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              {/* Cabecera de la Galería de Plantillas */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      <BlastIcon className="w-5 h-5" />
+                    </span>
+                    <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+                      Galería y Buscador de Plantillas
+                    </h1>
+                  </div>
+                  <p className="text-xs md:text-sm text-slate-400">
+                    Topologías empresariales de referencia probadas para AWS, Azure, Oracle y Google Cloud.
+                  </p>
+                </div>
+              </div>
+
+              {/* Barra de Búsqueda de Plantillas */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-[#0f172a] border border-slate-800">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={templateSearch}
+                    onChange={(e) => setTemplateSearch(e.target.value)}
+                    placeholder="Buscar plantillas por nombre, servicio o nube (ej. 3-tier, serverless, oracle, sql, kubernetes)..."
+                    className="w-full pl-9 pr-8 py-2.5 rounded-xl text-xs outline-none text-white"
+                    style={{ background: '#1e293b', border: '1px solid #334155' }}
+                    onFocus={(e) => e.target.style.borderColor = '#0084ff'}
+                    onBlur={(e) => e.target.style.borderColor = '#334155'}
+                  />
+                  <svg
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+                  </svg>
+                  {templateSearch && (
+                    <button
+                      onClick={() => setTemplateSearch('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-slate-400 hover:text-white"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+
+                <div className="text-xs text-slate-400 shrink-0">
+                  Mostrando <strong className="text-white">{filteredTemplates.length}</strong> de {ARCHITECTURE_PRESETS.length} plantillas
+                </div>
+              </div>
+
+              {/* Grid de Plantillas */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {filteredTemplates.map(preset => (
+                  <TemplateCard
+                    key={preset.id}
+                    preset={preset}
+                    onSelect={handleCreateFromPreset}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ────────────────────────────────────────────────────────────────
+              C. VISTA GENERAL (activeNavTab === 'overview')
+             ──────────────────────────────────────────────────────────────── */}
+          {activeNavTab === 'overview' && (
+            <div className="space-y-10 animate-in fade-in duration-200">
+              {/* Bienvenida y Resumen */}
+              <div>
+                <h1 className="text-3xl md:text-4xl font-black mb-1 tracking-tight">
+                  Hola, <span style={{ color: '#f59e0b' }}>{displayName.split(' ')[0]}</span>
+                </h1>
+                <p className="text-xs md:text-sm text-slate-400">
+                  Panel de control general de topologías cloud, presupuestos FinOps y auditorías de seguridad.
+                </p>
+              </div>
+
+              {/* KPIs Globales */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <KpiCard
+                  label="Proyectos"
+                  value={projects.length}
+                  icon={<FolderIcon className="w-5 h-5" />}
+                  sub="guardados en PostgreSQL"
+                />
+                <KpiCard
+                  label="Costo FinOps Total"
+                  value={formatUSD(totalCost)}
+                  icon={<DollarIcon className="w-5 h-5" />}
+                  color="#34d399"
+                  sub="estimado mensual"
+                />
+                <KpiCard
+                  label="Score de Auditoría"
+                  value={`${avgScore}/100`}
+                  icon={<ShieldIcon className="w-5 h-5" />}
+                  color={avgScore >= 80 ? '#34d399' : avgScore >= 60 ? '#f59e0b' : '#ef4444'}
+                  sub="promedio de seguridad"
+                />
+                <KpiCard
+                  label="Issues de Seguridad"
+                  value={totalIssues}
+                  icon={<WarningIcon className="w-5 h-5" />}
+                  color={totalIssues > 0 ? '#f87171' : '#34d399'}
+                  sub="reglas CIS detectadas"
+                />
+              </div>
+
+              {/* Plantillas de Arquitectura Destacadas */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-black text-slate-100 flex items-center gap-2">
+                      <BlastIcon className="w-4 h-4 text-amber-400" />
+                      <span>Plantillas de Arquitectura de Referencia</span>
+                    </h2>
+                    <p className="text-xs text-slate-400">
+                      Topologías preconfiguradas y optimizadas
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setActiveNavTab('templates')}
+                    className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                  >
+                    <span>Ver y buscar todas ({ARCHITECTURE_PRESETS.length})</span>
+                    <ArrowRightIcon className="w-3 h-3" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {ARCHITECTURE_PRESETS.slice(0, 4).map(preset => (
+                    <TemplateCard
+                      key={preset.id}
+                      preset={preset}
+                      onSelect={handleCreateFromPreset}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Proyectos Recientes */}
+              <div className="space-y-4 pt-4 border-t border-slate-800">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-black text-slate-100 flex items-center gap-2">
+                      <FolderIcon className="w-4 h-4 text-blue-400" />
+                      <span>Proyectos Recientes</span>
+                    </h2>
+                    <p className="text-xs text-slate-400">
+                      Últimos proyectos guardados o editados
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setActiveNavTab('projects')}
+                    className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                  >
+                    <span>Ver directorio de proyectos ({projects.length})</span>
+                    <ArrowRightIcon className="w-3 h-3" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {projects.slice(0, 6).map(p => (
+                    <ProjectCard
+                      key={p.id}
+                      project={p}
+                      onOpen={handleOpenProject}
+                      onDelete={handleDelete}
+                      onExport={handleExport}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* ── Modal Nuevo Proyecto ──────────────────────────────────────── */}
       {showNewModal && (
-        <NewProjectModal onClose={() => setShowNewModal(false)} onCreate={handleCreateProject} />
+        <NewProjectModal
+          onClose={() => setShowNewModal(false)}
+          onCreate={handleCreateProject}
+        />
       )}
     </div>
   );
 }
+
+

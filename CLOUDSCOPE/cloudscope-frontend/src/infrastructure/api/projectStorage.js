@@ -3,8 +3,11 @@
  * Maneja el guardado, cargado, listado y eliminación de proyectos CloudScope.
  */
 
+import { ARCHITECTURE_PRESETS } from '../../domain/models/ArchitecturePresets.js';
+
 const STORAGE_KEY = 'cloudscope_projects';
 const CURRENT_KEY = 'cloudscope_current_project';
+const LEGACY_KEY = 'cs_current_project';
 const VERSION = '1.0';
 
 /**
@@ -28,12 +31,29 @@ function generateProjectId() {
 
 /**
  * Obtiene todos los proyectos guardados.
+ * Si el almacenamiento está vacío, inicializa con las plantillas de referencia.
  * @returns {CloudProject[]}
  */
 export function listProjects() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+    // Inicializar proyectos de ejemplo basados en los presets
+    const initialProjects = ARCHITECTURE_PRESETS.map((p, idx) => ({
+      id: `proj_${p.id}`,
+      name: p.name,
+      description: p.description,
+      createdAt: new Date(Date.now() - (idx + 1) * 3600000).toISOString(),
+      updatedAt: new Date(Date.now() - idx * 1800000).toISOString(),
+      version: VERSION,
+      nodes: p.nodes ?? [],
+      edges: p.edges ?? [],
+    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(initialProjects));
+    return initialProjects;
   } catch {
     return [];
   }
@@ -71,18 +91,39 @@ export function saveProject(id, name, description, nodes, edges) {
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   localStorage.setItem(CURRENT_KEY, project.id);
+  localStorage.setItem(LEGACY_KEY, JSON.stringify(project));
+
+  // Sincronización asíncrona no bloqueante con el backend Spring Boot
+  try {
+    fetch(`http://localhost:8080/api/projects/${project.id}/save`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: project.name,
+        description: project.description,
+        nodes: project.nodes,
+        edges: project.edges,
+      }),
+    }).catch(() => { /* Backend offline: almacenamiento local asegurado */ });
+  } catch {
+    // Ignorar si el backend no está disponible
+  }
+
   return project;
 }
 
 /**
- * Carga un proyecto por ID.
+ * Carga un proyecto por ID y lo establece como activo.
  * @param {string} id
  * @returns {CloudProject|null}
  */
 export function loadProject(id) {
   const projects = listProjects();
   const project = projects.find(p => p.id === id) ?? null;
-  if (project) localStorage.setItem(CURRENT_KEY, id);
+  if (project) {
+    localStorage.setItem(CURRENT_KEY, id);
+    localStorage.setItem(LEGACY_KEY, JSON.stringify(project));
+  }
   return project;
 }
 
@@ -94,7 +135,10 @@ export function deleteProject(id) {
   const projects = listProjects().filter(p => p.id !== id);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
   const currentId = localStorage.getItem(CURRENT_KEY);
-  if (currentId === id) localStorage.removeItem(CURRENT_KEY);
+  if (currentId === id) {
+    localStorage.removeItem(CURRENT_KEY);
+    localStorage.removeItem(LEGACY_KEY);
+  }
 }
 
 /**
@@ -103,6 +147,28 @@ export function deleteProject(id) {
  */
 export function getCurrentProjectId() {
   return localStorage.getItem(CURRENT_KEY);
+}
+
+/**
+ * Obtiene el objeto del proyecto actualmente activo.
+ * @returns {CloudProject|null}
+ */
+export function getCurrentProject() {
+  try {
+    const raw = localStorage.getItem(LEGACY_KEY);
+    if (raw) {
+      const proj = JSON.parse(raw);
+      if (proj && proj.id) return proj;
+    }
+    const curId = localStorage.getItem(CURRENT_KEY);
+    if (curId) {
+      const projects = listProjects();
+      return projects.find(p => p.id === curId) ?? null;
+    }
+  } catch (err) {
+    console.error('Error fetching current project', err);
+  }
+  return null;
 }
 
 /**

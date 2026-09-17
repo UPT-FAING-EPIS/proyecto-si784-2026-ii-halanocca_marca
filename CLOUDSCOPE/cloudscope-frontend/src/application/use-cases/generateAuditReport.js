@@ -91,6 +91,7 @@ function buildReportHTML(projectName, nodes, edges, auditResult, costBreakdown) 
         </td>
         <td style="padding:8px 12px;border-bottom:1px solid #1e293b;color:#e2e8f0;font-size:13px;">${n.data?.label ?? 'Unnamed'}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #1e293b;color:#64748b;font-size:12px;">${meta?.label ?? n.data?.cloudType ?? '-'}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #1e293b;color:#94a3b8;font-size:11px;text-transform:uppercase;font-weight:600;">${meta?.provider ?? 'aws'}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #1e293b;color:#64748b;font-size:12px;">${meta?.category ?? '-'}</td>
       </tr>
     `;
@@ -168,8 +169,8 @@ function buildReportHTML(projectName, nodes, edges, auditResult, costBreakdown) 
 <div class="section">
   <div class="section-title">Inventario de Componentes (${nodes.length})</div>
   <table>
-    <thead><tr><th>Tipo</th><th>Nombre</th><th>Servicio AWS</th><th>Categoría</th></tr></thead>
-    <tbody>${componentsHTML || '<tr><td colspan="4" style="padding:16px;text-align:center;color:#334155;">Sin componentes</td></tr>'}</tbody>
+    <thead><tr><th>Tipo</th><th>Nombre</th><th>Servicio Cloud</th><th>Proveedor</th><th>Categoría</th></tr></thead>
+    <tbody>${componentsHTML || '<tr><td colspan="5" style="padding:16px;text-align:center;color:#334155;">Sin componentes</td></tr>'}</tbody>
   </table>
 </div>
 
@@ -177,7 +178,7 @@ function buildReportHTML(projectName, nodes, edges, auditResult, costBreakdown) 
 <div style="margin-top:40px;padding-top:16px;border-top:1px solid #1e293b;text-align:center;">
   <p style="font-size:11px;color:#334155;">
     Generado por CloudScope Studio MVP · Universidad Privada de Tacna · Escuela de Ingeniería de Sistemas
-    <br>Este reporte es una estimación. Valida todos los costos en la consola AWS antes de desplegar.
+    <br>Este reporte es una estimación. Valida todos los costos en la consola oficial del proveedor (AWS, Azure, Oracle o Google Cloud) antes de desplegar.
   </p>
 </div>
 

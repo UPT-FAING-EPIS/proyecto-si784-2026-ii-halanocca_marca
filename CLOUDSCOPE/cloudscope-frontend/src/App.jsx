@@ -5,17 +5,9 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './presentation/pages/Login.jsx';
+import Register from './presentation/pages/Register.jsx';
 import Dashboard from './presentation/pages/Dashboard.jsx';
 import Editor from './presentation/pages/Editor.jsx';
-
-// Auto-inject dev token ONLY if running locally and user hasn't explicitly logged out
-// (remove this block when the real backend is ready)
-const explicitLogout = sessionStorage.getItem('cs_logout');
-if (!localStorage.getItem('cs_token') && !explicitLogout) {
-  const devPayload = btoa(JSON.stringify({ sub: 'dev@cloudscope.io', name: 'Dev User', role: 'admin', exp: Date.now() + 86400000 }));
-  localStorage.setItem('cs_token', devPayload);
-  localStorage.setItem('cs_user', JSON.stringify({ email: 'dev@cloudscope.io', name: 'Dev User', role: 'admin' }));
-}
 
 /** Guard de autenticación */
 function PrivateRoute({ children }) {
@@ -27,10 +19,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rutas públicas */}
+        {/* Rutas públicas de autenticación */}
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-        {/* Rutas protegidas */}
+        {/* Rutas protegidas (requieren haber iniciado sesión) */}
         <Route path="/" element={
           <PrivateRoute><Dashboard /></PrivateRoute>
         } />
@@ -42,7 +35,7 @@ export default function App() {
         } />
 
         {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );

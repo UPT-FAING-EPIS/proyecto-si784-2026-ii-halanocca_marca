@@ -9,7 +9,7 @@ import { severityColor } from '../../../domain/models/SecurityRule.js';
 import { formatUSD } from '../../../application/use-cases/calculateCost.js';
 import { impactColor } from '../../../application/use-cases/runBlastRadius.js';
 import { generateAutoWhatIf, formatDelta } from '../../../application/use-cases/computeWhatIf.js';
-import { getServiceIcon, AwsLogo, AzureLogo, GcpLogo } from '../icons/CloudIcons.jsx';
+import { getServiceIcon, AwsLogo, AzureLogo, OracleLogo, GcpLogo } from '../icons/CloudIcons.jsx';
 
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
 function Tab({ label, badge, active, onClick, color }) {
@@ -155,6 +155,7 @@ function PropertiesPanel({
           <div className="flex items-center gap-1.5 mt-0.5">
             {meta.provider === 'aws' && <AwsLogo className="w-3 h-3 shrink-0" />}
             {meta.provider === 'azure' && <AzureLogo className="w-3 h-3 shrink-0" />}
+            {meta.provider === 'oracle' && <OracleLogo className="w-3 h-3 shrink-0" />}
             {meta.provider === 'gcp' && <GcpLogo className="w-3 h-3 shrink-0" />}
             <span className="text-[10px] text-slate-400 uppercase font-semibold">{meta.provider} • {meta.category}</span>
           </div>

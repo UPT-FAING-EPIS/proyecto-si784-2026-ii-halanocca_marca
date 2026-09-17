@@ -1,11 +1,12 @@
 /**
  * CloudNode – Modelo de dominio para un componente de infraestructura cloud.
- * Soporta arquitectura Multi-Cloud: AWS, Azure y GCP (RF-02).
+ * Soporta arquitectura Multi-Cloud: AWS, Azure, Oracle y Google Cloud (RF-02).
  */
 
 /** 
  * @typedef {'ec2'|'lambda'|'rds'|'s3'|'vpc'|'subnet'|'alb'|'igw'|
  *           'azure_vnet'|'azure_subnet'|'azure_appgw'|'azure_vm'|'azure_function'|'azure_sql'|'azure_blob'|
+ *           'oci_vcn'|'oci_subnet'|'oci_lb'|'oci_compute'|'oci_functions'|'oci_autonomous_db'|'oci_object_storage'|
  *           'gcp_vpc'|'gcp_subnet'|'gcp_lb'|'gcp_gce'|'gcp_cloudfunction'|'gcp_cloudsql'|'gcp_gcs'} CloudNodeType 
  */
 
@@ -15,8 +16,142 @@
  */
 export const NODE_CATALOG = {
   // ═══════════════════════════════════════════════════════════════════════════
+  // Common Components (Brainboard style)
+  // ═══════════════════════════════════════════════════════════════════════════
+  block: {
+    type: 'block',
+    label: 'BLOCK',
+    category: 'Common',
+    description: 'Generic resource container block',
+    baseCostPerMonth: 0,
+    color: '#0284c7',
+    bgColor: 'rgba(2,132,199,0.12)',
+    borderColor: 'rgba(2,132,199,0.4)',
+    icon: 'BLK',
+    provider: 'common',
+    configSchema: {
+      notes: { label: 'Block Note', type: 'text', default: 'Architecture Block' },
+    },
+  },
+  text_label: {
+    type: 'text_label',
+    label: 'TEXT LABEL',
+    category: 'Common',
+    description: 'Architecture label or annotation',
+    baseCostPerMonth: 0,
+    color: '#0284c7',
+    bgColor: 'rgba(2,132,199,0.12)',
+    borderColor: 'rgba(2,132,199,0.4)',
+    icon: 'TXT',
+    provider: 'common',
+    configSchema: {
+      text: { label: 'Label Text', type: 'text', default: 'Text Label' },
+    },
+  },
+  icon: {
+    type: 'icon',
+    label: 'ICON',
+    category: 'Common',
+    description: 'Custom architectural icon',
+    baseCostPerMonth: 0,
+    color: '#0284c7',
+    bgColor: 'rgba(2,132,199,0.12)',
+    borderColor: 'rgba(2,132,199,0.4)',
+    icon: 'ICO',
+    provider: 'common',
+    configSchema: {},
+  },
+  image: {
+    type: 'image',
+    label: 'IMAGE',
+    category: 'Common',
+    description: 'Custom architecture graphic / image',
+    baseCostPerMonth: 0,
+    color: '#0284c7',
+    bgColor: 'rgba(2,132,199,0.12)',
+    borderColor: 'rgba(2,132,199,0.4)',
+    icon: 'IMG',
+    provider: 'common',
+    configSchema: {},
+  },
+  area: {
+    type: 'area',
+    label: 'AREA',
+    category: 'Common',
+    description: 'Group boundary / security zone box',
+    baseCostPerMonth: 0,
+    color: '#0284c7',
+    bgColor: 'rgba(2,132,199,0.12)',
+    borderColor: 'rgba(2,132,199,0.4)',
+    icon: 'ARA',
+    provider: 'common',
+    configSchema: {
+      zoneName: { label: 'Zone Name', type: 'text', default: 'Public Subnet Zone' },
+    },
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // AWS (Amazon Web Services)
   // ═══════════════════════════════════════════════════════════════════════════
+  auto_scaling: {
+    type: 'auto_scaling',
+    label: 'AUTO SCALING',
+    category: 'Compute',
+    description: 'Auto scale EC2 group capacity',
+    baseCostPerMonth: 0,
+    color: '#f59e0b',
+    bgColor: 'rgba(245,158,11,0.12)',
+    borderColor: 'rgba(245,158,11,0.4)',
+    icon: 'ASG',
+    provider: 'aws',
+    configSchema: {
+      minSize: { label: 'Min Capacity', type: 'select', default: '1', options: ['1', '2', '4'] },
+      maxSize: { label: 'Max Capacity', type: 'select', default: '4', options: ['2', '4', '8', '16'] },
+    },
+  },
+  zone: {
+    type: 'zone',
+    label: 'ZONE',
+    category: 'Compute',
+    description: 'Availability zone',
+    baseCostPerMonth: 0,
+    color: '#f59e0b',
+    bgColor: 'rgba(245,158,11,0.12)',
+    borderColor: 'rgba(245,158,11,0.4)',
+    icon: 'AZ',
+    provider: 'aws',
+    configSchema: {
+      zone: { label: 'Zone', type: 'select', default: 'us-east-1a', options: ['us-east-1a', 'us-east-1b', 'us-east-1c'] },
+    },
+  },
+  ecs_cluster: {
+    type: 'ecs_cluster',
+    label: 'ECS CLUSTER',
+    category: 'Containers',
+    description: 'Logical grouping of tasks or services',
+    baseCostPerMonth: 0,
+    color: '#f59e0b',
+    bgColor: 'rgba(245,158,11,0.12)',
+    borderColor: 'rgba(245,158,11,0.4)',
+    icon: 'ECS',
+    provider: 'aws',
+    configSchema: {},
+  },
+  ecs_service: {
+    type: 'ecs_service',
+    label: 'ECS SERVICE',
+    category: 'Containers',
+    description: 'Run a specified number of tasks',
+    baseCostPerMonth: 12.00,
+    color: '#f59e0b',
+    bgColor: 'rgba(245,158,11,0.12)',
+    borderColor: 'rgba(245,158,11,0.4)',
+    icon: 'SVC',
+    provider: 'aws',
+    configSchema: {
+      desiredCount: { label: 'Desired Tasks', type: 'select', default: '2', options: ['1', '2', '4', '8'] },
+    },
+  },
   vpc: {
     type: 'vpc',
     label: 'VPC',
@@ -379,6 +514,126 @@ export const NODE_CATALOG = {
       versioning: { label: 'Versioning', type: 'boolean', default: false },
     },
   },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Oracle Cloud Infrastructure (OCI)
+  // ═══════════════════════════════════════════════════════════════════════════
+  oci_vcn: {
+    type: 'oci_vcn',
+    label: 'OCI VCN',
+    category: 'Networking',
+    description: 'Virtual Cloud Network (Oracle)',
+    baseCostPerMonth: 0,
+    color: '#f80000',
+    bgColor: 'rgba(248,0,0,0.12)',
+    borderColor: 'rgba(248,0,0,0.4)',
+    icon: 'VCN',
+    provider: 'oracle',
+    configSchema: {
+      cidr: { label: 'CIDR Block', type: 'text', default: '10.0.0.0/16' },
+      dnsLabel: { label: 'DNS Label', type: 'text', default: 'cloudscopevcn' },
+    },
+  },
+  oci_subnet: {
+    type: 'oci_subnet',
+    label: 'OCI Subnet',
+    category: 'Networking',
+    description: 'Regional VCN Subnet (Oracle)',
+    baseCostPerMonth: 0,
+    color: '#ea580c',
+    bgColor: 'rgba(234,88,12,0.12)',
+    borderColor: 'rgba(234,88,12,0.4)',
+    icon: 'Subnet',
+    provider: 'oracle',
+    configSchema: {
+      cidr: { label: 'CIDR Block', type: 'text', default: '10.0.1.0/24' },
+      isPublic: { label: 'Public Subnet', type: 'boolean', default: false },
+    },
+  },
+  oci_lb: {
+    type: 'oci_lb',
+    label: 'Flexible Load Balancer',
+    category: 'Networking',
+    description: 'OCI Flexible Load Balancer (Oracle)',
+    baseCostPerMonth: 16.50,
+    color: '#f80000',
+    bgColor: 'rgba(248,0,0,0.12)',
+    borderColor: 'rgba(248,0,0,0.4)',
+    icon: 'LB',
+    provider: 'oracle',
+    configSchema: {
+      bandwidth: { label: 'Bandwidth (Mbps)', type: 'select', default: '100Mbps', options: ['100Mbps', '400Mbps', '8000Mbps'] },
+      isPrivate: { label: 'Private Load Balancer', type: 'boolean', default: false },
+    },
+  },
+  oci_compute: {
+    type: 'oci_compute',
+    label: 'Compute Instance (VM)',
+    category: 'Compute & Serverless',
+    description: 'OCI Compute VM Instance (Oracle)',
+    baseCostPerMonth: 15.00,
+    color: '#c74634',
+    bgColor: 'rgba(199,70,52,0.12)',
+    borderColor: 'rgba(199,70,52,0.4)',
+    icon: 'VM',
+    provider: 'oracle',
+    configSchema: {
+      shape: { label: 'Shape', type: 'select', default: 'VM.Standard.E4.Flex', options: ['VM.Standard.E4.Flex', 'VM.Standard.A1.Flex', 'VM.Standard3.Flex'] },
+      ocpus: { label: 'OCPUs', type: 'select', default: '2', options: ['1', '2', '4', '8'] },
+      memoryGb: { label: 'Memory (GB)', type: 'select', default: '16', options: ['8', '16', '32', '64'] },
+      os: { label: 'Operating System', type: 'select', default: 'Oracle Linux 9', options: ['Oracle Linux 9', 'Ubuntu 22.04', 'CentOS 8 Stream'] },
+    },
+  },
+  oci_functions: {
+    type: 'oci_functions',
+    label: 'OCI Functions',
+    category: 'Compute & Serverless',
+    description: 'Serverless Functions (Oracle)',
+    baseCostPerMonth: 2.50,
+    color: '#f97316',
+    bgColor: 'rgba(249,115,22,0.12)',
+    borderColor: 'rgba(249,115,22,0.4)',
+    icon: 'Fn',
+    provider: 'oracle',
+    configSchema: {
+      runtime: { label: 'Runtime', type: 'select', default: 'java17', options: ['java17', 'python310', 'node18', 'go120'] },
+    },
+  },
+  oci_autonomous_db: {
+    type: 'oci_autonomous_db',
+    label: 'Autonomous Database (ATP)',
+    category: 'Storage & Databases',
+    description: 'Oracle Autonomous Transaction Processing (Oracle)',
+    baseCostPerMonth: 32.00,
+    color: '#f80000',
+    bgColor: 'rgba(248,0,0,0.12)',
+    borderColor: 'rgba(248,0,0,0.4)',
+    icon: 'ADB',
+    provider: 'oracle',
+    configSchema: {
+      dbWorkload: { label: 'Workload', type: 'select', default: 'OLTP', options: ['OLTP', 'DW', 'APEX', 'JSON'] },
+      dataStorageSizeInTBs: { label: 'Storage (TB)', type: 'select', default: '1', options: ['1', '2', '4'] },
+      isDedicated: { label: 'Dedicated Infrastructure', type: 'boolean', default: false },
+      isAccessControlEnabled: { label: 'Access Control (ACL)', type: 'boolean', default: true },
+    },
+  },
+  oci_object_storage: {
+    type: 'oci_object_storage',
+    label: 'OCI Object Storage',
+    category: 'Storage & Databases',
+    description: 'Object Storage Bucket (Oracle)',
+    baseCostPerMonth: 2.20,
+    color: '#ea580c',
+    bgColor: 'rgba(234,88,12,0.12)',
+    borderColor: 'rgba(234,88,12,0.4)',
+    icon: 'OS',
+    provider: 'oracle',
+    configSchema: {
+      storageTier: { label: 'Storage Tier', type: 'select', default: 'Standard', options: ['Standard', 'Archive'] },
+      publicAccessType: { label: 'Public Access', type: 'select', default: 'NoPublicAccess', options: ['NoPublicAccess', 'ObjectRead', 'ObjectReadWithoutList'] },
+      versioning: { label: 'Versioning Enabled', type: 'boolean', default: true },
+    },
+  },
 };
 
 /**
@@ -443,18 +698,31 @@ export function getNodeCost(type, config = {}) {
     cost *= 1.9;
   }
 
+  // Oracle Compute VM
+  if (type === 'oci_compute') {
+    const ocpus = Number(config.ocpus ?? 2);
+    cost = 7.50 * ocpus;
+  }
+
+  // Oracle Autonomous Database
+  if (type === 'oci_autonomous_db') {
+    const tbs = Number(config.dataStorageSizeInTBs ?? 1);
+    cost = 32.00 * tbs;
+    if (config.isDedicated) cost *= 2.5;
+  }
+
   return Math.round(cost * 100) / 100;
 }
 
 /**
  * Agrupa los tipos de nodo del catálogo por categoría, con filtro opcional de proveedor.
- * @param {'all'|'aws'|'azure'|'gcp'} provider
+ * @param {'all'|'aws'|'azure'|'oracle'|'gcp'} provider
  * @returns {Record<string, Array>}
  */
 export function getNodesByCategory(provider = 'all') {
   const groups = {};
   for (const meta of Object.values(NODE_CATALOG)) {
-    if (provider !== 'all' && meta.provider !== provider) continue;
+    if (provider !== 'all' && meta.provider !== provider && meta.provider !== 'common') continue;
     if (!groups[meta.category]) groups[meta.category] = [];
     groups[meta.category].push(meta);
   }

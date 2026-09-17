@@ -301,6 +301,52 @@ export const SECURITY_RULES = [
         }));
     },
   },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SEC-012 · OCI Autonomous Database Access Control Disabled
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: 'SEC-012',
+    title: 'OCI Autonomous Database Access Control Disabled',
+    severity: 'CRITICAL',
+    framework: 'CIS Oracle Cloud Infrastructure Benchmark 4.1',
+    evaluate(nodes) {
+      return nodes
+        .filter(n => n.data?.cloudType === 'oci_autonomous_db' && n.data?.config?.isAccessControlEnabled === false)
+        .map(n => ({
+          ruleId: 'SEC-012',
+          severity: 'CRITICAL',
+          title: 'OCI Autonomous DB sin lista de control de acceso (ACL)',
+          description: `La base de datos autónoma "${n.data.label}" no tiene activado el control de acceso IP/VCN (ACL), permitiendo intentos de conexión desde cualquier origen.`,
+          recommendation: 'Habilita "Access Control (ACL)" y restringe el acceso únicamente a VCNs privadas o bloques CIDR corporativos autorizados.',
+          nodeId: n.id,
+          framework: 'CIS Oracle Cloud Infrastructure Benchmark 4.1',
+        }));
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SEC-013 · OCI Object Storage Bucket Publicly Accessible
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    id: 'SEC-013',
+    title: 'OCI Object Storage Bucket Publicly Readable',
+    severity: 'HIGH',
+    framework: 'CIS Oracle Cloud Infrastructure Benchmark 3.1',
+    evaluate(nodes) {
+      return nodes
+        .filter(n => n.data?.cloudType === 'oci_object_storage' && n.data?.config?.publicAccessType !== 'NoPublicAccess')
+        .map(n => ({
+          ruleId: 'SEC-013',
+          severity: 'HIGH',
+          title: 'OCI Object Storage con lectura pública habilitada',
+          description: `El bucket de almacenamiento "${n.data.label}" tiene configurado el acceso público (${n.data.config?.publicAccessType}), exponiendo datos no autenticados.`,
+          recommendation: 'Configura "Public Access" en "NoPublicAccess" y utiliza Pre-Authenticated Requests (PAR) con expiración para accesos temporales.',
+          nodeId: n.id,
+          framework: 'CIS Oracle Cloud Infrastructure Benchmark 3.1',
+        }));
+    },
+  },
 ];
 
 /**

@@ -1,6 +1,6 @@
 /**
  * CloudIcons – Iconos vectoriales oficiales y estilizados para CloudScope.
- * Proveedores Oficiales: AWS, Microsoft Azure, Google Cloud Platform (GCP).
+ * Proveedores Oficiales: AWS, Microsoft Azure, Oracle Cloud (OCI), Google Cloud (GCP).
  * Tecnologías de Infraestructura: HashiCorp Terraform, Docker, Kubernetes.
  */
 
@@ -45,6 +45,20 @@ export function AzureLogo({ className = "w-4 h-4" }) {
         d="M13.2 3.5l4.6 13.2a.85.85 0 0 1-.8 1.1h-2.1l-1.7-5.2-2.4 7.4h-2l4.4-16.5z"
         fill="#50E6FF"
         opacity="0.9"
+      />
+    </svg>
+  );
+}
+
+/** Logo oficial de Oracle Cloud Infrastructure (OCI) */
+export function OracleLogo({ className = "w-4 h-4" }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M7.8 4h8.4C20.5 4 24 7.5 24 11.9c0 4.4-3.5 7.9-7.8 7.9H7.8C3.5 19.8 0 16.3 0 11.9 0 7.5 3.5 4 7.8 4zm8.3 12.3c2.4 0 4.3-1.9 4.3-4.4 0-2.4-1.9-4.4-4.3-4.4H7.9c-2.4 0-4.3 2-4.3 4.4 0 2.4 1.9 4.4 4.3 4.4h8.2z"
+        fill="#F80000"
       />
     </svg>
   );
@@ -426,34 +440,225 @@ export function getServiceIcon(type, className = "w-4 h-4", color) {
     case 'vpc':
     case 'azure_vnet':
     case 'gcp_vpc':
+    case 'oci_vcn':
       return <VpcIcon className={className} color={color} />;
     case 'subnet':
     case 'azure_subnet':
     case 'gcp_subnet':
+    case 'oci_subnet':
       return <VpcIcon className={className} color={color} />;
     case 'ec2':
     case 'azure_vm':
     case 'gcp_gce':
+    case 'oci_compute':
       return <Ec2Icon className={className} color={color} />;
     case 'rds':
     case 'azure_sql':
     case 'gcp_cloudsql':
+    case 'oci_autonomous_db':
       return <RdsIcon className={className} color={color} />;
     case 's3':
     case 'azure_blob':
     case 'gcp_gcs':
+    case 'oci_object_storage':
       return <S3Icon className={className} color={color} />;
     case 'lambda':
     case 'azure_function':
     case 'gcp_cloudfunction':
+    case 'oci_functions':
       return <LambdaIcon className={className} color={color} />;
     case 'alb':
     case 'azure_appgw':
     case 'gcp_lb':
+    case 'oci_lb':
       return <AlbIcon className={className} color={color} />;
     case 'igw':
       return <IgwIcon className={className} color={color} />;
+    case 'block':
+      return <BlockIcon className={className} color={color} />;
+    case 'text_label':
+      return <TextLabelIcon className={className} color={color} />;
+    case 'icon':
+      return <SparkleIcon className={className} color={color} />;
+    case 'image':
+      return <ImageIcon className={className} color={color} />;
+    case 'area':
+      return <AreaIcon className={className} color={color} />;
+    case 'auto_scaling':
+      return <Ec2Icon className={className} color={color} />;
+    case 'zone':
+      return <VpcIcon className={className} color={color} />;
+    case 'ecs_cluster':
+    case 'ecs_service':
+      return <DockerLogo className={className} />;
     default:
       return <span className="font-bold text-[10px]">{type?.substring(0, 3)?.toUpperCase()}</span>;
   }
+}
+
+// ─── Iconos de Interfaz estilo Brainboard ──────────────────────────────────────
+
+export function LockIcon({ className = 'w-4 h-4' }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+    </svg>
+  );
+}
+
+export function UserIcon({ className = 'w-4 h-4' }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    </svg>
+  );
+}
+
+export function CreditCardIcon({ className = 'w-4 h-4' }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <rect x="2" y="5" width="20" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="2" y1="10" x2="22" y2="10" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function UsersIcon({ className = 'w-4 h-4' }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+    </svg>
+  );
+}
+
+export function KeyIcon({ className = 'w-4 h-4' }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+    </svg>
+  );
+}
+
+export function SparkleIcon({ className = 'w-4 h-4', color = 'currentColor' }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke={color} strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.286L13 21l-2.286-6.857L5 12l5.714-2.286L13 3z" />
+    </svg>
+  );
+}
+
+export function PlayCircleIcon({ className = 'w-4 h-4' }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <circle cx="12" cy="12" r="10" />
+      <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function HelpCircleIcon({ className = 'w-4 h-4' }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <circle cx="12" cy="12" r="10" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3m.08 4h.01" />
+    </svg>
+  );
+}
+
+export function HeadsetIcon({ className = 'w-4 h-4' }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 18v-6a9 9 0 0118 0v6M3 18a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3v5zm18 0a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3v5z" />
+    </svg>
+  );
+}
+
+export function PowerIcon({ className = 'w-4 h-4' }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636a9 9 0 11-12.728 0M12 2v10" />
+    </svg>
+  );
+}
+
+export function ChevronDownIcon({ className = 'w-4 h-4' }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+    </svg>
+  );
+}
+
+export function ChevronUpIcon({ className = 'w-4 h-4' }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+    </svg>
+  );
+}
+
+export function ZoomInIcon({ className = 'w-4 h-4' }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      <line x1="11" y1="8" x2="11" y2="14" />
+      <line x1="8" y1="11" x2="14" y2="11" />
+    </svg>
+  );
+}
+
+export function ZoomOutIcon({ className = 'w-4 h-4' }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      <line x1="8" y1="11" x2="14" y2="11" />
+    </svg>
+  );
+}
+
+export function FitViewIcon({ className = 'w-4 h-4' }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+    </svg>
+  );
+}
+
+export function BlockIcon({ className = 'w-4 h-4', color = 'currentColor' }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke={color} strokeWidth={2}>
+      <rect x="3" y="3" width="18" height="18" rx="3" />
+      <line x1="3" y1="9" x2="21" y2="9" opacity="0.4" />
+    </svg>
+  );
+}
+
+export function TextLabelIcon({ className = 'w-4 h-4', color = 'currentColor' }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke={color} strokeWidth={2}>
+      <polyline points="4 7 4 4 20 4 20 7" />
+      <line x1="9" y1="20" x2="15" y2="20" />
+      <line x1="12" y1="4" x2="12" y2="20" />
+    </svg>
+  );
+}
+
+export function ImageIcon({ className = 'w-4 h-4', color = 'currentColor' }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke={color} strokeWidth={2}>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" fill={color} />
+      <polyline points="21 15 16 10 5 21" />
+    </svg>
+  );
+}
+
+export function AreaIcon({ className = 'w-4 h-4', color = 'currentColor' }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke={color} strokeWidth={2} strokeDasharray="3 3">
+      <rect x="3" y="3" width="18" height="18" rx="4" />
+    </svg>
+  );
 }

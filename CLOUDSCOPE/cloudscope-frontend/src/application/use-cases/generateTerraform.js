@@ -473,6 +473,111 @@ resource "google_storage_bucket" "${name}" {
 }`;
 }
 
+// ─── Generadores para Oracle Cloud Infrastructure (OCI) ──────────────────────
+
+function genOciVCN(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'main_vcn');
+  return `
+resource "oci_core_vcn" "${name}" {
+  cidr_block     = "${cfg.cidr ?? '10.0.0.0/16'}"
+  compartment_id = var.oci_compartment_id
+  display_name   = "${node.data?.label ?? 'CloudScope VCN'}"
+  dns_label      = "${cfg.dnsLabel ?? 'cloudscope'}"
+}`;
+}
+
+function genOciSubnet(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'app_subnet');
+  return `
+resource "oci_core_subnet" "${name}" {
+  cidr_block                 = "${cfg.cidr ?? '10.0.1.0/24'}"
+  compartment_id             = var.oci_compartment_id
+  display_name               = "${node.data?.label ?? 'CloudScope Subnet'}"
+  prohibit_public_ip_on_vnic = ${cfg.isPublic ? 'false' : 'true'}
+  # vcn_id                   = oci_core_vcn.<vcn_name>.id
+}`;
+}
+
+function genOciLB(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'lb');
+  return `
+resource "oci_load_balancer_load_balancer" "${name}" {
+  compartment_id = var.oci_compartment_id
+  display_name   = "${node.data?.label ?? 'CloudScope LB'}"
+  shape          = "flexible"
+  is_private     = ${cfg.isPrivate ? 'true' : 'false'}
+
+  shape_details {
+    maximum_bandwidth_in_mbps = ${parseInt(cfg.bandwidth ?? '100', 10) || 100}
+    minimum_bandwidth_in_mbps = 10
+  }
+}`;
+}
+
+function genOciCompute(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'compute');
+  return `
+resource "oci_core_instance" "${name}" {
+  compartment_id = var.oci_compartment_id
+  display_name   = "${node.data?.label ?? 'CloudScope VM'}"
+  shape          = "${cfg.shape ?? 'VM.Standard.E4.Flex'}"
+
+  shape_config {
+    ocpus         = ${cfg.ocpus ?? 2}
+    memory_in_gbs = ${cfg.memoryGb ?? 16}
+  }
+
+  create_vnic_details {
+    assign_public_ip = false
+  }
+}`;
+}
+
+function genOciFunctions(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'func');
+  return `
+resource "oci_functions_function" "${name}" {
+  # application_id = oci_functions_application.<app>.id
+  display_name   = "${node.data?.label ?? 'CloudScope Function'}"
+  image          = "phx.ocir.io/tenancy/image:latest"
+  memory_in_mbs  = 256
+}`;
+}
+
+function genOciAutonomousDB(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'autonomous_db');
+  return `
+resource "oci_database_autonomous_database" "${name}" {
+  compartment_id           = var.oci_compartment_id
+  db_name                  = "${toTfName(node.data?.label ?? 'db').substring(0, 14)}"
+  db_workload              = "${cfg.dbWorkload ?? 'OLTP'}"
+  data_storage_size_in_tbs = ${cfg.dataStorageSizeInTBs ?? 1}
+  is_dedicated             = ${cfg.isDedicated ? 'true' : 'false'}
+  is_access_control_enabled = ${cfg.isAccessControlEnabled !== false ? 'true' : 'false'}
+  admin_password           = "CloudScope2026#Secure"
+}`;
+}
+
+function genOciObjectStorage(node) {
+  const cfg = node.data?.config ?? {};
+  const name = toTfName(node.data?.label ?? 'bucket');
+  return `
+resource "oci_objectstorage_bucket" "${name}" {
+  compartment_id = var.oci_compartment_id
+  name           = "${name}-\${random_id.suffix.hex}"
+  namespace      = "my-oci-namespace"
+  storage_tier   = "${cfg.storageTier ?? 'Standard'}"
+  access_type    = "${cfg.publicAccessType ?? 'NoPublicAccess'}"
+  versioning     = "${cfg.versioning !== false ? 'Enabled' : 'Disabled'}"
+}`;
+}
+
 const GENERATORS = {
   // AWS
   vpc: genVPC,
@@ -491,6 +596,14 @@ const GENERATORS = {
   azure_function: genAzureFunction,
   azure_sql: genAzureSQL,
   azure_blob: genAzureBlob,
+  // Oracle Cloud (OCI)
+  oci_vcn: genOciVCN,
+  oci_subnet: genOciSubnet,
+  oci_lb: genOciLB,
+  oci_compute: genOciCompute,
+  oci_functions: genOciFunctions,
+  oci_autonomous_db: genOciAutonomousDB,
+  oci_object_storage: genOciObjectStorage,
   // GCP
   gcp_vpc: genGcpVPC,
   gcp_subnet: genGcpSubnet,
@@ -511,15 +624,16 @@ const GENERATORS = {
 export function generateTerraform(nodes, edges, projectName = 'cloudscope') {
   const tfName = toTfName(projectName);
 
-  const hasAws = nodes.some(n => !n.data?.cloudType?.startsWith('azure_') && !n.data?.cloudType?.startsWith('gcp_'));
+  const hasAws = nodes.some(n => !n.data?.cloudType?.startsWith('azure_') && !n.data?.cloudType?.startsWith('oci_') && !n.data?.cloudType?.startsWith('gcp_'));
   const hasAzure = nodes.some(n => n.data?.cloudType?.startsWith('azure_'));
+  const hasOracle = nodes.some(n => n.data?.cloudType?.startsWith('oci_'));
   const hasGcp = nodes.some(n => n.data?.cloudType?.startsWith('gcp_'));
 
   const header = `# ============================================================
 # CloudScope – Multi-Cloud Terraform Configuration (IaC)
 # Project: ${projectName}
 # Generated: ${new Date().toISOString()}
-# Providers: ${[hasAws && 'AWS', hasAzure && 'Azure', hasGcp && 'GCP'].filter(Boolean).join(', ') || 'AWS'}
+# Providers: ${[hasAws && 'AWS', hasAzure && 'Azure', hasOracle && 'Oracle Cloud', hasGcp && 'Google Cloud'].filter(Boolean).join(', ') || 'AWS'}
 # ============================================================
 
 terraform {
@@ -533,6 +647,10 @@ terraform {
     ${hasAzure ? `azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 3.0"
+    }` : ''}
+    ${hasOracle ? `oci = {
+      source  = "oracle/oci"
+      version = "~> 5.0"
     }` : ''}
     ${hasGcp ? `google = {
       source  = "hashicorp/google"
@@ -568,6 +686,22 @@ variable "azure_location" {
 resource "azurerm_resource_group" "rg" {
   name     = "${tfName}-rg"
   location = var.azure_location
+}` : ''}
+
+${hasOracle ? `provider "oci" {
+  region = var.oci_region
+}
+
+variable "oci_region" {
+  description = "OCI region"
+  type        = string
+  default     = "us-ashburn-1"
+}
+
+variable "oci_compartment_id" {
+  description = "OCI Compartment OCID"
+  type        = string
+  default     = "ocid1.compartment.oc1..example"
 }` : ''}
 
 ${hasGcp ? `provider "google" {

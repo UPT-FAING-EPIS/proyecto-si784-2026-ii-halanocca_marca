@@ -5,29 +5,42 @@
  */
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { CloudScopeLogo, AwsLogo, AzureLogo, GcpLogo, TerraformLogo, HexagonIcon, ShieldIcon, DollarIcon, PDFIcon, WarningIcon, ArrowRightIcon } from '../components/icons/CloudIcons.jsx';
+import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
+import { CloudScopeLogo, AwsLogo, AzureLogo, OracleLogo, GcpLogo, TerraformLogo, HexagonIcon, ShieldIcon, DollarIcon, PDFIcon, WarningIcon, ArrowRightIcon } from '../components/icons/CloudIcons.jsx';
 
-// ─── Mock Auth (reemplazar por llamada real al backend en VPS) ────────────────
+// ─── Mock Auth + Backend Auth ────────────────
 const MOCK_USERS = [
   { email: 'admin@cloudscope.io', password: 'admin123', name: 'Admin User', role: 'admin' },
   { email: 'demo@cloudscope.io', password: 'demo123', name: 'Demo User', role: 'viewer' },
 ];
 
-function mockLogin(email, password) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const user = MOCK_USERS.find(u => u.email === email && u.password === password);
-      if (user) {
-        const token = btoa(JSON.stringify({ sub: email, name: user.name, role: user.role, exp: Date.now() + 3600000 }));
-        localStorage.setItem('cs_token', token);
-        localStorage.setItem('cs_user', JSON.stringify({ email: user.email, name: user.name, role: user.role }));
-        resolve(user);
-      } else {
-        reject(new Error('Invalid email or password'));
-      }
-    }, 800); // simula latencia de red
-  });
+async function authenticateUser(email, password) {
+  try {
+    const res = await axios.post('http://localhost:8080/api/auth/login', { email, password });
+    if (res.data?.token) {
+      localStorage.setItem('cs_token', res.data.token);
+      localStorage.setItem('cs_user', JSON.stringify(res.data.user));
+      return res.data.user;
+    }
+  } catch (err) {
+    if (err.response?.status === 401) {
+      throw new Error('Correo electrónico o contraseña incorrectos.');
+    }
+  }
+
+  // Fallback a usuarios locales o mock
+  const registeredRaw = localStorage.getItem('cs_registered_users');
+  const registered = registeredRaw ? JSON.parse(registeredRaw) : [];
+  const allUsers = [...MOCK_USERS, ...registered];
+  const user = allUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+  if (user) {
+    const token = btoa(JSON.stringify({ sub: email, name: user.name, role: user.role ?? 'user', exp: Date.now() + 3600000 }));
+    localStorage.setItem('cs_token', token);
+    localStorage.setItem('cs_user', JSON.stringify({ email: user.email, name: user.name, role: user.role ?? 'user' }));
+    return user;
+  }
+  throw new Error('Correo electrónico o contraseña incorrectos.');
 }
 
 // ─── Icono de ojo ──────────────────────────────────────────────────────────────
@@ -62,7 +75,7 @@ export default function Login() {
     }
     setLoading(true);
     try {
-      await mockLogin(email.trim(), password);
+      await authenticateUser(email.trim(), password);
       sessionStorage.removeItem('cs_logout');
       navigate('/dashboard');
     } catch (err) {
@@ -78,7 +91,7 @@ export default function Login() {
     setLoading(true);
     setError('');
     try {
-      await mockLogin('demo@cloudscope.io', 'demo123');
+      await authenticateUser('demo@cloudscope.io', 'demo123');
       sessionStorage.removeItem('cs_logout');
       navigate('/dashboard');
     } catch (err) {
@@ -131,7 +144,7 @@ export default function Login() {
             with confidence
           </h1>
           <p className="text-lg leading-relaxed mb-6" style={{ color: '#64748b' }}>
-            Diseña, audita y exporta arquitecturas multi-cloud (AWS, Azure, GCP) con validación de seguridad CIS Benchmarks en tiempo real y FinOps.
+            Diseña, audita y exporta arquitecturas multi-cloud (AWS, Azure, Oracle, Google Cloud) con validación de seguridad CIS Benchmarks en tiempo real y FinOps.
           </p>
 
           {/* Logos oficiales proveedores en banner */}
@@ -145,8 +158,11 @@ export default function Login() {
               <div className="flex items-center gap-1 px-2 py-1 rounded bg-slate-900 border border-slate-800 text-[11px] font-bold text-sky-400">
                 <AzureLogo className="w-3.5 h-3.5" /> Azure
               </div>
+              <div className="flex items-center gap-1 px-2 py-1 rounded bg-slate-900 border border-slate-800 text-[11px] font-bold text-red-500">
+                <OracleLogo className="w-3.5 h-3.5" /> Oracle
+              </div>
               <div className="flex items-center gap-1 px-2 py-1 rounded bg-slate-900 border border-slate-800 text-[11px] font-bold text-rose-400">
-                <GcpLogo className="w-3.5 h-3.5" /> GCP
+                <GcpLogo className="w-3.5 h-3.5" /> Google Cloud
               </div>
               <div className="flex items-center gap-1 px-2 py-1 rounded bg-slate-900 border border-slate-800 text-[11px] font-bold text-purple-400">
                 <TerraformLogo className="w-3.5 h-3.5" /> IaC
@@ -311,6 +327,14 @@ export default function Login() {
           >
             Acceso Demo (sin cuenta)
           </button>
+
+          {/* Enlace al registro */}
+          <div className="mt-6 text-center text-xs text-slate-400">
+            ¿No tienes una cuenta?{' '}
+            <Link to="/register" className="text-amber-400 hover:text-amber-300 font-bold transition-colors">
+              Regístrate aquí
+            </Link>
+          </div>
 
           {/* Hint credentials */}
           <div className="mt-6 p-3 rounded-xl text-xs space-y-1"

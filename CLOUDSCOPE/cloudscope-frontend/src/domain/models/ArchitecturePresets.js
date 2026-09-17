@@ -333,4 +333,82 @@ export const ARCHITECTURE_PRESETS = [
       { id: 'e_gcp_gce_gcs', source: 'gcp_gce_node', target: 'gcp_gcs_node' },
     ],
   },
+  {
+    id: 'oci-enterprise-stack',
+    name: 'OCI Enterprise Cloud Stack',
+    provider: 'oracle',
+    category: 'Enterprise',
+    badge: 'Oracle',
+    color: '#f80000',
+    description: 'Topología empresarial en Oracle Cloud (OCI): Virtual Cloud Network (VCN), Subnet regional, Flexible Load Balancer, Compute VM, Autonomous Database y Object Storage.',
+    nodes: [
+      {
+        id: 'oci_vcn_node',
+        type: 'cloudNode',
+        position: { x: 60, y: 60 },
+        data: {
+          cloudType: 'oci_vcn',
+          label: 'Production VCN',
+          config: { cidr: '10.0.0.0/16', dnsLabel: 'prodvcn' },
+        },
+      },
+      {
+        id: 'oci_sub_node',
+        type: 'cloudNode',
+        position: { x: 320, y: 60 },
+        data: {
+          cloudType: 'oci_subnet',
+          label: 'App Regional Subnet',
+          config: { cidr: '10.0.1.0/24', isPublic: false },
+        },
+      },
+      {
+        id: 'oci_lb_node',
+        type: 'cloudNode',
+        position: { x: 320, y: 190 },
+        data: {
+          cloudType: 'oci_lb',
+          label: 'Flexible Load Balancer',
+          config: { bandwidth: '100Mbps', isPrivate: false },
+        },
+      },
+      {
+        id: 'oci_compute_node',
+        type: 'cloudNode',
+        position: { x: 320, y: 330 },
+        data: {
+          cloudType: 'oci_compute',
+          label: 'OCI App Server VM',
+          config: { shape: 'VM.Standard.E4.Flex', ocpus: '2', memoryGb: '16', os: 'Oracle Linux 9' },
+        },
+      },
+      {
+        id: 'oci_db_node',
+        type: 'cloudNode',
+        position: { x: 200, y: 470 },
+        data: {
+          cloudType: 'oci_autonomous_db',
+          label: 'Autonomous Database ATP',
+          config: { dbWorkload: 'OLTP', dataStorageSizeInTBs: '1', isDedicated: false, isAccessControlEnabled: true },
+        },
+      },
+      {
+        id: 'oci_storage_node',
+        type: 'cloudNode',
+        position: { x: 440, y: 470 },
+        data: {
+          cloudType: 'oci_object_storage',
+          label: 'OCI Object Storage Bucket',
+          config: { storageTier: 'Standard', publicAccessType: 'NoPublicAccess', versioning: true },
+        },
+      },
+    ],
+    edges: [
+      { id: 'e_oci_vcn_sub', source: 'oci_vcn_node', target: 'oci_sub_node' },
+      { id: 'e_oci_sub_lb', source: 'oci_sub_node', target: 'oci_lb_node' },
+      { id: 'e_oci_lb_compute', source: 'oci_lb_node', target: 'oci_compute_node', animated: true },
+      { id: 'e_oci_compute_db', source: 'oci_compute_node', target: 'oci_db_node' },
+      { id: 'e_oci_compute_storage', source: 'oci_compute_node', target: 'oci_storage_node' },
+    ],
+  },
 ];

@@ -13,6 +13,7 @@ import {
 import { calculateCost } from '../../application/use-cases/calculateCost.js';
 import { runAudit } from '../../application/use-cases/runAudit.js';
 import { generateTerraform, downloadTerraform } from '../../application/use-cases/generateTerraform.js';
+import { getCurrentProject } from '../../infrastructure/api/projectStorage.js';
 
 /** Contador global para generar IDs únicos de nodos */
 let nodeCounter = 0;
@@ -84,8 +85,9 @@ const INITIAL_EDGES = [
 ];
 
 export function useDiagram() {
-  const [nodes, setNodes] = useState(INITIAL_NODES);
-  const [edges, setEdges] = useState(INITIAL_EDGES);
+  const activeProj = useMemo(() => getCurrentProject(), []);
+  const [nodes, setNodes] = useState(() => activeProj?.nodes ?? INITIAL_NODES);
+  const [edges, setEdges] = useState(() => activeProj?.edges ?? INITIAL_EDGES);
   const [selectedNode, setSelectedNode] = useState(null);
 
   // ─── Historial para Deshacer / Rehacer (Atrás / Adelante) ──────────────────
@@ -244,11 +246,11 @@ export function useDiagram() {
 
   // ─── Export IaC ──────────────────────────────────────────────────────────
   const exportTerraform = useCallback(() => {
-    const curProjRaw = localStorage.getItem('cs_current_project');
-    const curProj = curProjRaw ? JSON.parse(curProjRaw) : null;
+    const curProj = getCurrentProject();
     const projectName = curProj?.name ?? 'CloudScope Architecture';
+    const filename = `${projectName.toLowerCase().replace(/[^a-z0-9_-]/g, '_')}_main.tf`;
     const hcl = generateTerraform(nodes, edges, projectName);
-    downloadTerraform(hcl, 'cloudscope_main.tf');
+    downloadTerraform(hcl, filename);
   }, [nodes, edges]);
 
   // ─── Cargar o limpiar diagrama ───────────────────────────────────────────

@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { Handle, Position } from 'reactflow';
 import { getNodeMeta } from '../../../domain/models/CloudNode.js';
 import { getNodeCost } from '../../../domain/models/CloudNode.js';
-import { getServiceIcon, AwsLogo, AzureLogo, GcpLogo } from '../icons/CloudIcons.jsx';
+import { getServiceIcon, AwsLogo, AzureLogo, OracleLogo, GcpLogo } from '../icons/CloudIcons.jsx';
 
 const CloudNodeComponent = memo(({ data, selected }) => {
   const meta = getNodeMeta(data.cloudType);
@@ -50,6 +50,8 @@ const CloudNodeComponent = memo(({ data, selected }) => {
               <AwsLogo className="w-2.5 h-2.5 shrink-0 opacity-90" />
             ) : meta.provider === 'azure' ? (
               <AzureLogo className="w-2.5 h-2.5 shrink-0 opacity-90" />
+            ) : meta.provider === 'oracle' ? (
+              <OracleLogo className="w-2.5 h-2.5 shrink-0 opacity-90" />
             ) : meta.provider === 'gcp' ? (
               <GcpLogo className="w-2.5 h-2.5 shrink-0 opacity-90" />
             ) : null}
