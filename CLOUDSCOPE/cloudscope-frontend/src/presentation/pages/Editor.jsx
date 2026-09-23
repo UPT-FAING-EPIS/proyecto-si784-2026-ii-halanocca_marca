@@ -220,6 +220,19 @@ function EditorInner() {
                     </button>
                   ))}
                 </div>
+
+                <div className={`mt-4 pt-3 border-t flex items-center justify-between ${isLight ? 'border-slate-100' : 'border-slate-800'}`}>
+                  <span className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                    ¿Primera vez diseñando en la nube?
+                  </span>
+                  <button
+                    onClick={() => navigate('/guide')}
+                    className="text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>📖 Ver Guía Paso a Paso para Principiantes</span>
+                    <span>→</span>
+                  </button>
+                </div>
               </div>
             </div>
           )}

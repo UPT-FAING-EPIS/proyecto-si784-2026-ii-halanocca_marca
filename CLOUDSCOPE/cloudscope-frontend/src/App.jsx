@@ -8,11 +8,22 @@ import Login from './presentation/pages/Login.jsx';
 import Register from './presentation/pages/Register.jsx';
 import Dashboard from './presentation/pages/Dashboard.jsx';
 import Editor from './presentation/pages/Editor.jsx';
+import AdminPanel from './presentation/pages/AdminPanel.jsx';
+import Guide from './presentation/pages/Guide.jsx';
 
 /** Guard de autenticación */
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('cs_token');
   return token ? children : <Navigate to="/login" replace />;
+}
+
+/** Guard exclusivo para administradores */
+function AdminRoute({ children }) {
+  const token = localStorage.getItem('cs_token');
+  if (!token) return <Navigate to="/login" replace />;
+  const userRaw = localStorage.getItem('cs_user');
+  const user = userRaw ? JSON.parse(userRaw) : null;
+  return user?.role === 'admin' ? children : <Navigate to="/dashboard" replace />;
 }
 
 export default function App() {
@@ -32,6 +43,12 @@ export default function App() {
         } />
         <Route path="/editor" element={
           <PrivateRoute><Editor /></PrivateRoute>
+        } />
+        <Route path="/guide" element={
+          <PrivateRoute><Guide /></PrivateRoute>
+        } />
+        <Route path="/admin" element={
+          <AdminRoute><AdminPanel /></AdminRoute>
         } />
 
         {/* Fallback */}

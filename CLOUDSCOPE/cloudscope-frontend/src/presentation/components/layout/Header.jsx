@@ -152,46 +152,7 @@ export default function Header({
             </div>
           )}
 
-          {/* Controles de Historial del Lienzo: Deshacer / Rehacer */}
-          <div className={`flex items-center gap-1 ml-1 pl-2 border-l ${isLight ? 'border-slate-200' : 'border-slate-800'}`}>
-            <button
-              onClick={onUndo}
-              disabled={!canUndo}
-              className="p-1.5 rounded-lg text-[11px] transition-all"
-              style={{
-                background: isLight
-                  ? (canUndo ? '#f1f5f9' : 'rgba(241,245,249,0.5)')
-                  : (canUndo ? '#1e293b' : 'rgba(30,41,59,0.4)'),
-                color: isLight
-                  ? (canUndo ? '#1e293b' : '#94a3b8')
-                  : (canUndo ? '#cbd5e1' : '#475569'),
-                border: `1px solid ${isLight ? '#cbd5e1' : '#334155'}`,
-                cursor: canUndo ? 'pointer' : 'not-allowed',
-              }}
-              title="Deshacer (Ctrl+Z)"
-            >
-              <UndoIcon className="w-3.5 h-3.5" />
-            </button>
 
-            <button
-              onClick={onRedo}
-              disabled={!canRedo}
-              className="p-1.5 rounded-lg text-[11px] transition-all"
-              style={{
-                background: isLight
-                  ? (canRedo ? '#f1f5f9' : 'rgba(241,245,249,0.5)')
-                  : (canRedo ? '#1e293b' : 'rgba(30,41,59,0.4)'),
-                color: isLight
-                  ? (canRedo ? '#1e293b' : '#94a3b8')
-                  : (canRedo ? '#cbd5e1' : '#475569'),
-                border: `1px solid ${isLight ? '#cbd5e1' : '#334155'}`,
-                cursor: canRedo ? 'pointer' : 'not-allowed',
-              }}
-              title="Rehacer (Ctrl+Y)"
-            >
-              <RedoIcon className="w-3.5 h-3.5" />
-            </button>
-          </div>
 
           {/* Indicador de Blast Radius activo */}
           {blastActive && (
@@ -318,6 +279,21 @@ export default function Header({
               </div>
             )}
           </div>
+
+          {/* Guía para Principiantes */}
+          <button
+            onClick={() => navigate('/guide')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all shadow-sm"
+            style={{
+              background: isLight ? '#ecfdf5' : '#064e3b40',
+              color: isLight ? '#059669' : '#34d399',
+              border: `1px solid ${isLight ? '#a7f3d0' : '#05966960'}`,
+            }}
+            title="Abrir la Guía Interactiva para Principiantes"
+          >
+            <HelpCircleIcon className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Guía</span>
+          </button>
 
           {/* Guardar */}
           <button
