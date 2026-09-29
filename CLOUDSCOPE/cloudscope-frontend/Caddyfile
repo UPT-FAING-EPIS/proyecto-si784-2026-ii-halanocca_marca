@@ -1,4 +1,4 @@
-169.58.156.169.nip.io {
+:80 {
     route /api/* {
         reverse_proxy cloudscope-backend:8080
     }
