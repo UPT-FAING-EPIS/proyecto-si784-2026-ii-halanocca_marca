@@ -1,9 +1,9 @@
-﻿import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 export const EditorThemeContext = createContext({
-  theme: 'dark',
-  isDark: true,
-  isLight: false,
+  theme: 'light',
+  isDark: false,
+  isLight: true,
   setTheme: () => {},
   toggleTheme: () => {},
 });
@@ -11,9 +11,9 @@ export const EditorThemeContext = createContext({
 export function EditorThemeProvider({ children }) {
   const [theme, setThemeState] = useState(() => {
     try {
-      return localStorage.getItem('cs_editor_theme') || 'dark';
+      return localStorage.getItem('cs_editor_theme') || 'light';
     } catch {
-      return 'dark';
+      return 'light';
     }
   });
 
