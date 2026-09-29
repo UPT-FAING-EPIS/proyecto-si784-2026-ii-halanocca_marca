@@ -132,7 +132,7 @@ export default function Login() {
       setLoading(true);
       setError('');
       try {
-        // Obtenemos los datos del usuario desde Google
+        // 1. Obtenemos los datos del usuario desde Google
         const userInfoRes = await axios.get(
           'https://www.googleapis.com/oauth2/v3/userinfo',
           { headers: { Authorization: `Bearer ${tokenResponse.access_token}` } }
@@ -140,21 +140,26 @@ export default function Login() {
         
         const googleProfile = userInfoRes.data;
         
-        // Simulamos la sesión con los datos reales de Google
-        const userObj = {
-          name: googleProfile.name,
+        // 2. Enviamos los datos al Backend (PostgreSQL)
+        const API_URL = `http://${window.location.hostname}:8080`;
+        const backendRes = await axios.post(`${API_URL}/api/auth/google`, {
           email: googleProfile.email,
-          picture: googleProfile.picture,
-          role: 'user'
-        };
-        
-        const token = btoa(JSON.stringify({ sub: userObj.email, name: userObj.name, exp: Date.now() + 86400000 }));
-        localStorage.setItem('cs_token', token);
-        localStorage.setItem('cs_user', JSON.stringify(userObj));
-        
-        navigate('/dashboard');
+          name: googleProfile.name,
+          picture: googleProfile.picture
+        });
+
+        // 3. Guardamos el token y usuario validados por el backend
+        if (backendRes.data?.token) {
+          localStorage.setItem('cs_token', backendRes.data.token);
+          localStorage.setItem('cs_user', JSON.stringify(backendRes.data.user));
+          navigate('/dashboard');
+        } else {
+          throw new Error('Respuesta inválida del servidor.');
+        }
+
       } catch (err) {
-        setError('Falló la autenticación con Google.');
+        console.error(err);
+        setError('Falló la autenticación con el servidor.');
       } finally {
         setLoading(false);
       }

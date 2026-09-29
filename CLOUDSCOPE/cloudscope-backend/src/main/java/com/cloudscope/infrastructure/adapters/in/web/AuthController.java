@@ -110,4 +110,45 @@ public class AuthController {
                 )
         ));
     }
+
+    @PostMapping("/google")
+    public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> request) {
+        String email = request.getOrDefault("email", "").trim().toLowerCase();
+        String name = request.getOrDefault("name", "").trim();
+        String picture = request.getOrDefault("picture", "").trim();
+
+        if (email.isEmpty() || name.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Datos de Google inválidos."));
+        }
+
+        // Dividir nombre y apellido
+        String[] nameParts = name.split(" ", 2);
+        String firstName = nameParts[0];
+        String lastName = nameParts.length > 1 ? nameParts[1] : "";
+
+        // Buscar usuario o crearlo si es la primera vez que entra con Google
+        UserEntity user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            user = new UserEntity(firstName, lastName, email, "google_sso_oauth_placeholder", "US1");
+            user = userRepository.save(user);
+        }
+
+        String token = Base64.getEncoder().encodeToString(
+                ("{\"sub\":\"" + user.getEmail() + "\",\"name\":\"" + user.getFirstName() + " " + user.getLastName() + "\",\"exp\":" + (System.currentTimeMillis() + 86400000) + "}").getBytes()
+        );
+
+        return ResponseEntity.ok(Map.of(
+                "status", "success",
+                "token", token,
+                "user", Map.of(
+                        "id", user.getId(),
+                        "name", user.getFirstName() + " " + user.getLastName(),
+                        "firstName", user.getFirstName(),
+                        "lastName", user.getLastName(),
+                        "email", user.getEmail(),
+                        "picture", picture,
+                        "region", user.getRegion()
+                )
+        ));
+    }
 }
