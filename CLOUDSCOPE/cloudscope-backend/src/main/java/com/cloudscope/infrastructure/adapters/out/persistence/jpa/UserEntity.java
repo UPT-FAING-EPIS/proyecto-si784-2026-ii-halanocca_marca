@@ -27,6 +27,9 @@ public class UserEntity {
     @Column(name = "region", length = 32)
     private String region;
 
+    @Column(name = "phone", length = 32)
+    private String phone;
+
     @Column(name = "created_at")
     private String createdAt;
 
@@ -63,6 +66,9 @@ public class UserEntity {
 
     public String getRegion() { return region; }
     public void setRegion(String region) { this.region = region; }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
 
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }

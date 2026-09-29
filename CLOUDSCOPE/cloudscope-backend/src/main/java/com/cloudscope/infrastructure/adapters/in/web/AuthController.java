@@ -151,4 +151,46 @@ public class AuthController {
                 )
         ));
     }
+
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(@RequestBody Map<String, String> request) {
+        String email = request.getOrDefault("email", "").trim().toLowerCase();
+        
+        Optional<UserEntity> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Usuario no encontrado."));
+        }
+
+        UserEntity user = userOpt.get();
+        
+        // Update allowed fields (Not email)
+        if (request.containsKey("firstName")) {
+            user.setFirstName(request.get("firstName").trim());
+        }
+        if (request.containsKey("lastName")) {
+            user.setLastName(request.get("lastName").trim());
+        }
+        if (request.containsKey("region")) {
+            user.setRegion(request.get("region").trim());
+        }
+        if (request.containsKey("phone")) {
+            user.setPhone(request.get("phone").trim());
+        }
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok(Map.of(
+                "status", "success",
+                "message", "Perfil actualizado correctamente.",
+                "user", Map.of(
+                        "id", user.getId(),
+                        "name", user.getFirstName() + " " + user.getLastName(),
+                        "firstName", user.getFirstName(),
+                        "lastName", user.getLastName(),
+                        "email", user.getEmail(),
+                        "phone", user.getPhone() != null ? user.getPhone() : "",
+                        "region", user.getRegion()
+                )
+        ));
+    }
 }

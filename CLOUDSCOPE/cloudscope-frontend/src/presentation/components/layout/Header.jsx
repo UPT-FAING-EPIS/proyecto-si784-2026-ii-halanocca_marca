@@ -114,6 +114,54 @@ export default function Header({
     setTimeout(() => setExported(false), 2500);
   };
 
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileData, setProfileData] = useState({ firstName: '', lastName: '', phone: '' });
+
+  const handleOpenProfile = () => {
+    setShowUserMenu(false);
+    const userStr = localStorage.getItem('cs_user');
+    if (userStr) {
+      const u = JSON.parse(userStr);
+      setProfileData({
+        firstName: u.firstName || u.name?.split(' ')[0] || '',
+        lastName: u.lastName || u.name?.split(' ').slice(1).join(' ') || '',
+        phone: u.phone || ''
+      });
+    }
+    setShowProfileModal(true);
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      const userStr = localStorage.getItem('cs_user');
+      if (!userStr) return;
+      const u = JSON.parse(userStr);
+
+      const API_URL = window.location.protocol === 'https:' ? '' : `http://${window.location.hostname}:8080`;
+      const res = await fetch(`${API_URL}/api/auth/profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: u.email,
+          firstName: profileData.firstName,
+          lastName: profileData.lastName,
+          phone: profileData.phone
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Update local storage with new info (keep the token)
+        localStorage.setItem('cs_user', JSON.stringify({ ...u, ...data.user }));
+        setShowProfileModal(false);
+        window.location.reload();
+      } else {
+        alert('Error al guardar perfil.');
+      }
+    } catch (e) {
+      alert('Error de conexión.');
+    }
+  };
+
   const handleMenuAction = (actionTitle, detail) => {
     setShowUserMenu(false);
     setModalInfo({
@@ -455,7 +503,7 @@ export default function Header({
               >
                 {/* Bloque 1: Configuración de cuenta y equipo */}
                 <button
-                  onClick={() => handleMenuAction('User settings', 'Configuración de perfil, correo y preferencias personales.')}
+                  onClick={handleOpenProfile}
                   className="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-slate-50 transition-colors text-left text-slate-700 font-medium"
                 >
                   <UserIcon className="w-4 h-4 text-slate-500 shrink-0" />
@@ -634,6 +682,79 @@ export default function Header({
                 className="px-4 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
               >
                 Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE PERFIL */}
+      {showProfileModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowProfileModal(false)} />
+          <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+            <div className="p-5 border-b border-slate-100 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <UserIcon className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-800 text-base">Configuración de Perfil</h3>
+                <p className="text-xs text-slate-500">Actualiza tus datos personales</p>
+              </div>
+            </div>
+            
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Nombre</label>
+                <input 
+                  type="text" 
+                  value={profileData.firstName}
+                  onChange={e => setProfileData({...profileData, firstName: e.target.value})}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Apellido</label>
+                <input 
+                  type="text" 
+                  value={profileData.lastName}
+                  onChange={e => setProfileData({...profileData, lastName: e.target.value})}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Celular</label>
+                <input 
+                  type="text" 
+                  value={profileData.phone}
+                  onChange={e => setProfileData({...profileData, phone: e.target.value})}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="+51 987 654 321"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Correo Electrónico (Solo Lectura)</label>
+                <input 
+                  type="text" 
+                  value={user?.email || ''}
+                  disabled
+                  className="w-full border border-slate-200 bg-slate-50 rounded-lg px-3 py-2 text-sm text-slate-500 cursor-not-allowed"
+                />
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+              <button 
+                onClick={() => setShowProfileModal(false)}
+                className="px-4 py-2 text-sm font-bold text-slate-600 hover:text-slate-800 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleSaveProfile}
+                className="px-4 py-2 text-sm font-bold bg-blue-600 text-white rounded-lg shadow-sm shadow-blue-600/20 hover:bg-blue-700 transition-colors"
+              >
+                Guardar Cambios
               </button>
             </div>
           </div>
