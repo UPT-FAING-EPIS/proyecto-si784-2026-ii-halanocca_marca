@@ -18,7 +18,8 @@ const MOCK_USERS = [
 
 async function authenticateUser(email, password) {
   try {
-    const res = await axios.post('http://localhost:8080/api/auth/login', { email, password });
+    const API_URL = `http://${window.location.hostname}:8080`;
+    const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
     if (res.data?.token) {
       localStorage.setItem('cs_token', res.data.token);
       localStorage.setItem('cs_user', JSON.stringify(res.data.user));
