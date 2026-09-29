@@ -57,6 +57,30 @@ function EyeIcon({ open }) {
   );
 }
 
+// ─── Icono de Google ─────────────────────────────────────────────────────────────
+function GoogleIcon({ className = "w-5 h-5" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24">
+      <path
+        fill="#4285F4"
+        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.04 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+      />
+    </svg>
+  );
+}
+
 export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -99,6 +123,22 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleLogin = () => {
+    setLoading(true);
+    setTimeout(() => {
+      const googleUser = {
+        name: 'Google Cloud User',
+        email: 'user.google@cloudscope.io',
+        role: 'user',
+        region: 'US1',
+      };
+      const token = btoa(JSON.stringify({ sub: googleUser.email, name: googleUser.name, exp: Date.now() + 86400000 }));
+      localStorage.setItem('cs_token', token);
+      localStorage.setItem('cs_user', JSON.stringify(googleUser));
+      navigate('/dashboard');
+    }, 600);
   };
 
   return (
@@ -227,6 +267,26 @@ export default function Login() {
             </div>
           )}
 
+          {/* Botón de Google */}
+          <div className="mb-5">
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="w-full py-2.5 px-4 rounded-xl border border-slate-300 hover:border-slate-400 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm flex items-center justify-center gap-3 transition-all duration-150 shadow-sm"
+            >
+              <GoogleIcon className="w-5 h-5" />
+              <span>Google</span>
+            </button>
+          </div>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex-1 h-px" style={{ background: '#e2e8f0' }} />
+            <span className="text-xs font-medium" style={{ color: '#94a3b8' }}>o continúa con el email</span>
+            <div className="flex-1 h-px" style={{ background: '#e2e8f0' }} />
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div className="space-y-1.5">
@@ -315,29 +375,24 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px" style={{ background: '#e2e8f0' }} />
-            <span className="text-xs font-medium" style={{ color: '#94a3b8' }}>o continúa con</span>
-            <div className="flex-1 h-px" style={{ background: '#e2e8f0' }} />
-          </div>
-
           {/* Demo access */}
-          <button
-            id="login-demo"
-            onClick={handleDemoLogin}
-            disabled={loading}
-            className="w-full py-3 rounded-xl font-bold text-sm transition-all duration-200"
-            style={{
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
-              color: '#64748b',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.color = '#0f172a'; e.currentTarget.style.background = '#f1f5f9'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.background = '#f8fafc'; }}
-          >
-            Acceso Demo (sin cuenta)
-          </button>
+          <div className="mt-6">
+            <button
+              id="login-demo"
+              onClick={handleDemoLogin}
+              disabled={loading}
+              className="w-full py-3 rounded-xl font-bold text-sm transition-all duration-200"
+              style={{
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                color: '#64748b',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.color = '#0f172a'; e.currentTarget.style.background = '#f1f5f9'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.background = '#f8fafc'; }}
+            >
+              Acceso Demo (sin cuenta)
+            </button>
+          </div>
 
           {/* Enlace al registro */}
           <div className="mt-6 text-center text-xs text-slate-500">
