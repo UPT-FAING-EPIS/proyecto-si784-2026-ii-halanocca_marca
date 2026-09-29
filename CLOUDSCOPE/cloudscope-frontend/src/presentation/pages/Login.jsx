@@ -119,16 +119,6 @@ export default function Login() {
             backgroundSize: '32px 32px',
           }}
         />
-        {/* Marca de agua de la imagen subida por el usuario */}
-        <div
-          className="absolute inset-0 opacity-5 pointer-events-none"
-          style={{
-            backgroundImage: "url('/bg-pattern.png')",
-            backgroundSize: '300px',
-            backgroundRepeat: 'repeat',
-            backgroundPosition: 'center',
-          }}
-        />
         {/* Glow */}
         <div
           className="absolute top-1/3 left-1/3 w-96 h-96 rounded-full opacity-20 blur-3xl"
@@ -202,8 +192,19 @@ export default function Login() {
       </div>
 
       {/* ── Panel derecho: formulario ───────────────────────────────────── */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-slate-50">
-        <div className="w-full max-w-md bg-white p-10 rounded-2xl shadow-sm border border-slate-200">
+      <div className="flex-1 flex items-center justify-center p-8 bg-slate-50 relative">
+        {/* Marca de agua de la imagen subida por el usuario en el lado derecho */}
+        <div
+          className="absolute inset-0 opacity-5 pointer-events-none"
+          style={{
+            backgroundImage: "url('/bg-pattern.png')",
+            backgroundSize: '300px',
+            backgroundRepeat: 'repeat',
+            backgroundPosition: 'center',
+          }}
+        />
+
+        <div className="w-full max-w-md bg-white p-10 rounded-2xl shadow-sm border border-slate-200 relative z-10">
 
           {/* Logo móvil */}
           <div className="flex lg:hidden items-center gap-2 mb-10 justify-center">
