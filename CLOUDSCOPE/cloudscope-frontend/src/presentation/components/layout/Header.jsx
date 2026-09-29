@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatUSD } from '../../../application/use-cases/calculateCost.js';
 import { ARCHITECTURE_PRESETS } from '../../../domain/models/ArchitecturePresets.js';
-import { getCurrentProject } from '../../../infrastructure/api/projectStorage.js';
+import { getCurrentProject, saveProject } from '../../../infrastructure/api/projectStorage.js';
 import { useEditorTheme } from '../../context/EditorThemeContext.jsx';
 import {
   CloudScopeLogo, AwsLogo, AzureLogo, OracleLogo, GcpLogo,
@@ -60,6 +60,32 @@ export default function Header({
   const displayName = (user?.name || user?.username || 'STEVIE').toUpperCase();
   const userInitials = displayName.split(' ').map(n => n[0]).filter(Boolean).join('').slice(0, 2) || 'GM';
   const currentProject = getCurrentProject();
+
+  // Estado para edición del nombre del proyecto
+  const [localProjectName, setLocalProjectName] = useState(currentProject?.name || '');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editNameValue, setEditNameValue] = useState('');
+
+  useEffect(() => {
+    if (currentProject?.name) {
+      setLocalProjectName(currentProject.name);
+    }
+  }, [currentProject?.name]);
+
+  const handleRenameSubmit = () => {
+    if (editNameValue.trim() && currentProject && editNameValue.trim() !== currentProject.name) {
+      const newName = editNameValue.trim();
+      setLocalProjectName(newName);
+      saveProject(
+        currentProject.id,
+        newName,
+        currentProject.description,
+        currentProject.nodes,
+        currentProject.edges
+      );
+    }
+    setIsEditingName(false);
+  };
 
   const handleLogout = () => {
     sessionStorage.setItem('cs_logout', '1');
@@ -146,9 +172,30 @@ export default function Header({
           {currentProject?.name && (
             <div className={`hidden lg:flex items-center gap-1.5 pl-2 border-l ${isLight ? 'border-slate-200' : 'border-slate-800'} text-xs`}>
               <span className={`font-mono text-[10px] ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>PROYECTO:</span>
-              <span className={`font-bold truncate max-w-[200px] ${isLight ? 'text-amber-600' : 'text-amber-400'}`} title={currentProject.name}>
-                {currentProject.name}
-              </span>
+              {isEditingName ? (
+                <input
+                  autoFocus
+                  value={editNameValue}
+                  onChange={(e) => setEditNameValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleRenameSubmit();
+                    if (e.key === 'Escape') setIsEditingName(false);
+                  }}
+                  onBlur={handleRenameSubmit}
+                  className={`font-bold outline-none bg-transparent ${isLight ? 'text-amber-700' : 'text-amber-300'} border-b border-amber-500 w-[180px] px-1`}
+                />
+              ) : (
+                <span
+                  className={`font-bold truncate max-w-[200px] cursor-pointer hover:underline decoration-amber-500/50 px-1 ${isLight ? 'text-amber-600' : 'text-amber-400'}`}
+                  title="Clic para renombrar proyecto"
+                  onClick={() => {
+                    setEditNameValue(localProjectName);
+                    setIsEditingName(true);
+                  }}
+                >
+                  {localProjectName}
+                </span>
+              )}
             </div>
           )}
 
