@@ -22,67 +22,9 @@ function generateNodeId() {
   return `node_${Date.now()}_${++nodeCounter}`;
 }
 
-/** Nodos de ejemplo para el canvas inicial */
-const INITIAL_NODES = [
-  {
-    id: 'demo_vpc',
-    type: 'cloudNode',
-    position: { x: 250, y: 80 },
-    data: {
-      cloudType: 'vpc',
-      label: 'Production VPC',
-      config: { cidr: '10.0.0.0/16', enableDnsHostnames: true },
-    },
-  },
-  {
-    id: 'demo_subnet_pub',
-    type: 'cloudNode',
-    position: { x: 80, y: 230 },
-    data: {
-      cloudType: 'subnet',
-      label: 'Public Subnet',
-      config: { cidr: '10.0.1.0/24', isPublic: true, availabilityZone: 'us-east-1a' },
-    },
-  },
-  {
-    id: 'demo_subnet_priv',
-    type: 'cloudNode',
-    position: { x: 420, y: 230 },
-    data: {
-      cloudType: 'subnet',
-      label: 'Private Subnet',
-      config: { cidr: '10.0.2.0/24', isPublic: false, availabilityZone: 'us-east-1b' },
-    },
-  },
-  {
-    id: 'demo_ec2',
-    type: 'cloudNode',
-    position: { x: 80, y: 380 },
-    data: {
-      cloudType: 'ec2',
-      label: 'App Server',
-      config: { instanceType: 't3.medium', os: 'Amazon Linux 2' },
-    },
-  },
-  {
-    id: 'demo_rds',
-    type: 'cloudNode',
-    position: { x: 420, y: 380 },
-    data: {
-      cloudType: 'rds',
-      label: 'Primary DB',
-      config: { engine: 'postgres', instanceClass: 'db.t3.micro', multiAz: false, publiclyAccessible: false },
-    },
-  },
-];
-
-const INITIAL_EDGES = [
-  { id: 'e_vpc_pub', source: 'demo_vpc', target: 'demo_subnet_pub', animated: false, style: { stroke: '#8b5cf6', strokeWidth: 1.5 } },
-  { id: 'e_vpc_priv', source: 'demo_vpc', target: 'demo_subnet_priv', animated: false, style: { stroke: '#8b5cf6', strokeWidth: 1.5 } },
-  { id: 'e_pub_ec2', source: 'demo_subnet_pub', target: 'demo_ec2', animated: true, style: { stroke: '#f97316', strokeWidth: 1.5 } },
-  { id: 'e_priv_rds', source: 'demo_subnet_priv', target: 'demo_rds', animated: false, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
-  { id: 'e_ec2_rds', source: 'demo_ec2', target: 'demo_rds', animated: false, style: { stroke: '#64748b', strokeWidth: 1.5, strokeDasharray: '5,3' } },
-];
+/** Nodos de ejemplo para el canvas inicial (Vaciados para permitir lienzo en blanco) */
+const INITIAL_NODES = [];
+const INITIAL_EDGES = [];
 
 export function useDiagram() {
   const activeProj = useMemo(() => getCurrentProject(), []);

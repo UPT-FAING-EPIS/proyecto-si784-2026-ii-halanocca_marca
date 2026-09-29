@@ -876,7 +876,7 @@ export default function Dashboard() {
             </button>
 
             <button
-              onClick={() => navigate('/editor')}
+              onClick={() => handleCreateProject('Proyecto en blanco', '')}
               className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold transition-all bg-slate-100 hover:bg-slate-200 text-slate-800"
             >
               <BlockIcon className="w-3.5 h-3.5 text-slate-600" />
