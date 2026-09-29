@@ -5,10 +5,40 @@
 
 import { ARCHITECTURE_PRESETS } from '../../domain/models/ArchitecturePresets.js';
 
-const STORAGE_KEY = 'cloudscope_projects';
-const CURRENT_KEY = 'cloudscope_current_project';
-const LEGACY_KEY = 'cs_current_project';
 const VERSION = '1.0';
+
+function getStorageKey() {
+  const userRaw = localStorage.getItem('cs_user');
+  if (userRaw) {
+    try {
+      const user = JSON.parse(userRaw);
+      if (user && user.email) return `cloudscope_projects_${user.email}`;
+    } catch {}
+  }
+  return 'cloudscope_projects';
+}
+
+function getCurrentKey() {
+  const userRaw = localStorage.getItem('cs_user');
+  if (userRaw) {
+    try {
+      const user = JSON.parse(userRaw);
+      if (user && user.email) return `cloudscope_current_project_${user.email}`;
+    } catch {}
+  }
+  return 'cloudscope_current_project';
+}
+
+function getLegacyKey() {
+  const userRaw = localStorage.getItem('cs_user');
+  if (userRaw) {
+    try {
+      const user = JSON.parse(userRaw);
+      if (user && user.email) return `cs_current_project_${user.email}`;
+    } catch {}
+  }
+  return 'cs_current_project';
+}
 
 /**
  * @typedef {Object} CloudProject
@@ -36,7 +66,7 @@ function generateProjectId() {
  */
 export function listProjects() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(getStorageKey());
     if (raw) {
       const parsed = JSON.parse(raw);
       // Si ya hay un arreglo guardado (incluso vacío), lo devolvemos
@@ -53,7 +83,7 @@ export function listProjects() {
       nodes: p.nodes ?? [],
       edges: p.edges ?? [],
     }));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(initialProjects));
+    localStorage.setItem(getStorageKey(), JSON.stringify(initialProjects));
     return initialProjects;
   } catch {
     return [];
@@ -90,9 +120,9 @@ export function saveProject(id, name, description, nodes, edges) {
     ? projects.map(p => p.id === project.id ? project : p)
     : [...projects, project];
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  localStorage.setItem(CURRENT_KEY, project.id);
-  localStorage.setItem(LEGACY_KEY, JSON.stringify(project));
+  localStorage.setItem(getStorageKey(), JSON.stringify(updated));
+  localStorage.setItem(getCurrentKey(), project.id);
+  localStorage.setItem(getLegacyKey(), JSON.stringify(project));
 
   // Sincronización asíncrona no bloqueante con el backend Spring Boot
   try {
@@ -122,8 +152,8 @@ export function loadProject(id) {
   const projects = listProjects();
   const project = projects.find(p => p.id === id) ?? null;
   if (project) {
-    localStorage.setItem(CURRENT_KEY, id);
-    localStorage.setItem(LEGACY_KEY, JSON.stringify(project));
+    localStorage.setItem(getCurrentKey(), id);
+    localStorage.setItem(getLegacyKey(), JSON.stringify(project));
   }
   return project;
 }
@@ -134,11 +164,11 @@ export function loadProject(id) {
  */
 export function deleteProject(id) {
   const projects = listProjects().filter(p => p.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
-  const currentId = localStorage.getItem(CURRENT_KEY);
+  localStorage.setItem(getStorageKey(), JSON.stringify(projects));
+  const currentId = localStorage.getItem(getCurrentKey());
   if (currentId === id) {
-    localStorage.removeItem(CURRENT_KEY);
-    localStorage.removeItem(LEGACY_KEY);
+    localStorage.removeItem(getCurrentKey());
+    localStorage.removeItem(getLegacyKey());
   }
 }
 
@@ -147,7 +177,7 @@ export function deleteProject(id) {
  * @returns {string|null}
  */
 export function getCurrentProjectId() {
-  return localStorage.getItem(CURRENT_KEY);
+  return localStorage.getItem(getCurrentKey());
 }
 
 /**
@@ -156,12 +186,12 @@ export function getCurrentProjectId() {
  */
 export function getCurrentProject() {
   try {
-    const raw = localStorage.getItem(LEGACY_KEY);
+    const raw = localStorage.getItem(getLegacyKey());
     if (raw) {
       const proj = JSON.parse(raw);
       if (proj && proj.id) return proj;
     }
-    const curId = localStorage.getItem(CURRENT_KEY);
+    const curId = localStorage.getItem(getCurrentKey());
     if (curId) {
       const projects = listProjects();
       return projects.find(p => p.id === curId) ?? null;
@@ -211,7 +241,7 @@ export function importProjectJSON() {
           project.id = generateProjectId();
           project.name = `${project.name} (imported)`;
           const projects = listProjects();
-          localStorage.setItem(STORAGE_KEY, JSON.stringify([...projects, project]));
+          localStorage.setItem(getStorageKey(), JSON.stringify([...projects, project]));
           resolve(project);
         } catch (err) {
           reject(err);

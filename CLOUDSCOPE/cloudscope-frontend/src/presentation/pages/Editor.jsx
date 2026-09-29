@@ -18,6 +18,7 @@ import { getNodeMeta } from '../../domain/models/CloudNode.js';
 import { runBlastRadius } from '../../application/use-cases/runBlastRadius.js';
 import { generateAuditReport } from '../../application/use-cases/generateAuditReport.js';
 import { ARCHITECTURE_PRESETS } from '../../domain/models/ArchitecturePresets.js';
+import { getCurrentProject } from '../../infrastructure/api/projectStorage.js';
 
 function EditorInner() {
   const rfInstance = useReactFlow();
@@ -112,8 +113,7 @@ function EditorInner() {
 
   // Exportar reporte de auditoría a PDF (RF-11)
   const handleExportPDF = useCallback(() => {
-    const curProjRaw = localStorage.getItem('cs_current_project');
-    const curProj = curProjRaw ? JSON.parse(curProjRaw) : null;
+    const curProj = getCurrentProject();
     const projectName = curProj?.name ?? 'Arquitectura CloudScope';
     generateAuditReport(projectName, nodes, edges, auditResult, costBreakdown);
   }, [nodes, edges, auditResult, costBreakdown]);
