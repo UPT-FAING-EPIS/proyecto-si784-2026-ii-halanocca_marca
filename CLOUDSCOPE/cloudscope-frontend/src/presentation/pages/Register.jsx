@@ -147,7 +147,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-slate-950 font-sans text-slate-100 selection:bg-purple-500 selection:text-white">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-slate-50 font-sans text-slate-800 selection:bg-blue-500 selection:text-white">
       
       {/* Tarjeta principal estilo Brainboard / CloudScope */}
       <div
