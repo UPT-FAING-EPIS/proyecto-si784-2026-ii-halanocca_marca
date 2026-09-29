@@ -98,7 +98,7 @@ function generateLog(id) {
     type,
     source,
     message,
-    userId: Math.random() < 0.5 ? 'admin@cloudscope.io' : (Math.random() < 0.5 ? 'demo@cloudscope.io' : null),
+    userId: Math.random() < 0.5 ? 'admin' : (Math.random() < 0.5 ? 'demo@cloudscope.io' : null),
     requestId: `req-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
   };
 }
@@ -242,7 +242,7 @@ export default function AdminPanel() {
   const registeredRaw = localStorage.getItem('cs_registered_users');
   const registered = registeredRaw ? JSON.parse(registeredRaw) : [];
   const allUsers = [
-    { email: 'admin@cloudscope.io', name: 'Admin User', role: 'admin',   lastLogin: new Date(Date.now() - 60000) },
+    { email: 'admin', name: 'Admin User', role: 'admin',   lastLogin: new Date(Date.now() - 60000) },
     { email: 'demo@cloudscope.io',  name: 'Demo User',  role: 'viewer',  lastLogin: new Date(Date.now() - 3600000) },
     ...registered.map((u, i) => ({ ...u, role: u.role ?? 'user', lastLogin: new Date(Date.now() - randomBetween(0, 86400000)) })),
   ];
@@ -311,8 +311,8 @@ export default function AdminPanel() {
     return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
   })();
 
-  const BG = '#080d18', CARD = '#0f172a', BORDER = '#1e293b';
-  const textPrimary = '#f8fafc', textMuted = '#64748b', textDim = '#334155';
+  const BG = '#ffffff', CARD = '#f8fafc', BORDER = '#e2e8f0';
+  const textPrimary = '#0f172a', textMuted = '#64748b', textDim = '#94a3b8';
 
   if (!isAdmin) {
     return (
@@ -343,7 +343,7 @@ export default function AdminPanel() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: BG, fontFamily: "'Inter', sans-serif" }}>
 
       {/* ── Header ───────────────────────────────────────────────────────────── */}
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', background: '#0a0f1e', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', background: CARD, borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <CloudScopeLogo className="w-5 h-5" />
@@ -397,7 +397,7 @@ export default function AdminPanel() {
       </header>
 
       {/* ── Tabs ─────────────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 24px', background: '#0a0f1e', borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 24px', background: CARD, borderBottom: `1px solid ${BORDER}`, flexShrink: 0 }}>
         {TABS.map(tab => (
           <button
             key={tab.id}

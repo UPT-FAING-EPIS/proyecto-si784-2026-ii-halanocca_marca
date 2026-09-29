@@ -71,10 +71,10 @@ public class AuthController {
         String password = request.getOrDefault("password", "").trim();
 
         // Soporte para credenciales de prueba predefinidas
-        if (("admin@cloudscope.io".equals(email) && "admin123".equals(password)) ||
+        if (("admin".equals(email) && "admin".equals(password)) ||
             ("demo@cloudscope.io".equals(email) && "demo123".equals(password))) {
-            String role = email.startsWith("admin") ? "admin" : "viewer";
-            String name = email.startsWith("admin") ? "Admin User" : "Demo User";
+            String role = "admin".equals(email) ? "admin" : "viewer";
+            String name = "admin".equals(email) ? "Admin User" : "Demo User";
             String token = Base64.getEncoder().encodeToString(
                     ("{\"sub\":\"" + email + "\",\"name\":\"" + name + "\",\"role\":\"" + role + "\"}").getBytes()
             );

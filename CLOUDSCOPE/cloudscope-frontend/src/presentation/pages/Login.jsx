@@ -12,7 +12,7 @@ import { CloudScopeLogo, AwsLogo, AzureLogo, OracleLogo, GcpLogo, TerraformLogo,
 
 // ─── Mock Auth + Backend Auth ────────────────
 const MOCK_USERS = [
-  { email: 'admin@cloudscope.io', password: 'admin123', name: 'Admin User', role: 'admin' },
+  { email: 'admin', password: 'admin', name: 'Admin User', role: 'admin' },
   { email: 'demo@cloudscope.io', password: 'demo123', name: 'Demo User', role: 'viewer' },
 ];
 
@@ -324,7 +324,7 @@ export default function Login() {
               </label>
               <input
                 id="login-email"
-                type="email"
+                type="text"
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -435,7 +435,7 @@ export default function Login() {
           <div className="mt-6 p-3 rounded-xl text-xs space-y-1"
             style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b' }}>
             <div className="font-bold text-slate-700 mb-1">Credenciales de prueba:</div>
-            <div className="font-mono">admin@cloudscope.io · admin123</div>
+            <div className="font-mono">admin · admin</div>
             <div className="font-mono">demo@cloudscope.io&nbsp;&nbsp; · demo123</div>
           </div>
         </div>
