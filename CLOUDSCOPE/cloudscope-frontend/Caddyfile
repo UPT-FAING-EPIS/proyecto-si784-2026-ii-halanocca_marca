@@ -1,0 +1,5 @@
+169.58.156.169.nip.io {
+    root * /usr/share/caddy
+    file_server
+    try_files {path} /index.html
+}
