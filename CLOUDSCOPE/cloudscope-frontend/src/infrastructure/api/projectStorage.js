@@ -39,9 +39,10 @@ export function listProjects() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      // Si ya hay un arreglo guardado (incluso vacío), lo devolvemos
+      if (Array.isArray(parsed)) return parsed;
     }
-    // Inicializar proyectos de ejemplo basados en los presets
+    // Inicializar proyectos de ejemplo solo la primera vez que se entra
     const initialProjects = ARCHITECTURE_PRESETS.map((p, idx) => ({
       id: `proj_${p.id}`,
       name: p.name,
