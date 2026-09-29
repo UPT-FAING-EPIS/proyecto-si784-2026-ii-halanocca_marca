@@ -126,7 +126,8 @@ export function saveProject(id, name, description, nodes, edges) {
 
   // Sincronización asíncrona no bloqueante con el backend Spring Boot
   try {
-    fetch(`http://localhost:8080/api/projects/${project.id}/save`, {
+    const API_URL = window.location.protocol === 'https:' ? '' : `http://${window.location.hostname}:8080`;
+    fetch(`${API_URL}/api/projects/${project.id}/save`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

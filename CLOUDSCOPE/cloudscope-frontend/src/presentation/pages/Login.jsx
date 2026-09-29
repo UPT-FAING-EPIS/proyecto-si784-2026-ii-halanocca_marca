@@ -18,7 +18,7 @@ const MOCK_USERS = [
 
 async function authenticateUser(email, password) {
   try {
-    const API_URL = `http://${window.location.hostname}:8080`;
+    const API_URL = window.location.protocol === 'https:' ? '' : `http://${window.location.hostname}:8080`;
     const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
     if (res.data?.token) {
       localStorage.setItem('cs_token', res.data.token);
@@ -141,7 +141,7 @@ export default function Login() {
         const googleProfile = userInfoRes.data;
         
         // 2. Enviamos los datos al Backend (PostgreSQL)
-        const API_URL = `http://${window.location.hostname}:8080`;
+        const API_URL = window.location.protocol === 'https:' ? '' : `http://${window.location.hostname}:8080`;
         const backendRes = await axios.post(`${API_URL}/api/auth/google`, {
           email: googleProfile.email,
           name: googleProfile.name,

@@ -82,7 +82,7 @@ export default function Register() {
       // Intentar registro en el backend Spring Boot / PostgreSQL
       let response;
       try {
-        const API_URL = `http://${window.location.hostname}:8080`;
+        const API_URL = window.location.protocol === 'https:' ? '' : `http://${window.location.hostname}:8080`;
         response = await axios.post(`${API_URL}/api/auth/register`, {
           firstName: firstName.trim(),
           lastName: lastName.trim(),
