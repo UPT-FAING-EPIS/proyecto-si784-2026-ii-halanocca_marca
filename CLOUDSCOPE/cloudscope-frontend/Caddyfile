@@ -1,4 +1,5 @@
-:80 {
+169.58.156.169.nip.io {
+    tls internal
     route /api/* {
         reverse_proxy cloudscope-backend:8080
     }
