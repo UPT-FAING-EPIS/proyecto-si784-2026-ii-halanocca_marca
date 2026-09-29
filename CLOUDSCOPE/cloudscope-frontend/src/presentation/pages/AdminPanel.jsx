@@ -239,38 +239,53 @@ export default function AdminPanel() {
   const logIdRef = useRef(41);
   const [projects, setProjects] = useState(() => listProjects());
 
-  const registeredRaw = localStorage.getItem('cs_registered_users');
-  const registered = registeredRaw ? JSON.parse(registeredRaw) : [];
-  const allUsers = [
+  const [realUsers, setRealUsers] = useState([]);
+  const allUsers = realUsers.length > 0 ? realUsers : [
     { email: 'admin', name: 'Admin User', role: 'admin',   lastLogin: new Date(Date.now() - 60000) },
-    { email: 'demo@cloudscope.io',  name: 'Demo User',  role: 'viewer',  lastLogin: new Date(Date.now() - 3600000) },
-    ...registered.map((u, i) => ({ ...u, role: u.role ?? 'user', lastLogin: new Date(Date.now() - randomBetween(0, 86400000)) })),
   ];
 
-  // Métricas en tiempo real
+  // Fetch real data from backend
   useEffect(() => {
     if (isPaused) return;
-    const interval = setInterval(() => {
-      setMetrics(prev => {
-        const next = generateSystemMetrics(prev);
-        setCpuHistory(h => [...h.slice(-29), next.cpu]);
-        setMemHistory(h => [...h.slice(-29), next.memory]);
-        setNetHistory(h => [...h.slice(-29), next.network]);
-        return next;
-      });
-    }, 1000);
+
+    const fetchData = async () => {
+      try {
+        const API_URL = window.location.protocol === 'https:' ? '' : `http://${window.location.hostname}:8080`;
+        
+        // Fetch Metrics
+        const metricsRes = await fetch(`${API_URL}/api/admin/metrics`);
+        if (metricsRes.ok) {
+          const next = await metricsRes.json();
+          setMetrics(next);
+          setCpuHistory(h => [...h.slice(-29), next.cpu]);
+          setMemHistory(h => [...h.slice(-29), next.memory]);
+          setNetHistory(h => [...h.slice(-29), next.network]);
+        }
+
+        // Fetch Users
+        const usersRes = await fetch(`${API_URL}/api/admin/users`);
+        if (usersRes.ok) {
+          const usersData = await usersRes.json();
+          setRealUsers(usersData);
+        }
+
+        // Fetch Logs
+        const logsRes = await fetch(`${API_URL}/api/admin/logs`);
+        if (logsRes.ok) {
+          const logsData = await logsRes.json();
+          if (logsData && logsData.length > 0) {
+            setLogs(logsData.map(l => ({ ...l, timestamp: new Date(l.timestamp) })));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch admin data", err);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 2000);
     return () => clearInterval(interval);
   }, [isPaused]);
-
-  // Generación de logs
-  useEffect(() => {
-    if (isPaused) return;
-    const delay = randomBetween(1500, 3500);
-    const timeout = setTimeout(() => {
-      setLogs(prev => [...prev.slice(-199), generateLog(logIdRef.current++)]);
-    }, delay);
-    return () => clearTimeout(timeout);
-  }, [logs, isPaused]);
 
   // Auto-scroll
   useEffect(() => {

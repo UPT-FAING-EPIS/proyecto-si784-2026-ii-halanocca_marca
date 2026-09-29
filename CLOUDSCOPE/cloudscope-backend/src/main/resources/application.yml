@@ -20,6 +20,8 @@ spring:
         dialect: ${HIBERNATE_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
 
 logging:
+  file:
+    name: logs/cloudscope.log
   level:
     root: INFO
     com.cloudscope: DEBUG
