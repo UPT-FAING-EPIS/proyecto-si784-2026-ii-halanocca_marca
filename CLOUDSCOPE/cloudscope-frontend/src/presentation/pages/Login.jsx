@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { useGoogleLogin } from '@react-oauth/google';
 import { CloudScopeLogo, AwsLogo, AzureLogo, OracleLogo, GcpLogo, TerraformLogo, HexagonIcon, ShieldIcon, DollarIcon, PDFIcon, WarningIcon, ArrowRightIcon } from '../components/icons/CloudIcons.jsx';
 
 // ─── Mock Auth + Backend Auth ────────────────
@@ -125,21 +126,42 @@ export default function Login() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    setLoading(true);
-    setTimeout(() => {
-      const googleUser = {
-        name: 'Google Cloud User',
-        email: 'user.google@cloudscope.io',
-        role: 'user',
-        region: 'US1',
-      };
-      const token = btoa(JSON.stringify({ sub: googleUser.email, name: googleUser.name, exp: Date.now() + 86400000 }));
-      localStorage.setItem('cs_token', token);
-      localStorage.setItem('cs_user', JSON.stringify(googleUser));
-      navigate('/dashboard');
-    }, 600);
-  };
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setLoading(true);
+      setError('');
+      try {
+        // Obtenemos los datos del usuario desde Google
+        const userInfoRes = await axios.get(
+          'https://www.googleapis.com/oauth2/v3/userinfo',
+          { headers: { Authorization: `Bearer ${tokenResponse.access_token}` } }
+        );
+        
+        const googleProfile = userInfoRes.data;
+        
+        // Simulamos la sesión con los datos reales de Google
+        const userObj = {
+          name: googleProfile.name,
+          email: googleProfile.email,
+          picture: googleProfile.picture,
+          role: 'user'
+        };
+        
+        const token = btoa(JSON.stringify({ sub: userObj.email, name: userObj.name, exp: Date.now() + 86400000 }));
+        localStorage.setItem('cs_token', token);
+        localStorage.setItem('cs_user', JSON.stringify(userObj));
+        
+        navigate('/dashboard');
+      } catch (err) {
+        setError('Falló la autenticación con Google.');
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: () => {
+      setError('Falló la autenticación con Google.');
+    }
+  });
 
   return (
     <div
