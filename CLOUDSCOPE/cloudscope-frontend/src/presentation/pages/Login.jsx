@@ -159,7 +159,8 @@ export default function Login() {
 
       } catch (err) {
         console.error(err);
-        setError('Falló la autenticación con el servidor.');
+        const errorMsg = err.response?.data?.error || err.message || 'Error desconocido';
+        setError(`Falló la autenticación con el servidor: ${errorMsg}`);
       } finally {
         setLoading(false);
       }
