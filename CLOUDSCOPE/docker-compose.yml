@@ -45,7 +45,7 @@ services:
     container_name: cloudscope-frontend
     restart: always
     ports:
-      - "80:80"
+      - "90:80"
     depends_on:
       - cloudscope-backend
     environment:
