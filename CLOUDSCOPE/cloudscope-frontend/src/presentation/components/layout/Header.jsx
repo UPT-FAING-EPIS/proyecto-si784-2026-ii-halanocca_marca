@@ -376,7 +376,7 @@ export default function Header({
           <div className="relative" ref={userMenuRef}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-2 px-1.5 py-1 rounded-lg transition-all hover:bg-slate-800/60"
+              className={`flex items-center gap-2 px-1.5 py-1 rounded-lg transition-all ${isLight ? 'hover:bg-slate-100' : 'hover:bg-slate-800/60'}`}
               title={`Perfil de ${displayName}`}
             >
               {/* Badge Circular Rojo con Iniciales (ej. GM) */}
@@ -388,7 +388,7 @@ export default function Header({
               </div>
 
               {/* Nombre de usuario en mayúsculas negrita */}
-              <span className="font-extrabold text-xs text-white tracking-wide hidden sm:inline">
+              <span className={`font-extrabold text-xs tracking-wide hidden sm:inline ${isLight ? 'text-slate-800' : 'text-white'}`}>
                 {displayName}
               </span>
 
