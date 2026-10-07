@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="2070" viewBox="0 0 1800 2070">
+<rect width="100%" height="100%" fill="white"/>
+<text x="900" y="61.6" text-anchor="middle" font-family="Arial" font-size="37" font-weight="bold" fill="#161616">Diagrama de actividades del proceso actual</text>
+<text x="900" y="109.6" text-anchor="middle" font-family="Arial" font-size="27" font-weight="normal" fill="#161616">Diseñar y evaluar una arquitectura cloud antes de utilizar CloudScope</text>
+<text x="225" y="175.8" text-anchor="middle" font-family="Arial" font-size="26" font-weight="bold" fill="#161616">Arquitecto de</text>
+<text x="225" y="209.8" text-anchor="middle" font-family="Arial" font-size="26" font-weight="bold" fill="#161616">soluciones</text>
+<text x="675" y="175.8" text-anchor="middle" font-family="Arial" font-size="26" font-weight="bold" fill="#161616">Especialista en</text>
+<text x="675" y="209.8" text-anchor="middle" font-family="Arial" font-size="26" font-weight="bold" fill="#161616">seguridad</text>
+<text x="1125" y="175.8" text-anchor="middle" font-family="Arial" font-size="26" font-weight="bold" fill="#161616">Analista de</text>
+<text x="1125" y="209.8" text-anchor="middle" font-family="Arial" font-size="26" font-weight="bold" fill="#161616">costos FinOps</text>
+<text x="1575" y="175.8" text-anchor="middle" font-family="Arial" font-size="26" font-weight="bold" fill="#161616">Ingeniero de</text>
+<text x="1575" y="209.8" text-anchor="middle" font-family="Arial" font-size="26" font-weight="bold" fill="#161616">infraestructura</text>
+<polyline points="15,230 15,1870" fill="none" stroke="#b00036" stroke-width="1"/>
+<polyline points="450,230 450,1870" fill="none" stroke="#b00036" stroke-width="1"/>
+<polyline points="900,230 900,1870" fill="none" stroke="#b00036" stroke-width="1"/>
+<polyline points="1350,230 1350,1870" fill="none" stroke="#b00036" stroke-width="1"/>
+<polyline points="1785,230 1785,1870" fill="none" stroke="#b00036" stroke-width="1"/>
+<circle cx="225" cy="270" r="16" fill="black" stroke="#b00036" stroke-width="3"/>
+<polyline points="225,286 225,329" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="217.32919138233274,314.95867900975406 225,329 232.67080861766723,314.95867900975406" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="225,421 225,459" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="217.32919138233274,444.95867900975406 225,459 232.67080861766723,444.95867900975406" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="225,551 225,590" fill="none" stroke="#b00036" stroke-width="2"/>
+<rect x="215" y="590" width="920" height="7" rx="0" fill="#b00036" stroke="#b00036" stroke-width="2"/>
+<polyline points="675,597 675,684" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="667.3291913823327,669.9586790097541 675,684 682.6708086176673,669.9586790097541" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="1125,597 1125,684" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="1117.3291913823327,669.9586790097541 1125,684 1132.6708086176673,669.9586790097541" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="840,730 869,730 869,1000" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="1290,730 1320,730 1320,1000" fill="none" stroke="#b00036" stroke-width="2"/>
+<rect x="840" y="1000" width="480" height="7" rx="0" fill="#b00036" stroke="#b00036" stroke-width="2"/>
+<polyline points="1050,1007 1050,1070 390,1070 390,1130" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="382.32919138233274,1115.958679009754 390,1130 397.67080861766726,1115.958679009754" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="225,1176 225,1250" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="217.32919138233274,1235.958679009754 225,1250 232.67080861766723,1235.958679009754" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="85,1305 50,1305 50,505 60,505" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="45.958679009754036,512.6708086176673 60,505 45.958679009754036,497.32919138233274" fill="none" stroke="#b00036" stroke-width="2"/>
+<text x="62" y="1220.4" text-anchor="start" font-family="Arial" font-size="23" font-weight="normal" fill="#b00036">[No]</text>
+<text x="70" y="1251.8" text-anchor="start" font-family="Arial" font-size="21" font-weight="normal" fill="#b00036">Replantear</text>
+<polyline points="225,1360 225,1420 1410,1420" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="1395.958679009754,1427.6708086176673 1410,1420 1395.958679009754,1412.3291913823327" fill="none" stroke="#b00036" stroke-width="2"/>
+<text x="255" y="1394.4" text-anchor="start" font-family="Arial" font-size="23" font-weight="normal" fill="#b00036">[Sí]</text>
+<polyline points="1575,1466 1575,1529" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="1567.3291913823327,1514.958679009754 1575,1529 1582.6708086176673,1514.958679009754" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="1575,1621 1575,1690" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="1567.3291913823327,1675.958679009754 1575,1690 1582.6708086176673,1675.958679009754" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="1715,1745 1755,1745 1755,1420 1740,1420" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="1754.041320990246,1412.3291913823327 1740,1420 1754.041320990246,1427.6708086176673" fill="none" stroke="#b00036" stroke-width="2"/>
+<text x="1749" y="1637.6" text-anchor="middle" font-family="Arial" font-size="22" font-weight="normal" fill="#b00036">[No]</text>
+<polyline points="1575,1800 1575,1836" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="1567.3291913823327,1821.958679009754 1575,1836 1582.6708086176673,1821.958679009754" fill="none" stroke="#b00036" stroke-width="2"/>
+<text x="1605" y="1827.6" text-anchor="start" font-family="Arial" font-size="22" font-weight="normal" fill="#b00036">[Sí]</text>
+<circle cx="1575" cy="1853" r="21" fill="white" stroke="#b00036" stroke-width="3"/>
+<circle cx="1575" cy="1853" r="14" fill="black" stroke="#161616" stroke-width="1"/>
+<polyline points="320,551 320,640" fill="none" stroke="#161616" stroke-width="2" stroke-dasharray="10 8"/>
+<polyline points="312.32919138233274,625.9586790097541 320,640 327.67080861766726,625.9586790097541" fill="none" stroke="#161616" stroke-width="2"/>
+<polyline points="370,689 520,689 520,713 510,713" fill="none" stroke="#161616" stroke-width="2" stroke-dasharray="10 8"/>
+<polyline points="524.0413209902459,705.3291913823327 510,713 524.0413209902459,720.6708086176673" fill="none" stroke="#161616" stroke-width="2"/>
+<polyline points="370,700 425,700 425,627 955,627 955,710 960,710" fill="none" stroke="#161616" stroke-width="2" stroke-dasharray="10 8"/>
+<polyline points="945.9586790097541,717.6708086176673 960,710 945.9586790097541,702.3291913823327" fill="none" stroke="#161616" stroke-width="2"/>
+<polyline points="675,776 675,825" fill="none" stroke="#161616" stroke-width="2" stroke-dasharray="10 8"/>
+<polyline points="667.3291913823327,810.9586790097541 675,825 682.6708086176673,810.9586790097541" fill="none" stroke="#161616" stroke-width="2"/>
+<polyline points="1125,776 1125,825" fill="none" stroke="#161616" stroke-width="2" stroke-dasharray="10 8"/>
+<polyline points="1117.3291913823327,810.9586790097541 1125,825 1132.6708086176673,810.9586790097541" fill="none" stroke="#161616" stroke-width="2"/>
+<polyline points="675,915 675,945 150,945 150,1084" fill="none" stroke="#161616" stroke-width="2" stroke-dasharray="10 8"/>
+<polyline points="142.32919138233274,1069.958679009754 150,1084 157.67080861766723,1069.958679009754" fill="none" stroke="#161616" stroke-width="2"/>
+<polyline points="1125,915 1125,970 300,970 300,1084" fill="none" stroke="#161616" stroke-width="2" stroke-dasharray="10 8"/>
+<polyline points="292.32919138233274,1069.958679009754 300,1084 307.67080861766726,1069.958679009754" fill="none" stroke="#161616" stroke-width="2"/>
+<rect x="60.0" y="329.0" width="330" height="92" rx="30" fill="#ffffd2" stroke="#b00036" stroke-width="2"/>
+<text x="225" y="364.6" text-anchor="middle" font-family="Arial" font-size="27" font-weight="normal" fill="#161616">Definir necesidades</text>
+<text x="225" y="399.6" text-anchor="middle" font-family="Arial" font-size="27" font-weight="normal" fill="#161616">y restricciones</text>
+<rect x="60.0" y="459.0" width="330" height="92" rx="30" fill="#ffffd2" stroke="#b00036" stroke-width="2"/>
+<text x="225" y="494.6" text-anchor="middle" font-family="Arial" font-size="27" font-weight="normal" fill="#161616">Dibujar topología</text>
+<text x="225" y="529.6" text-anchor="middle" font-family="Arial" font-size="27" font-weight="normal" fill="#161616">en herramienta visual</text>
+<rect x="80.0" y="640.0" width="290" height="98" rx="0" fill="white" stroke="#b00036" stroke-width="2"/>
+<text x="225" y="678.2" text-anchor="middle" font-family="Arial" font-size="24" font-weight="normal" fill="#153f8c">a: Arquitectura</text>
+<text x="225" y="710.2" text-anchor="middle" font-family="Arial" font-size="24" font-weight="normal" fill="#153f8c">[diseñada]</text>
+<rect x="510.0" y="684.0" width="330" height="92" rx="30" fill="#ffffd2" stroke="#b00036" stroke-width="2"/>
+<text x="675" y="719.6" text-anchor="middle" font-family="Arial" font-size="27" font-weight="normal" fill="#161616">Revisar manualmente</text>
+<text x="675" y="754.6" text-anchor="middle" font-family="Arial" font-size="27" font-weight="normal" fill="#161616">seguridad y resiliencia</text>
+<rect x="960.0" y="684.0" width="330" height="92" rx="30" fill="#ffffd2" stroke="#b00036" stroke-width="2"/>
+<text x="1125" y="719.6" text-anchor="middle" font-family="Arial" font-size="27" font-weight="normal" fill="#161616">Estimar costos en</text>
+<text x="1125" y="754.6" text-anchor="middle" font-family="Arial" font-size="27" font-weight="normal" fill="#161616">calculadoras externas</text>
+<rect x="515.0" y="825.0" width="320" height="90" rx="0" fill="white" stroke="#b00036" stroke-width="2"/>
+<text x="675" y="859.2" text-anchor="middle" font-family="Arial" font-size="24" font-weight="normal" fill="#153f8c">r: Revisión de seguridad</text>
+<text x="675" y="891.2" text-anchor="middle" font-family="Arial" font-size="24" font-weight="normal" fill="#153f8c">[completada]</text>
+<rect x="965.0" y="825.0" width="320" height="90" rx="0" fill="white" stroke="#b00036" stroke-width="2"/>
+<text x="1125" y="859.2" text-anchor="middle" font-family="Arial" font-size="24" font-weight="normal" fill="#153f8c">e: Estimación de costos</text>
+<text x="1125" y="891.2" text-anchor="middle" font-family="Arial" font-size="24" font-weight="normal" fill="#153f8c">[calculada]</text>
+<rect x="60.0" y="1084.0" width="330" height="92" rx="30" fill="#ffffd2" stroke="#b00036" stroke-width="2"/>
+<text x="225" y="1119.6" text-anchor="middle" font-family="Arial" font-size="27" font-weight="normal" fill="#161616">Consolidar resultados</text>
+<text x="225" y="1154.6" text-anchor="middle" font-family="Arial" font-size="27" font-weight="normal" fill="#161616">y evaluar viabilidad</text>
+<polygon points="225,1250 365,1305 225,1360 85,1305" fill="#ffffd2" stroke="#b00036" stroke-width="2"/>
+<text x="225" y="1311.2" text-anchor="middle" font-family="Arial" font-size="24" font-weight="normal" fill="#161616">¿Diseño viable?</text>
+<rect x="1410.0" y="1374.0" width="330" height="92" rx="30" fill="#ffffd2" stroke="#b00036" stroke-width="2"/>
+<text x="1575" y="1409.6" text-anchor="middle" font-family="Arial" font-size="27" font-weight="normal" fill="#161616">Redactar manualmente</text>
+<text x="1575" y="1444.6" text-anchor="middle" font-family="Arial" font-size="27" font-weight="normal" fill="#161616">código Terraform</text>
+<rect x="1410.0" y="1529.0" width="330" height="92" rx="30" fill="#ffffd2" stroke="#b00036" stroke-width="2"/>
+<text x="1575" y="1564.6" text-anchor="middle" font-family="Arial" font-size="27" font-weight="normal" fill="#161616">Validar código</text>
+<text x="1575" y="1599.6" text-anchor="middle" font-family="Arial" font-size="27" font-weight="normal" fill="#161616">y sus dependencias</text>
+<polygon points="1575,1690 1715,1745 1575,1800 1435,1745" fill="#ffffd2" stroke="#b00036" stroke-width="2"/>
+<text x="1575" y="1751.2" text-anchor="middle" font-family="Arial" font-size="24" font-weight="normal" fill="#161616">¿Código válido?</text>
+<text x="1440" y="1915.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="bold" fill="#161616">Fin del diseño</text>
+<polyline points="90,1960 160,1960" fill="none" stroke="#b00036" stroke-width="2"/>
+<polyline points="145.95867900975404,1967.6708086176673 160,1960 145.95867900975404,1952.3291913823327" fill="none" stroke="#b00036" stroke-width="2"/>
+<text x="180" y="1964.6" text-anchor="start" font-family="Arial" font-size="22" font-weight="normal" fill="#161616">Flujo de control</text>
+<polyline points="490,1960 560,1960" fill="none" stroke="#161616" stroke-width="2" stroke-dasharray="10 8"/>
+<polyline points="545.9586790097541,1967.6708086176673 560,1960 545.9586790097541,1952.3291913823327" fill="none" stroke="#161616" stroke-width="2"/>
+<text x="580" y="1964.6" text-anchor="start" font-family="Arial" font-size="22" font-weight="normal" fill="#161616">Flujo de objetos</text>
+<rect x="960" y="1957" width="90" height="7" rx="0" fill="#b00036" stroke="#b00036" stroke-width="2"/>
+<text x="1070" y="1964.6" text-anchor="start" font-family="Arial" font-size="22" font-weight="normal" fill="#161616">Revisiones independientes y reunión</text>
+<text x="900" y="2020.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="bold" fill="#161616">Figura 2. Proceso actual de diseño y evaluación de arquitectura cloud.</text>
+<text x="900" y="2054.8" text-anchor="middle" font-family="Arial" font-size="21" font-weight="normal" fill="#161616">Modelo de referencia basado en la problemática del proyecto; el despliegue queda fuera del proceso.</text>
+</svg>

@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1570" viewBox="0 0 2200 1570">
+<rect width="100%" height="100%" fill="white"/>
+<text x="1100" y="62.4" text-anchor="middle" font-family="Arial" font-size="43" font-weight="bold" fill="#161616">Diagrama de paquetes de CloudScope</text>
+<text x="1100" y="110.4" text-anchor="middle" font-family="Arial" font-size="28" font-weight="normal" fill="#161616">Organización de los módulos y sus principales dependencias</text>
+<rect x="25" y="138" width="130" height="28" rx="0" fill="#fff3df" stroke="#202020" stroke-width="2"/>
+<rect x="25" y="165" width="2150" height="1200" rx="0" fill="#fff3df" stroke="#202020" stroke-width="2"/>
+<text x="1100.0" y="209.2" text-anchor="middle" font-family="Arial" font-size="34" font-weight="bold" fill="#161616">CloudScope</text>
+<rect x="65" y="258" width="130" height="28" rx="0" fill="#cee577" stroke="#202020" stroke-width="2"/>
+<rect x="65" y="285" width="940" height="1030" rx="0" fill="#cee577" stroke="#202020" stroke-width="2"/>
+<text x="535.0" y="327.6" text-anchor="middle" font-family="Arial" font-size="32" font-weight="bold" fill="#161616">cloudscope-frontend</text>
+<text x="535" y="361.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">React · JavaScript · React Flow</text>
+<rect x="1195" y="258" width="130" height="28" rx="0" fill="#cee577" stroke="#202020" stroke-width="2"/>
+<rect x="1195" y="285" width="940" height="1030" rx="0" fill="#cee577" stroke="#202020" stroke-width="2"/>
+<text x="1665.0" y="327.6" text-anchor="middle" font-family="Arial" font-size="32" font-weight="bold" fill="#161616">cloudscope-backend</text>
+<text x="1665" y="361.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">Java · Spring Boot · JPA</text>
+<rect x="145" y="388" width="130" height="28" rx="0" fill="#70dce6" stroke="#202020" stroke-width="2"/>
+<rect x="145" y="415" width="780" height="170" rx="0" fill="#70dce6" stroke="#202020" stroke-width="2"/>
+<text x="535.0" y="454.4" text-anchor="middle" font-family="Arial" font-size="28" font-weight="bold" fill="#161616">presentation</text>
+<polyline points="145,479 925,479" fill="none" stroke="#202020" stroke-width="1"/>
+<text x="535.0" y="519.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">pages · components</text>
+<text x="535.0" y="552.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">hooks · context</text>
+<rect x="145" y="708" width="116.66666666666667" height="28" rx="0" fill="#70dce6" stroke="#202020" stroke-width="2"/>
+<rect x="145" y="735" width="350" height="235" rx="0" fill="#70dce6" stroke="#202020" stroke-width="2"/>
+<text x="320.0" y="774.4" text-anchor="middle" font-family="Arial" font-size="28" font-weight="bold" fill="#161616">application</text>
+<polyline points="145,799 495,799" fill="none" stroke="#202020" stroke-width="1"/>
+<text x="320.0" y="839.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">use-cases</text>
+<text x="320.0" y="872.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">Auditoría y costos</text>
+<text x="320.0" y="905.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">Impacto y exportación</text>
+<rect x="575" y="708" width="116.66666666666667" height="28" rx="0" fill="#70dce6" stroke="#202020" stroke-width="2"/>
+<rect x="575" y="735" width="350" height="235" rx="0" fill="#70dce6" stroke="#202020" stroke-width="2"/>
+<text x="750.0" y="774.4" text-anchor="middle" font-family="Arial" font-size="28" font-weight="bold" fill="#161616">infrastructure</text>
+<polyline points="575,799 925,799" fill="none" stroke="#202020" stroke-width="1"/>
+<text x="750.0" y="839.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">api</text>
+<text x="750.0" y="872.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">projectStorage</text>
+<text x="750.0" y="905.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">Guardado e intercambio</text>
+<rect x="145" y="1093" width="130" height="28" rx="0" fill="#70dce6" stroke="#202020" stroke-width="2"/>
+<rect x="145" y="1120" width="780" height="150" rx="0" fill="#70dce6" stroke="#202020" stroke-width="2"/>
+<text x="535.0" y="1159.4" text-anchor="middle" font-family="Arial" font-size="28" font-weight="bold" fill="#161616">domain.models</text>
+<polyline points="145,1184 925,1184" fill="none" stroke="#202020" stroke-width="1"/>
+<text x="535.0" y="1224.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">CloudNode · SecurityRule · ArchitecturePresets</text>
+<rect x="1275" y="388" width="130" height="28" rx="0" fill="#70dce6" stroke="#202020" stroke-width="2"/>
+<rect x="1275" y="415" width="780" height="170" rx="0" fill="#70dce6" stroke="#202020" stroke-width="2"/>
+<text x="1665.0" y="454.4" text-anchor="middle" font-family="Arial" font-size="28" font-weight="bold" fill="#161616">infrastructure.adapters.in.web</text>
+<polyline points="1275,479 2055,479" fill="none" stroke="#202020" stroke-width="1"/>
+<text x="1665.0" y="519.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">ProjectController</text>
+<text x="1665.0" y="552.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">AuthController · AdminController</text>
+<rect x="1275" y="708" width="116.66666666666667" height="28" rx="0" fill="#70dce6" stroke="#202020" stroke-width="2"/>
+<rect x="1275" y="735" width="350" height="235" rx="0" fill="#70dce6" stroke="#202020" stroke-width="2"/>
+<text x="1450.0" y="774.4" text-anchor="middle" font-family="Arial" font-size="28" font-weight="bold" fill="#161616">application</text>
+<polyline points="1275,799 1625,799" fill="none" stroke="#202020" stroke-width="1"/>
+<text x="1450.0" y="839.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">services: ProjectService</text>
+<text x="1450.0" y="872.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">ports.in: ProjectUseCase</text>
+<text x="1450.0" y="905.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">ports.out:</text>
+<text x="1450.0" y="938.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">ProjectRepositoryPort</text>
+<rect x="1705" y="708" width="116.66666666666667" height="28" rx="0" fill="#70dce6" stroke="#202020" stroke-width="2"/>
+<rect x="1705" y="735" width="350" height="235" rx="0" fill="#70dce6" stroke="#202020" stroke-width="2"/>
+<text x="1880.0" y="774.4" text-anchor="middle" font-family="Arial" font-size="28" font-weight="bold" fill="#161616">infrastructure</text>
+<polyline points="1705,799 2055,799" fill="none" stroke="#202020" stroke-width="1"/>
+<text x="1880.0" y="839.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">adapters.out.persistence</text>
+<text x="1880.0" y="872.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">Adaptadores y JPA</text>
+<text x="1880.0" y="905.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">Entidades y repositorios</text>
+<rect x="1275" y="1093" width="130" height="28" rx="0" fill="#70dce6" stroke="#202020" stroke-width="2"/>
+<rect x="1275" y="1120" width="780" height="150" rx="0" fill="#70dce6" stroke="#202020" stroke-width="2"/>
+<text x="1665.0" y="1159.4" text-anchor="middle" font-family="Arial" font-size="28" font-weight="bold" fill="#161616">domain.models</text>
+<polyline points="1275,1184 2055,1184" fill="none" stroke="#202020" stroke-width="1"/>
+<text x="1665.0" y="1224.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">Project</text>
+<polyline points="320,585 320,708" fill="none" stroke="#202020" stroke-width="2" stroke-dasharray="10 8"/>
+<polyline points="312.32919138233274,693.9586790097541 320,708 327.67080861766726,693.9586790097541" fill="none" stroke="#202020" stroke-width="2"/>
+<rect x="321.0" y="633" width="78.0" height="31" rx="0" fill="#f7fbe7" stroke="#f7fbe7" stroke-width="0"/>
+<text x="360" y="655.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#161616">«use»</text>
+<polyline points="750,585 750,708" fill="none" stroke="#202020" stroke-width="2" stroke-dasharray="10 8"/>
+<polyline points="742.3291913823327,693.9586790097541 750,708 757.6708086176673,693.9586790097541" fill="none" stroke="#202020" stroke-width="2"/>
+<rect x="751.0" y="633" width="78.0" height="31" rx="0" fill="#f7fbe7" stroke="#f7fbe7" stroke-width="0"/>
+<text x="790" y="655.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#161616">«use»</text>
+<polyline points="320,970 320,1093" fill="none" stroke="#202020" stroke-width="2" stroke-dasharray="10 8"/>
+<polyline points="312.32919138233274,1078.958679009754 320,1093 327.67080861766726,1078.958679009754" fill="none" stroke="#202020" stroke-width="2"/>
+<rect x="321.0" y="1016" width="78.0" height="31" rx="0" fill="#f7fbe7" stroke="#f7fbe7" stroke-width="0"/>
+<text x="360" y="1038.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#161616">«use»</text>
+<polyline points="750,970 750,1093" fill="none" stroke="#202020" stroke-width="2" stroke-dasharray="10 8"/>
+<polyline points="742.3291913823327,1078.958679009754 750,1093 757.6708086176673,1078.958679009754" fill="none" stroke="#202020" stroke-width="2"/>
+<rect x="751.0" y="1016" width="78.0" height="31" rx="0" fill="#f7fbe7" stroke="#f7fbe7" stroke-width="0"/>
+<text x="790" y="1038.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#161616">«use»</text>
+<polyline points="1450,585 1450,708" fill="none" stroke="#202020" stroke-width="2" stroke-dasharray="10 8"/>
+<polyline points="1442.3291913823327,693.9586790097541 1450,708 1457.6708086176673,693.9586790097541" fill="none" stroke="#202020" stroke-width="2"/>
+<rect x="1451.0" y="633" width="78.0" height="31" rx="0" fill="#f7fbe7" stroke="#f7fbe7" stroke-width="0"/>
+<text x="1490" y="655.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#161616">«use»</text>
+<polyline points="1880,585 1880,708" fill="none" stroke="#202020" stroke-width="2" stroke-dasharray="10 8"/>
+<polyline points="1872.3291913823327,693.9586790097541 1880,708 1887.6708086176673,693.9586790097541" fill="none" stroke="#202020" stroke-width="2"/>
+<rect x="1881.0" y="633" width="78.0" height="31" rx="0" fill="#f7fbe7" stroke="#f7fbe7" stroke-width="0"/>
+<text x="1920" y="655.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#161616">«use»</text>
+<polyline points="1705,850 1625,850" fill="none" stroke="#202020" stroke-width="2" stroke-dasharray="10 8"/>
+<polyline points="1639.041320990246,842.3291913823327 1625,850 1639.041320990246,857.6708086176673" fill="none" stroke="#202020" stroke-width="2"/>
+<text x="1665" y="810.6" text-anchor="middle" font-family="Arial" font-size="22" font-weight="normal" fill="#161616">«use»</text>
+<polyline points="1450,970 1450,1093" fill="none" stroke="#202020" stroke-width="2" stroke-dasharray="10 8"/>
+<polyline points="1442.3291913823327,1078.958679009754 1450,1093 1457.6708086176673,1078.958679009754" fill="none" stroke="#202020" stroke-width="2"/>
+<rect x="1451.0" y="1016" width="78.0" height="31" rx="0" fill="#f7fbe7" stroke="#f7fbe7" stroke-width="0"/>
+<text x="1490" y="1038.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#161616">«use»</text>
+<polyline points="1880,970 1880,1093" fill="none" stroke="#202020" stroke-width="2" stroke-dasharray="10 8"/>
+<polyline points="1872.3291913823327,1078.958679009754 1880,1093 1887.6708086176673,1078.958679009754" fill="none" stroke="#202020" stroke-width="2"/>
+<rect x="1881.0" y="1016" width="78.0" height="31" rx="0" fill="#f7fbe7" stroke="#f7fbe7" stroke-width="0"/>
+<text x="1920" y="1038.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#161616">«use»</text>
+<polyline points="925,492 1275,492" fill="none" stroke="#202020" stroke-width="2" stroke-dasharray="10 8"/>
+<polyline points="1260.958679009754,499.67080861766726 1275,492 1260.958679009754,484.32919138233274" fill="none" stroke="#202020" stroke-width="2"/>
+<text x="1100" y="463.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#161616">«HTTP / JSON»</text>
+<polyline points="925,850 1100,850 1100,548 1275,548" fill="none" stroke="#202020" stroke-width="2" stroke-dasharray="10 8"/>
+<polyline points="1260.958679009754,555.6708086176673 1275,548 1260.958679009754,540.3291913823327" fill="none" stroke="#202020" stroke-width="2"/>
+<text x="1080" y="896.6" text-anchor="middle" font-family="Arial" font-size="22" font-weight="normal" fill="#161616">API de proyectos</text>
+<text x="1100" y="1408.8" text-anchor="middle" font-family="Arial" font-size="26" font-weight="normal" fill="#161616">Flecha discontinua: el paquete de origen utiliza al paquete de destino.</text>
+<text x="1100" y="1448.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">Los adaptadores de persistencia utilizan los puertos definidos en application.</text>
+<text x="1100" y="1487.0" text-anchor="middle" font-family="Arial" font-size="25" font-weight="normal" fill="#161616">AuthController y AdminController acceden directamente a repositorios JPA en la versión actual.</text>
+<text x="1100" y="1538.8" text-anchor="middle" font-family="Arial" font-size="26" font-weight="bold" fill="#161616">Figura 4. Paquetes de CloudScope según la estructura del código fuente.</text>
+</svg>

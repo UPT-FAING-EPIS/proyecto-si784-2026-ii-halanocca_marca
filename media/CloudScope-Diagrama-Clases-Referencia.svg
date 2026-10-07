@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="2080" viewBox="0 0 1800 2080">
+<rect width="100%" height="100%" fill="white"/>
+<text x="900" y="52.2" text-anchor="middle" font-family="Arial" font-size="34" font-weight="bold" fill="#202020">CloudScope — Diagrama de clases</text>
+<rect x="80" y="105" width="580" height="452" rx="5" fill="#e6e6e6" stroke="#202020" stroke-width="3"/>
+<polyline points="80,157 660,157" fill="none" stroke="#202020" stroke-width="3"/>
+<polyline points="80,437 660,437" fill="none" stroke="#202020" stroke-width="3"/>
+<text x="370.0" y="142.4" text-anchor="middle" font-family="Arial" font-size="28" font-weight="bold" fill="#202020">Project</text>
+<text x="98" y="191.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- id: String</text>
+<text x="98" y="223.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- name: String</text>
+<text x="98" y="255.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- description: String</text>
+<text x="98" y="287.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- version: String</text>
+<text x="98" y="319.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- nodes: Object</text>
+<text x="98" y="351.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- edges: Object</text>
+<text x="98" y="383.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- createdAt: String</text>
+<text x="98" y="415.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- updatedAt: String</text>
+<text x="98" y="471.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ getId(): String</text>
+<text x="98" y="503.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ getNodes(): Object</text>
+<text x="98" y="535.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ getEdges(): Object</text>
+<rect x="1140" y="105" width="580" height="420" rx="5" fill="#b3d8fa" stroke="#202020" stroke-width="3"/>
+<polyline points="1140,157 1720,157" fill="none" stroke="#202020" stroke-width="3"/>
+<polyline points="1140,437 1720,437" fill="none" stroke="#202020" stroke-width="3"/>
+<text x="1430.0" y="142.4" text-anchor="middle" font-family="Arial" font-size="28" font-weight="bold" fill="#202020">ProjectEntity</text>
+<text x="1158" y="191.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- id: String</text>
+<text x="1158" y="223.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- name: String</text>
+<text x="1158" y="255.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- description: String</text>
+<text x="1158" y="287.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- version: String</text>
+<text x="1158" y="319.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- nodesJson: String</text>
+<text x="1158" y="351.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- edgesJson: String</text>
+<text x="1158" y="383.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- createdAt: String</text>
+<text x="1158" y="415.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- updatedAt: String</text>
+<text x="1158" y="471.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ getNodesJson(): String</text>
+<text x="1158" y="503.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ getEdgesJson(): String</text>
+<polyline points="660,315 1140,315" fill="none" stroke="#202020" stroke-width="3" stroke-dasharray="10 8"/>
+<polyline points="1125.958679009754,322.67080861766726 1140,315 1125.958679009754,307.32919138233274" fill="none" stroke="#202020" stroke-width="3"/>
+<text x="900" y="287.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#202020">Conversión para persistencia</text>
+<text x="900" y="359.6" text-anchor="middle" font-family="Arial" font-size="22" font-weight="normal" fill="#202020">a través del repositorio</text>
+<rect x="80" y="770" width="580" height="324" rx="5" fill="#b8f5b1" stroke="#202020" stroke-width="3"/>
+<polyline points="80,822 660,822" fill="none" stroke="#202020" stroke-width="3"/>
+<polyline points="80,1038 660,1038" fill="none" stroke="#202020" stroke-width="3"/>
+<text x="370.0" y="807.4" text-anchor="middle" font-family="Arial" font-size="28" font-weight="bold" fill="#202020">CloudNode (editor)</text>
+<text x="98" y="856.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ id: string</text>
+<text x="98" y="888.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ type: string</text>
+<text x="98" y="920.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ position: { x: number, y: number }</text>
+<text x="98" y="952.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ data.cloudType: CloudNodeType</text>
+<text x="98" y="984.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ data.label: string</text>
+<text x="98" y="1016.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ data.config: object</text>
+<rect x="1140" y="770" width="580" height="228" rx="5" fill="#b8f5b1" stroke="#202020" stroke-width="3"/>
+<polyline points="1140,822 1720,822" fill="none" stroke="#202020" stroke-width="3"/>
+<polyline points="1140,942 1720,942" fill="none" stroke="#202020" stroke-width="3"/>
+<text x="1430.0" y="807.4" text-anchor="middle" font-family="Arial" font-size="28" font-weight="bold" fill="#202020">Edge (editor)</text>
+<text x="1158" y="856.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ id: string</text>
+<text x="1158" y="888.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ source: string</text>
+<text x="1158" y="920.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ target: string</text>
+<polyline points="240,557 240,770" fill="none" stroke="#202020" stroke-width="3"/>
+<text x="145" y="696.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#202020">contiene</text>
+<text x="270" y="589.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#202020">1</text>
+<text x="275" y="751.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#202020">0..*</text>
+<polyline points="510,557 510,686 1440,686 1440,770" fill="none" stroke="#202020" stroke-width="3"/>
+<text x="960" y="665.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#202020">contiene</text>
+<text x="538" y="589.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#202020">1</text>
+<text x="1480" y="751.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#202020">0..*</text>
+<polyline points="660,845 1140,845" fill="none" stroke="#202020" stroke-width="3"/>
+<text x="900" y="822.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#202020">origen (source)</text>
+<text x="685" y="876.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#202020">1</text>
+<text x="1100" y="876.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#202020">0..*</text>
+<polyline points="660,944 1140,944" fill="none" stroke="#202020" stroke-width="3"/>
+<text x="900" y="921.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#202020">destino (target)</text>
+<text x="685" y="975.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#202020">1</text>
+<text x="1100" y="975.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#202020">0..*</text>
+<rect x="80" y="1230" width="580" height="260" rx="5" fill="#e6e6e6" stroke="#202020" stroke-width="3"/>
+<polyline points="80,1282 660,1282" fill="none" stroke="#202020" stroke-width="3"/>
+<polyline points="80,1434 660,1434" fill="none" stroke="#202020" stroke-width="3"/>
+<text x="370.0" y="1267.4" text-anchor="middle" font-family="Arial" font-size="28" font-weight="bold" fill="#202020">SecurityRule</text>
+<text x="98" y="1316.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ id: string</text>
+<text x="98" y="1348.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ title: string</text>
+<text x="98" y="1380.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ severity: Severity</text>
+<text x="98" y="1412.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ framework: string</text>
+<text x="98" y="1468.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ evaluate(nodes, edges): SecurityFinding[]</text>
+<rect x="1140" y="1180" width="580" height="356" rx="5" fill="#b8f5b1" stroke="#202020" stroke-width="3"/>
+<polyline points="1140,1232 1720,1232" fill="none" stroke="#202020" stroke-width="3"/>
+<polyline points="1140,1480 1720,1480" fill="none" stroke="#202020" stroke-width="3"/>
+<text x="1430.0" y="1217.4" text-anchor="middle" font-family="Arial" font-size="28" font-weight="bold" fill="#202020">SecurityFinding</text>
+<text x="1158" y="1266.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ ruleId: string</text>
+<text x="1158" y="1298.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ nodeId: string [0..1]</text>
+<text x="1158" y="1330.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ title: string</text>
+<text x="1158" y="1362.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ severity: Severity</text>
+<text x="1158" y="1394.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ framework: string</text>
+<text x="1158" y="1426.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ description: string</text>
+<text x="1158" y="1458.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ recommendation: string</text>
+<polyline points="660,1370 1140,1370" fill="none" stroke="#202020" stroke-width="3" stroke-dasharray="10 8"/>
+<polyline points="1125.958679009754,1377.6708086176673 1140,1370 1125.958679009754,1362.3291913823327" fill="none" stroke="#202020" stroke-width="3"/>
+<text x="900" y="1346.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#202020">genera</text>
+<text x="900" y="1418.4" text-anchor="middle" font-family="Arial" font-size="23" font-weight="normal" fill="#202020">0..* hallazgos</text>
+<rect x="80" y="1630" width="580" height="420" rx="5" fill="#b3d8fa" stroke="#202020" stroke-width="3"/>
+<polyline points="80,1682 660,1682" fill="none" stroke="#202020" stroke-width="3"/>
+<polyline points="80,1962 660,1962" fill="none" stroke="#202020" stroke-width="3"/>
+<text x="370.0" y="1667.4" text-anchor="middle" font-family="Arial" font-size="28" font-weight="bold" fill="#202020">UserEntity</text>
+<text x="98" y="1716.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- id: String</text>
+<text x="98" y="1748.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- firstName: String</text>
+<text x="98" y="1780.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- lastName: String</text>
+<text x="98" y="1812.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- email: String</text>
+<text x="98" y="1844.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- password: String</text>
+<text x="98" y="1876.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- region: String</text>
+<text x="98" y="1908.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- phone: String</text>
+<text x="98" y="1940.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">- createdAt: String</text>
+<text x="98" y="1996.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ getId(): String</text>
+<text x="98" y="2028.2" text-anchor="start" font-family="Arial" font-size="24" font-weight="normal" fill="#202020">+ getEmail(): String</text>
+<text x="840" y="1720.0" text-anchor="start" font-family="Arial" font-size="25" font-weight="normal" fill="#202020">UserEntity no tiene una relación persistida</text>
+<text x="840" y="1760.0" text-anchor="start" font-family="Arial" font-size="25" font-weight="normal" fill="#202020">con ProjectEntity en la versión actual.</text>
+<text x="840" y="1855.0" text-anchor="start" font-family="Arial" font-size="25" font-weight="normal" fill="#202020">+ público     − privado</text>
+<text x="840" y="1895.0" text-anchor="start" font-family="Arial" font-size="25" font-weight="normal" fill="#202020">1: uno     0..*: cero o varios</text>
+<text x="840" y="1973.4" text-anchor="start" font-family="Arial" font-size="23" font-weight="normal" fill="#202020">Se muestran los atributos y métodos principales.</text>
+</svg>
