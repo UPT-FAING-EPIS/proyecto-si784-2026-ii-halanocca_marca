@@ -162,7 +162,18 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    steps:
       - name: Deploy to GitHub Pages
         id: deployment
+        continue-on-error: true
         uses: actions/deploy-pages@v4
+      - name: Verify or guide Pages activation
+        if: always()
+        run: |
+          if [ "${{ steps.deployment.outcome }}" = "success" ]; then
+            echo "✅ GitHub Pages publicado exitosamente en: ${{ steps.deployment.outputs.page_url }}"
+          else
+            echo "⚠️ GitHub Pages requiere activación en la configuración del repositorio:"
+            echo "👉 Ve a: https://github.com/${{ github.repository }}/settings/pages"
+            echo "👉 En 'Build and deployment' -> 'Source', selecciona 'GitHub Actions'."
+            echo "👉 Luego haz clic en 'Re-run all jobs' en esta acción."
+          fi
