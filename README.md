@@ -1,84 +1,350 @@
-# Diagramador y Analizador Interactivo de Infraestructura Cloud con Auditoría de Seguridad, Estimación de Costos (FinOps) y Generación de Infraestructura como Código (IaC)
-> **Versión:** v1.0 | **Curso:** SI784 – Proyecto de Ingeniería de Software | **Ciclo Académico:** 2026-II
-> **Autores:** Halanocca Marca | **Institución:** Universidad Privada de Tacna – Facultad de Ingeniería / EPIS
+<p align="center">
+  <img src="https://img.shields.io/badge/CloudScope-v1.0-f59e0b?style=for-the-badge&logo=cloud&logoColor=white" alt="CloudScope" />
+  <img src="https://img.shields.io/badge/React-18-61dafb?style=for-the-badge&logo=react&logoColor=white" alt="React" />
+  <img src="https://img.shields.io/badge/Spring_Boot-3.3-6db33f?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot" />
+  <img src="https://img.shields.io/badge/PostgreSQL-16-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Docker-Compose-2496ed?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/Terraform-IaC-7b42bc?style=for-the-badge&logo=terraform&logoColor=white" alt="Terraform" />
+</p>
+
+<h1 align="center">☁️ CLOUDSCOPE</h1>
+<p align="center"><strong>Diagramador y Analizador Interactivo de Infraestructura Cloud</strong><br/>
+con Auditoría de Seguridad · Estimación FinOps · Generación de IaC (Terraform) · Simulación de Blast Radius</p>
+
+<p align="center">
+  <strong>Curso:</strong> SI784 – Proyecto de Ingeniería de Software &nbsp;|&nbsp;
+  <strong>Ciclo:</strong> 2026-II &nbsp;|&nbsp;
+  <strong>Autores:</strong> Halanocca Marca<br/>
+  <strong>Institución:</strong> Universidad Privada de Tacna – EPIS / Facultad de Ingeniería
+</p>
 
 ---
 
-## 1. Título del Proyecto
+## 📋 Tabla de Contenidos
+
+- [Descripción General](#-descripción-general)
+- [Características Principales](#-características-principales)
+- [Arquitectura del Sistema](#-arquitectura-del-sistema)
+- [Stack Tecnológico](#-stack-tecnológico)
+- [Estructura del Repositorio](#-estructura-del-repositorio)
+- [Instalación y Ejecución](#-instalación-y-ejecución)
+- [Planteamiento del Problema](#-planteamiento-del-problema)
+- [Objetivos](#-objetivos)
+- [Justificación](#-justificación)
+- [Referencias Clave](#-referencias-clave)
+
+---
+
+## 🌐 Descripción General
+
+**CloudScope** es una plataforma web interactiva de diagramación y análisis de infraestructura cloud de última generación. A diferencia de las herramientas convencionales como Draw.io o Lucidchart —que actúan como *lienzos pasivos*— CloudScope integra en un único entorno cohesionado:
+
+- Un **lienzo drag-and-drop basado en grafos** para diseñar topologías cloud visualmente.
+- Un **motor de auditoría de seguridad en tiempo real** basado en CIS Benchmarks y AWS Well-Architected Framework.
+- Un **módulo FinOps de estimación de costos** con cálculo dinámico por componente (AWS, Azure, GCP, Oracle Cloud).
+- Un **simulador de Blast Radius** (BFS/DFS sobre el grafo) para análisis *what-if* arquitectónico.
+- Un **exportador automatizado de Infraestructura como Código** en formato Terraform HCL.
+
+---
+
+## ✨ Características Principales
+
+| Módulo | Descripción |
+|--------|-------------|
+| 🎨 **Lienzo Interactivo** | Canvas drag-and-drop con nodos parametrizables (EC2, RDS, S3, VPC, Load Balancers, etc.), conexiones tipadas y exportación/importación JSON |
+| 🔒 **Auditoría de Seguridad** | Motor de reglas contra CIS Benchmarks v1.5+ y AWS WAF; hallazgos clasificados CRITICAL / HIGH / MEDIUM / LOW con remediaciones accionables |
+| 💰 **Estimación FinOps** | TCO mensual en tiempo real desglosado por servicio, principios Shift-Left FinOps, catálogo de precios para AWS · Azure · GCP · Oracle Cloud |
+| 💥 **Blast Radius** | Simulación visual del radio de impacto ante fallo/eliminación de componentes mediante traversal BFS/DFS sobre el grafo arquitectónico |
+| 🏗️ **IaC Terraform** | Generación automatizada de plantillas `.tf` multi-nube (HCL), exportación PDF con reporte de auditoría y desglose FinOps |
+| 📐 **Plantillas Empresariales** | Presets de arquitecturas de referencia para AWS, Azure, GCP y Oracle Cloud listos para cargar en un clic |
+| 🌓 **Dual Theme** | Modo visual oscuro / blanco para el lienzo y la interfaz completa |
+| 👤 **Auth & Proyectos** | Autenticación de usuarios, gestión de proyectos, renombramiento en línea y guardado persistente |
+
+---
+
+## 🏛️ Arquitectura del Sistema
+
+CloudScope implementa una **arquitectura hexagonal** (Ports & Adapters) en el backend y una **arquitectura de capas** en el frontend:
 
 ```
-Desarrollo de un Diagramador y Analizador Interactivo de Infraestructura Cloud
-con Auditoría de Seguridad, Estimación de Costos (FinOps) y Generación de
-Infraestructura como Código (IaC)
+┌──────────────────────────────────────────────────────┐
+│                  CLOUDSCOPE FRONTEND                  │
+│          React 18 + Vite · Arquitectura MVC           │
+│  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐  │
+│  │Presentation │  │  Application │  │   Domain    │  │
+│  │ Components  │  │  Use Cases   │  │   Models    │  │
+│  │  (JSX/CSS)  │  │(calculateCost│  │(CloudNode,  │  │
+│  │             │  │  auditRules) │  │SecurityRule,│  │
+│  │  Header     │  │              │  │Arch.Presets)│  │
+│  │  Editor     │  │              │  │             │  │
+│  │  Dashboard  │  │              │  │             │  │
+│  └─────────────┘  └──────────────┘  └─────────────┘  │
+│          │              │                  │          │
+│  ┌─────────────────────────────────────────────────┐  │
+│  │         Infrastructure (API / Storage)          │  │
+│  └─────────────────────────────────────────────────┘  │
+└──────────────────────────┬───────────────────────────┘
+                           │ REST API (HTTP :8080)
+┌──────────────────────────▼───────────────────────────┐
+│                CLOUDSCOPE BACKEND                     │
+│      Spring Boot 3.3 · Java 21 · Hexagonal Arch.     │
+│  ┌────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │Controllers │  │   Services   │  │ Repositories │  │
+│  │ (REST API) │  │ (Domain Logic│  │  (JPA/SQL)   │  │
+│  └────────────┘  └──────────────┘  └──────────────┘  │
+└──────────────────────────┬───────────────────────────┘
+                           │
+┌──────────────────────────▼───────────────────────────┐
+│              PostgreSQL 16 (Docker)                   │
+│              Base de datos: cloudscope_db             │
+└──────────────────────────────────────────────────────┘
+```
+
+### Flujo de Datos del Lienzo
+
+```
+[Componente arrastrado al Canvas]
+         │
+         ▼
+   [Grafo de Nodos/Aristas]   ←──────────── JSON canónico
+         │
+    ┌────┴───────────────────────────────────┐
+    │                                        │
+    ▼                                        ▼
+[Motor FinOps]                     [Motor de Seguridad]
+ calculateCost.js                   SecurityRule.js
+ → TCO por servicio/región          → CIS Benchmarks
+ → Total mensual USD                → CRITICAL/HIGH/MEDIUM/LOW
+    │                                        │
+    └──────────────────┬─────────────────────┘
+                       ▼
+              [Header Status Bar]
+              FinOps $X.XX/mo | Score XX/100 | N Issues
+                       │
+              ┌────────┴───────┐
+              ▼                ▼
+         [Terraform HCL]   [PDF Report]
 ```
 
 ---
 
-## 2. Planteamiento del Problema
+## 🛠️ Stack Tecnológico
 
-### 2.1 Descripción de la Realidad Problemática
+### Frontend
 
-La adopción acelerada de infraestructuras en la nube ha transformado profundamente los modelos de desarrollo y despliegue de software en organizaciones de escala global. No obstante, dicha transformación ha evidenciado una brecha metodológica y tecnológica crítica: la desconexión estructural entre las herramientas de diseño arquitectónico y los mecanismos de análisis, auditoría y estimación financiera que deben operar de manera integrada desde las fases tempranas del ciclo de vida del sistema.
+| Tecnología | Versión | Uso |
+|-----------|---------|-----|
+| **React** | 18 | UI Components & State Management |
+| **Vite** | latest | Build tool & Dev Server |
+| **React Router** | v6 | SPA Routing (Dashboard, Editor, Login, Guide) |
+| **React Flow** | latest | Lienzo de grafos interactivo |
+| **Vanilla CSS** | — | Estilos sin frameworks externos |
 
-Las herramientas de diagramación convencionales —entre las que se cuentan Draw.io, Lucidchart y Microsoft Visio— funcionan como **"vectores pasivos"**: lienzos estáticos que permiten representar topologías de red y arquitecturas cloud de forma visual, pero que carecen por completo de capacidad analítica. Sus artefactos de salida son imágenes o documentos no computables, lo que imposibilita la ejecución de validaciones semánticas, la evaluación de conformidad con marcos de buenas prácticas (como AWS Well-Architected Framework o los CIS Benchmarks) o la inferencia de costos operativos mensuales asociados a los recursos representados. Esta limitación fuerza a los equipos de arquitectura a depender de flujos de trabajo fragmentados: el diseño se realiza en una herramienta, la auditoría de seguridad en otra (frecuentemente mediante scripts de terminal o soluciones CSPM como AWS Security Hub), y la estimación de costos en calculadoras en línea independientes (AWS Pricing Calculator, Azure Cost Estimator). La carencia de integración entre estas disciplinas introduce latencia operativa, inconsistencias entre la arquitectura diseñada y la desplegada (**Architectural Drift**), y un elevado riesgo de errores humanos de configuración (**misconfigurations**).
+### Backend
 
-Según el informe *State of the Cloud 2024* de Flexera, el **82% de las organizaciones** identifica la optimización de costos en la nube como su principal desafío, mientras que el **Cloud Waste** promedio —recursos sobreaprovisionados o inactivos que generan gasto sin retorno— alcanza el **28% del presupuesto total de nube** de las empresas encuestadas. Esta problemática es consecuencia directa de la ausencia de prácticas **Shift-Left FinOps**: la estimación de costos no se integra en el momento del diseño arquitectónico, sino que se efectúa retrospectivamente, cuando las decisiones ya han sido comprometidas y el costo de cambio es significativamente mayor.
+| Tecnología | Versión | Uso |
+|-----------|---------|-----|
+| **Java** | 21 | Runtime principal |
+| **Spring Boot** | 3.3.3 | REST API Framework |
+| **Spring Data JPA** | — | ORM y acceso a datos |
+| **Spring Validation** | — | Validación de DTOs |
+| **PostgreSQL Driver** | — | Conexión en producción |
+| **H2 Database** | — | Base de datos en memoria para tests |
 
-En el ámbito de la seguridad, el *Verizon Data Breach Investigations Report 2024* señala que las **misconfigurations en entornos cloud** son el vector de ataque más frecuente, responsables del **21% de los incidentes** de brecha de datos en infraestructuras IaaS/PaaS. Errores de diseño recurrentes —tales como la exposición de puertos administrativos (SSH/RDP) a internet sin restricción de CIDR, la habilitación de instancias de bases de datos con acceso público directo, o la ausencia de segmentación mediante subredes privadas— son sistemáticamente introducidos en fases tempranas del diseño cuando no existe un mecanismo de retroalimentación en tiempo real que evalúe la conformidad de la topología con marcos normativos de referencia.
+### Infraestructura
 
-Adicionalmente, la ausencia de herramientas que permitan simular el **radio de impacto** (*Blast Radius*) ante la eliminación, fallo o reconfiguración de componentes individuales de la arquitectura, impide la realización de análisis *what-if* durante el diseño. Esta carencia se traduce en arquitecturas frágiles, escasamente resilientes y con dependencias no declaradas que solo se hacen visibles en producción. Asimismo, la brecha entre el diseño arquitectónico y la generación automatizada de plantillas de **Infraestructura como Código (IaC)** —particularmente en el ecosistema Terraform de HashiCorp— obliga a los equipos de infraestructura a reescribir manualmente la arquitectura diseñada en forma de código declarativo, proceso propenso a errores y altamente demandante en tiempo.
+| Tecnología | Uso |
+|-----------|-----|
+| **Docker + Docker Compose** | Orquestación de contenedores (DB + Backend + Frontend) |
+| **PostgreSQL 16 Alpine** | Base de datos relacional persistente |
+| **Caddy** | Servidor web / Reverse proxy para el frontend en producción |
+| **Maven** | Build tool del backend |
 
-En síntesis, la problemática se articula en cuatro dimensiones interdependientes: **(1)** la pasividad analítica de las herramientas de diagramación actuales; **(2)** la introducción temprana de vulnerabilidades de seguridad por ausencia de retroalimentación normativa en diseño; **(3)** el desperdicio financiero derivado de la ausencia de estimación predictiva de costos; y **(4)** la incapacidad de evaluar el impacto sistémico de cambios arquitectónicos antes del despliegue.
+---
 
-### 2.2 Formulación de la Pregunta General de Investigación
+## 📁 Estructura del Repositorio
+
+```
+proyecto-si784-2026-ii-halanocca_marca/
+├── 📂 CLOUDSCOPE/                          # Código fuente principal de la aplicación
+│   ├── 📂 cloudscope-frontend/             # Aplicación React (Vite)
+│   │   └── src/
+│   │       ├── application/
+│   │       │   └── use-cases/
+│   │       │       └── calculateCost.js    # Motor FinOps – cálculo TCO mensual
+│   │       ├── domain/
+│   │       │   └── models/
+│   │       │       ├── CloudNode.js        # Catálogo de 60+ nodos cloud (AWS/Azure/GCP/OCI)
+│   │       │       ├── SecurityRule.js     # Reglas CIS Benchmarks y AWS WAF
+│   │       │       └── ArchitecturePresets.js  # Plantillas de arquitectura empresarial
+│   │       ├── infrastructure/
+│   │       │   └── api/
+│   │       │       └── projectStorage.js   # Gestión de proyectos (localStorage / API)
+│   │       └── presentation/
+│   │           ├── components/
+│   │           │   ├── layout/
+│   │           │   │   └── Header.jsx      # Header con status bar FinOps/Score/Issues
+│   │           │   └── icons/
+│   │           │       └── CloudIcons.jsx  # Biblioteca de iconos cloud SVG
+│   │           ├── context/
+│   │           │   └── EditorThemeContext.jsx  # Contexto tema oscuro/claro
+│   │           └── pages/                  # Dashboard, Editor, Login, Guide
+│   ├── 📂 cloudscope-backend/              # API REST Spring Boot (Java 21)
+│   │   ├── src/                            # Código fuente Java – Arquitectura Hexagonal
+│   │   ├── pom.xml                         # Dependencias Maven
+│   │   └── Dockerfile                      # Imagen Docker del backend
+│   ├── 📂 Bd/                              # Scripts de base de datos PostgreSQL
+│   ├── 🐳 docker-compose.yml               # Orquestación: DB + Backend + Frontend
+│   ├── 🌐 cloudscope-demo.html             # Demo standalone (HTML puro)
+│   ├── ▶️ iniciar-cloudscope.bat           # Script inicio Windows
+│   └── ⏹️ detener-cloudscope.bat           # Script detención Windows
+├── 📂 deploy/                              # Configuración de despliegue VPS
+├── 📂 infra/                               # Infraestructura adicional
+├── 📂 scripts/                             # Scripts auxiliares
+├── 📂 media/                               # Recursos multimedia del proyecto
+├── 📄 FD01-EPIS-Informe de Factibilidad.md
+├── 📄 FD02-EPIS-Informe Vision.md
+├── 🔍 .semgrep.yml                         # Reglas de análisis estático de código
+└── 📋 sonar-project.properties             # Configuración SonarQube
+```
+
+---
+
+## 🚀 Instalación y Ejecución
+
+### Prerrequisitos
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (incluye Docker Compose)
+- [Node.js](https://nodejs.org/) ≥ 18 (para desarrollo frontend)
+- [Java 21](https://adoptium.net/) + Maven (para desarrollo backend)
+
+### ▶️ Inicio Rápido con Docker (Recomendado)
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/UPT-FAING-EPIS/proyecto-si784-2026-ii-halanocca_marca.git
+cd proyecto-si784-2026-ii-halanocca_marca/CLOUDSCOPE
+
+# 2. Levantar todos los servicios (DB + Backend + Frontend)
+docker-compose up -d
+
+# 3. Acceder a la aplicación
+#    Frontend: http://localhost:80
+#    API REST: http://localhost:8080
+#    BD:       localhost:5432  (cloudscope_db / postgres / postgres)
+```
+
+**En Windows**, también puedes usar los scripts incluidos:
+
+```batch
+REM Iniciar CloudScope
+iniciar-cloudscope.bat
+
+REM Detener CloudScope
+detener-cloudscope.bat
+```
+
+### 🧑‍💻 Desarrollo Local
+
+#### Frontend (React + Vite)
+
+```bash
+cd CLOUDSCOPE/cloudscope-frontend
+npm install
+npm run dev
+# → http://localhost:5173
+```
+
+#### Backend (Spring Boot)
+
+```bash
+cd CLOUDSCOPE/cloudscope-backend
+mvn spring-boot:run
+# → http://localhost:8080
+```
+
+#### Solo base de datos (para desarrollo local)
+
+```bash
+cd CLOUDSCOPE
+docker-compose up cloudscope-db -d
+```
+
+### 🌐 Demo Standalone
+
+Para una demostración rápida sin instalación, abre directamente en el navegador:
+
+```
+CLOUDSCOPE/cloudscope-demo.html
+```
+
+---
+
+## 🔍 Planteamiento del Problema
+
+### Descripción de la Realidad Problemática
+
+La adopción acelerada de infraestructuras en la nube ha transformado profundamente los modelos de desarrollo y despliegue de software. Sin embargo, esta transformación ha evidenciado una **brecha metodológica y tecnológica crítica**: la desconexión estructural entre las herramientas de diseño arquitectónico y los mecanismos de análisis, auditoría y estimación financiera.
+
+Las herramientas de diagramación convencionales —Draw.io, Lucidchart, Microsoft Visio— funcionan como **"vectores pasivos"**: lienzos estáticos que representan topologías visualmente pero **carecen completamente de capacidad analítica**. Esto obliga a los equipos de arquitectura a depender de flujos fragmentados: diseño en una herramienta, auditoría en otra (scripts / CSPM como AWS Security Hub), y estimación de costos en calculadoras independientes (AWS Pricing Calculator, Azure Cost Estimator). Esta fragmentación introduce **Architectural Drift**, **misconfigurations** y **Cloud Waste**.
+
+> 📊 Según **Flexera State of the Cloud 2024**: el 82% de las organizaciones identifica la optimización de costos cloud como su principal desafío, con un Cloud Waste promedio del **28% del presupuesto total**.
+
+> 🔐 Según el **Verizon DBIR 2024**: las misconfigurations en entornos cloud son el vector de ataque más frecuente, responsables del **21% de los incidentes** de brecha de datos en IaaS/PaaS.
+
+La problemática se articula en cuatro dimensiones interdependientes:
+1. La **pasividad analítica** de las herramientas de diagramación actuales.
+2. La **introducción temprana de vulnerabilidades** por ausencia de retroalimentación normativa en diseño.
+3. El **desperdicio financiero** derivado de la ausencia de estimación predictiva de costos.
+4. La **incapacidad de evaluar el impacto sistémico** de cambios arquitectónicos antes del despliegue.
+
+### Pregunta General de Investigación
 
 > **¿En qué medida el desarrollo de un diagramador web interactivo de infraestructura cloud, integrado con un motor de auditoría de seguridad basado en reglas, un módulo de estimación dinámica de costos FinOps, y un generador automatizado de plantillas IaC (Terraform), contribuye a reducir las brechas de seguridad por misconfiguration, el desperdicio financiero por sobreaprovisionamiento y el esfuerzo manual de codificación de infraestructura durante las fases tempranas del diseño arquitectónico?**
 
 ---
 
-## 3. Objetivos
+## 🎯 Objetivos
 
-### 3.1 Objetivo General
+### Objetivo General
 
-Desarrollar un sistema web interactivo de diagramación y análisis de infraestructura cloud que, operando sobre una representación computacional de grafos, integre de forma cohesionada un motor de auditoría de seguridad basado en los estándares CIS Benchmarks y AWS Well-Architected Framework, un módulo de estimación dinámica de costos mensuales alineado con los principios FinOps, un simulador de radio de impacto (*Blast Radius*) para análisis *what-if* arquitectónico, y un exportador automatizado de plantillas de Infraestructura como Código en formato Terraform HCL, con el propósito de reducir las brechas de seguridad por misconfiguration, mitigar el Cloud Waste financiero y acelerar el ciclo de materialización del diseño arquitectónico en infraestructura desplegable.
+Desarrollar un sistema web interactivo de diagramación y análisis de infraestructura cloud que, operando sobre una representación computacional de grafos, integre de forma cohesionada un motor de auditoría de seguridad basado en los estándares CIS Benchmarks y AWS Well-Architected Framework, un módulo de estimación dinámica de costos mensual alineado con los principios FinOps, un simulador de Blast Radius para análisis *what-if* arquitectónico, y un exportador automatizado de Infraestructura como Código en formato Terraform HCL.
 
----
+### Objetivos Específicos
 
-### 3.2 Objetivos Específicos
+#### OE1 — Lienzo Web Interactivo Basado en Grafos
 
-#### OE1 — Diseño del Lienzo Web Interactivo Basado en Grafos
+Diseñar e implementar un lienzo de alta fidelidad con componentes parametrizables (instancias de cómputo, balanceadores de carga, bases de datos gestionadas, redes virtuales, subredes, grupos de seguridad) representados internamente como un **grafo dirigido y ponderado**, con exportación/importación en JSON canónico.
 
-Diseñar e implementar un lienzo web interactivo de alta fidelidad que permita la construcción visual e intuitiva de topologías de infraestructura cloud mediante la composición de componentes parametrizables (instancias de cómputo, balanceadores de carga, bases de datos gestionadas, redes virtuales, subredes, grupos de seguridad, entre otros), representando la arquitectura internamente como un **grafo dirigido y ponderado** (estructura de nodos y aristas) que habilite la captura semántica de la topología para su procesamiento analítico posterior, garantizando la exportación e importación del estado del diagrama en formato JSON canónico.
+#### OE2 — Motor de Reglas para Auditoría de Seguridad y Resiliencia
 
-#### OE2 — Implementación del Motor de Reglas para Auditoría de Seguridad y Resiliencia
+Implementar un motor de evaluación de conformidad que valide la arquitectura diseñada contra controles derivados del **CIS Benchmarks for Cloud Providers (v1.5+)** y el **AWS Well-Architected Framework**, generando hallazgos clasificados por severidad (CRITICAL / HIGH / MEDIUM / LOW) con remediaciones accionables.
 
-Implementar un motor de evaluación de reglas de conformidad que, operando sobre la representación grafo de la arquitectura diseñada, ejecute validaciones estáticas en tiempo real contra un conjunto codificado de controles de seguridad derivados del **CIS Benchmarks for Cloud Providers** (v1.5+) y del **AWS Well-Architected Framework** (pilares de Seguridad y Fiabilidad), generando un informe de hallazgos (*findings*) clasificados por nivel de severidad (CRITICAL / HIGH / MEDIUM / LOW) con descripción del control vulnerado, evidencia técnica sobre el componente incumplidor y recomendaciones de remediación accionables.
+#### OE3 — Módulo de Estimación Dinámica de Costos (FinOps)
 
-#### OE3 — Integración del Módulo de Estimación Dinámica de Costos Mensuales (FinOps)
+Integrar un módulo de estimación de **Total Cost of Ownership (TCO)** mensual en tiempo real, desglosado por servicio, con catálogo de precios actualizable para AWS, Azure, GCP y Oracle Cloud, implementando los principios de **Shift-Left FinOps** de la FinOps Foundation.
 
-Integrar un módulo de estimación de costos operativos mensuales que, a partir de los atributos configurados en cada componente del diagrama (tipo de instancia, región geográfica, capacidad de almacenamiento, políticas de escalado), consulte un catálogo de precios actualizable vinculado a los modelos tarifarios de los principales proveedores cloud (AWS, Azure, GCP) y calcule en tiempo real el **Total Cost of Ownership (TCO) estimado** de la arquitectura diseñada, desglosado por servicio y agrupado por dominio funcional, implementando los principios de **Shift-Left FinOps** conforme a la taxonomía de la FinOps Foundation, con el objetivo de habilitar decisiones de diseño informadas financieramente antes del aprovisionamiento.
+#### OE4 — Simulación de Blast Radius y Exportación IaC Terraform
 
-#### OE4 — Implementación del Módulo de Simulación de Impacto (Blast Radius) y Exportación Automatizada a Terraform IaC
-
-Implementar un módulo de análisis de impacto sistémico que, mediante algoritmos de traversal sobre el grafo arquitectónico (BFS/DFS con propagación de dependencias), permita simular el **radio de impacto** (*Blast Radius*) ante la eliminación, fallo o reconfiguración de cualquier componente del diagrama, identificando los recursos dependientes afectados y calculando métricas de resiliencia; y, de forma complementaria, desarrollar un motor de generación automatizada de plantillas de **Infraestructura como Código** en formato **Terraform HCL** (HashiCorp Configuration Language), capaz de traducir la topología diseñada en código declarativo, parametrizado y ejecutable, conforme a las convenciones del Terraform Registry para los principales proveedores cloud.
+Implementar un módulo de análisis de impacto sistémico mediante algoritmos BFS/DFS sobre el grafo, y un motor de generación automatizada de plantillas **Terraform HCL** (HashiCorp Configuration Language) conformes al Terraform Registry para los principales proveedores cloud.
 
 ---
 
-## 4. Justificación
+## 💡 Justificación
 
-### 4.1 Justificación Teórica
+### Justificación Teórica
 
-La presente investigación se fundamenta en la convergencia de marcos normativos, estándares industriales y hallazgos empíricos de alto impacto en la disciplina de la arquitectura cloud. El *Gartner Magic Quadrant for Cloud Management Platforms 2024* proyecta que, para el año 2027, las organizaciones que implementen prácticas de **FinOps integradas en el ciclo de diseño** reducirán su Cloud Waste en un 35% respecto a aquellas que operan con modelos reactivos de gestión del gasto. La **FinOps Foundation** establece en su marco de referencia la fase de *Inform* como prerequisito crítico para la optimización del gasto, indicando que la visibilidad de costos debe estar disponible en tiempo de diseño (*design-time cost awareness*) y no únicamente en tiempo de operación.
+- El *Gartner Magic Quadrant for Cloud Management Platforms 2024* proyecta que para 2027, las organizaciones con prácticas FinOps integradas en el ciclo de diseño reducirán su Cloud Waste en un **35%**.
+- El paradigma **Shift-Left Security** (DevSecOps) postula que el costo de corrección de un defecto de seguridad se multiplica por un factor de **30×** si se detecta en producción versus en diseño (*IBM Systems Sciences Institute*).
+- El ecosistema Terraform con más de **1.9 millones de módulos** en el Terraform Registry justifica su adopción como formato de exportación IaC estándar.
 
-Desde la perspectiva de la seguridad, el **CIS Controls v8** y los **CIS Benchmarks para AWS, Azure y GCP** proveen un conjunto de controles prescriptivos y medibles que constituyen el estándar de facto para la evaluación de la postura de seguridad en infraestructuras cloud. La incorporación de estos controles en un motor de validación automatizada responde al paradigma **Shift-Left Security** —también denominado *DevSecOps*— que postula la detección temprana de vulnerabilidades en las fases de diseño y desarrollo como mecanismo de reducción del costo de remediación (Modelo de IBM: el costo de corrección de un defecto de seguridad se multiplica por un factor de 30× si se detecta en producción versus en diseño). Finalmente, el ecosistema Terraform de HashiCorp, con más de 1.9 millones de módulos publicados en el Terraform Registry, se ha consolidado como el estándar predominante de IaC, justificando su adopción como formato de exportación principal del sistema propuesto.
+### Justificación Práctica
 
-### 4.2 Justificación Práctica
-
-La solución propuesta responde directamente a necesidades operativas verificables en equipos de arquitectura de software y plataformas cloud: (a) la eliminación del contexto fragmentado entre herramientas de diagramación, auditoría y estimación de costos; (b) la habilitación de retroalimentación inmediata sobre postura de seguridad durante el diseño, antes de que las decisiones arquitectónicas sean codificadas e implementadas; (c) la reducción del tiempo de generación de código IaC mediante automatización de la traducción diagrama → Terraform; y (d) la provisión de un análisis cuantificado del riesgo sistémico mediante la simulación del *Blast Radius*, herramienta de alto valor para la planificación de continuidad de negocio y recuperación ante desastres (DR/BCP). El sistema propuesto representa, por tanto, un avance sustancial hacia la unificación del ciclo de vida del diseño arquitectónico cloud en una plataforma cohesionada, inteligente e interactiva.
+CloudScope elimina la fragmentación entre herramientas al unificar en una sola plataforma el ciclo completo: **diseño → auditoría de seguridad → estimación FinOps → análisis de resiliencia → generación IaC**, reduciendo la latencia operativa, el Architectural Drift y el riesgo de errores humanos en el ciclo de vida del diseño arquitectónico cloud.
 
 ---
 
-## 5. Referencias Clave
+## 📚 Referencias Clave
 
 | # | Fuente | Relevancia |
 |---|--------|-----------|
@@ -93,5 +359,10 @@ La solución propuesta responde directamente a necesidades operativas verificabl
 
 ---
 
-> *Documento generado en el marco del Proyecto de Ingeniería SI784 – 2026-II.*
-> *Universidad Privada de Tacna – Escuela Profesional de Ingeniería de Sistemas.*
+<p align="center">
+  <em>Documento generado en el marco del Proyecto de Ingeniería SI784 – 2026-II</em><br/>
+  <em>Universidad Privada de Tacna – Escuela Profesional de Ingeniería de Sistemas</em><br/><br/>
+  <strong>☁️ CloudScope</strong> — <em>Design. Audit. Optimize. Deploy.</em>
+</p>
+
+
