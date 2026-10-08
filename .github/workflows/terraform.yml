@@ -29,6 +29,9 @@ jobs:
         run: |
           set -o pipefail
           terraform -chdir=infra/terraform test -json | tee reports/terraform/tests.jsonl
+      - name: Generate Terraform tests report
+        if: always()
+        run: python scripts/terraform_test_report.py
       - name: Monthly cost allocation
         if: always()
         run: python scripts/cost_report.py --require-config

@@ -1,0 +1,176 @@
+name: Release and Deploy
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.2.3)'
+        required: true
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}
+
+jobs:
+  # ── 1. Run full test suite before releasing ──────────────────────────────
+  tests:
+    uses: ./.github/workflows/ci.yml
+
+  terraform-validation:
+    uses: ./.github/workflows/terraform.yml
+
+  # ── 2. Build and push Docker images ──────────────────────────────────────
+  build:
+    needs: [tests, terraform-validation]
+    runs-on: ubuntu-latest
+    outputs:
+      backend_image: ${{ steps.meta-backend.outputs.tags }}
+      frontend_image: ${{ steps.meta-frontend.outputs.tags }}
+      backend_digest: ${{ steps.push-backend.outputs.digest }}
+      frontend_digest: ${{ steps.push-frontend.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Backend
+      - name: Backend image metadata
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/cloudscope-backend
+          tags: |
+            type=semver,pattern={{version}}
+            type=sha,prefix=sha-
+
+      - name: Build and push backend image
+        id: push-backend
+        uses: docker/build-push-action@v6
+        with:
+          context: CLOUDSCOPE/cloudscope-backend
+          push: true
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Frontend
+      - name: Frontend image metadata
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/cloudscope-frontend
+          tags: |
+            type=semver,pattern={{version}}
+            type=sha,prefix=sha-
+
+      - name: Build and push frontend image
+        id: push-frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: CLOUDSCOPE/cloudscope-frontend
+          push: true
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ── 3. Create GitHub Release with artifacts ───────────────────────────────
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all workflow artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Create release notes
+        run: |
+          TAG="${{ github.ref_name }}"
+          cat > release-notes.md <<EOF
+          ## ☁️ CloudScope $TAG
+
+          ### Docker Images
+          | Servicio | Imagen |
+          |----------|--------|
+          | Backend  | \`${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/cloudscope-backend@${{ needs.build.outputs.backend_digest }}\` |
+          | Frontend | \`${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/cloudscope-frontend@${{ needs.build.outputs.frontend_digest }}\` |
+
+          ### Cambios
+          $(git log $(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD --oneline --no-decorate 2>/dev/null || echo "Primera versión")
+
+          ### Instalación
+          Consulta el [README.md](https://github.com/${{ github.repository }}/blob/main/README.md) para instrucciones de despliegue.
+          EOF
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release-notes.md
+          files: |
+            artifacts/**/*.xml
+            artifacts/**/*.json
+            artifacts/**/*.md
+          generate_release_notes: false
+          make_latest: true
+
+  # ── 4. Deploy to VPS ─────────────────────────────────────────────────────
+  deploy:
+    needs: [build, release]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          BACKEND_IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/cloudscope-backend@${{ needs.build.outputs.backend_digest }}
+          FRONTEND_IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/cloudscope-frontend@${{ needs.build.outputs.frontend_digest }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: BACKEND_IMAGE,FRONTEND_IMAGE
+          script: |
+            set -e
+            cd ~/cloudscope
+
+            # Pull latest images
+            docker pull "$BACKEND_IMAGE"
+            docker pull "$FRONTEND_IMAGE"
+
+            # Export Terraform-managed resource names
+            export TF_NETWORK=$(terraform -chdir=~/cloudscope/infra/terraform output -raw network_name)
+            export TF_POSTGRES_VOLUME=$(terraform -chdir=~/cloudscope/infra/terraform output -raw postgres_volume)
+            export TF_CADDY_DATA=$(terraform -chdir=~/cloudscope/infra/terraform output -raw caddy_data_volume)
+            export TF_CADDY_CONFIG=$(terraform -chdir=~/cloudscope/infra/terraform output -raw caddy_config_volume)
+
+            # Zero-downtime rolling update
+            BACKEND_IMAGE="$BACKEND_IMAGE" FRONTEND_IMAGE="$FRONTEND_IMAGE" \
+              docker compose -f deploy/compose.release.yml pull
+            BACKEND_IMAGE="$BACKEND_IMAGE" FRONTEND_IMAGE="$FRONTEND_IMAGE" \
+              docker compose -f deploy/compose.release.yml up -d --remove-orphans
+
+            # Health check
+            sleep 10
+            docker compose -f deploy/compose.release.yml ps
+            echo "✅ CloudScope ${{ github.ref_name }} deployed successfully"

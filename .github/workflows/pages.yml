@@ -1,0 +1,168 @@
+name: Documentation and GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # ── 1. Generate README diagrams and docs ──────────────────────────────────
+  generate-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Validate README architectural diagrams and data dictionary
+      - name: Validate README architectural documentation
+        run: python scripts/generate_readme_docs.py
+
+      # Generate Javadoc for backend
+      - name: Generate Javadoc
+        working-directory: CLOUDSCOPE/cloudscope-backend
+        run: mvn -B javadoc:javadoc -Dshow=private -DfailOnError=false
+
+      # Install TypeDoc for frontend
+      - name: Install dependencies
+        working-directory: CLOUDSCOPE/cloudscope-frontend
+        run: npm ci
+
+      # Build frontend to validate
+      - name: Build frontend
+        working-directory: CLOUDSCOPE/cloudscope-frontend
+        run: npm run build
+
+      # Prepare GitHub Pages site
+      - name: Build GitHub Pages site
+        run: |
+          mkdir -p docs/javadoc docs/frontend
+
+          # Copy Javadoc
+          cp -r CLOUDSCOPE/cloudscope-backend/target/site/apidocs/. docs/javadoc/ 2>/dev/null || echo "No Javadoc generated"
+
+          # Generate Pages index
+          cat > docs/index.html <<'EOF'
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>CloudScope – Documentación Técnica</title>
+            <style>
+              :root { --amber: #f59e0b; --dark: #0a0f1e; --text: #f8fafc; }
+              * { box-sizing: border-box; margin: 0; padding: 0; }
+              body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: var(--text); min-height: 100vh; }
+              header { background: #0f172a; border-bottom: 1px solid #1e293b; padding: 1.5rem 2rem; display: flex; align-items: center; gap: 1rem; }
+              header h1 { font-size: 1.5rem; font-weight: 900; }
+              header h1 span { color: var(--amber); }
+              main { max-width: 900px; margin: 3rem auto; padding: 0 2rem; }
+              h2 { font-size: 1.25rem; color: var(--amber); margin-bottom: 1.5rem; border-bottom: 1px solid #1e293b; padding-bottom: .5rem; }
+              .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px,1fr)); gap: 1.5rem; margin-bottom: 3rem; }
+              .card { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 1.5rem; transition: border-color .2s; }
+              .card:hover { border-color: var(--amber); }
+              .card h3 { font-size: 1rem; margin-bottom: .5rem; }
+              .card p { font-size: .85rem; color: #94a3b8; line-height: 1.6; margin-bottom: 1rem; }
+              .card a { display: inline-block; color: var(--amber); font-weight: 700; font-size: .85rem; text-decoration: none; }
+              .card a:hover { text-decoration: underline; }
+              footer { text-align: center; padding: 2rem; color: #475569; font-size: .8rem; border-top: 1px solid #1e293b; }
+            </style>
+          </head>
+          <body>
+            <header>
+              <h1>☁️ Cloud<span>Scope</span></h1>
+              <p style="color:#94a3b8;font-size:.9rem">Documentación Técnica – SI784 · 2026-II</p>
+            </header>
+            <main>
+              <h2>📚 Documentación del Proyecto</h2>
+              <div class="grid">
+                <div class="card">
+                  <h3>☕ Backend – Javadoc</h3>
+                  <p>Documentación de todas las clases, métodos y propiedades del API REST Spring Boot (Java 21).</p>
+                  <a href="javadoc/index.html">Ver Javadoc →</a>
+                </div>
+                <div class="card">
+                  <h3>📄 README</h3>
+                  <p>Descripción general, arquitectura, stack tecnológico, estructura del repositorio e instrucciones de instalación.</p>
+                  <a href="https://github.com/UPT-FAING-EPIS/proyecto-si784-2026-ii-halanocca_marca#readme">Ver README →</a>
+                </div>
+                <div class="card">
+                  <h3>🛡️ Reporte Semgrep</h3>
+                  <p>Análisis estático de código con hallazgos de seguridad y vulnerabilidades detectadas por Semgrep.</p>
+                  <a href="https://github.com/UPT-FAING-EPIS/proyecto-si784-2026-ii-halanocca_marca/actions">Ver Actions →</a>
+                </div>
+                <div class="card">
+                  <h3>🔍 Reporte SonarQube</h3>
+                  <p>Bugs, Vulnerabilities y Security Hotspots del análisis de calidad continua con SonarQube.</p>
+                  <a href="https://github.com/UPT-FAING-EPIS/proyecto-si784-2026-ii-halanocca_marca/actions">Ver Actions →</a>
+                </div>
+                <div class="card">
+                  <h3>☁️ Terraform + Costos</h3>
+                  <p>Infraestructura como código provisionada en Docker, tests y reporte de costos mensuales estimados.</p>
+                  <a href="https://github.com/UPT-FAING-EPIS/proyecto-si784-2026-ii-halanocca_marca/actions">Ver Actions →</a>
+                </div>
+                <div class="card">
+                  <h3>🗄️ Base de Datos</h3>
+                  <p>Scripts SQL, diccionario de datos y diagrama Entidad-Relación de la base de datos PostgreSQL.</p>
+                  <a href="https://github.com/UPT-FAING-EPIS/proyecto-si784-2026-ii-halanocca_marca/tree/main/CLOUDSCOPE/Bd">Ver BD →</a>
+                </div>
+              </div>
+
+              <h2>🏗️ Arquitectura</h2>
+              <div class="grid">
+                <div class="card">
+                  <h3>📦 Diagrama de Componentes</h3>
+                  <p>React 18 (Vite) · Spring Boot 3.3 · PostgreSQL 16 · Docker Compose · Caddy</p>
+                  <a href="https://github.com/UPT-FAING-EPIS/proyecto-si784-2026-ii-halanocca_marca#-arquitectura-del-sistema">Ver en README →</a>
+                </div>
+                <div class="card">
+                  <h3>🚀 Diagrama de Despliegue</h3>
+                  <p>Contenedores Docker orquestados por Terraform, expuestos via Caddy reverse proxy con HTTPS.</p>
+                  <a href="https://github.com/UPT-FAING-EPIS/proyecto-si784-2026-ii-halanocca_marca#-arquitectura-del-sistema">Ver en README →</a>
+                </div>
+              </div>
+            </main>
+            <footer>☁️ CloudScope · Universidad Privada de Tacna – EPIS · SI784 2026-II</footer>
+          </body>
+          </html>
+          EOF
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/
+
+  # ── 2. Deploy to GitHub Pages ─────────────────────────────────────────────
+  deploy-pages:
+    needs: generate-docs
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

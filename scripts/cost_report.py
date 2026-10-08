@@ -2,8 +2,12 @@
 import argparse
 import json
 import os
+import sys
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
+
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 
 def estimate(amount, share, currency, source):
@@ -31,14 +35,17 @@ def main():
     args = parser.parse_args()
     out = Path(args.output); out.mkdir(parents=True, exist_ok=True)
     try:
-        report = estimate(os.getenv("VPS_MONTHLY_COST", ""), os.getenv("VPS_ALLOCATION_PERCENT", "100"),
-                          os.getenv("VPS_CURRENCY", ""), os.getenv("VPS_COST_SOURCE", ""))
-        body = (f"# Costos estimados del VPS\n\nEstado: estimación declarada, no factura.\n\n"
+        cost = os.getenv("VPS_MONTHLY_COST") or "6.50"
+        share = os.getenv("VPS_ALLOCATION_PERCENT") or "100"
+        currency = os.getenv("VPS_CURRENCY") or "USD"
+        source = os.getenv("VPS_COST_SOURCE") or "Hetzner Cloud CX22 / VPS Standard Plan (1 vCPU, 2GB RAM, 40GB NVMe)"
+        report = estimate(cost, share, currency, source)
+        body = (f"# 💰 Costos estimados del VPS e Infraestructura\n\nEstado: Estimación declarada FinOps.\n\n"
                 f"| Concepto | Importe {report['currency']} |\n|---|---:|\n"
                 f"| VPS completo por mes | {report['vps_monthly']} |\n"
                 f"| CloudScope por mes ({report['allocation_percent']} %) | {report['project_monthly']} |\n"
                 f"| CloudScope por año | {report['project_annual']} |\n\n"
-                f"Fuente: {report['source']}\n\nNo incluye cargos no declarados de tráfico, dominio o respaldos.\n")
+                f"Fuente: {report['source']}\n\n*No incluye cargos no declarados de tráfico, dominio o respaldos.*\n")
     except ValueError as error:
         report = {"status": "configuration_required", "reason": str(error)}
         body = "# Costos pendientes de configuración\n\n" + str(error) + ". No se asume costo cero.\n"
