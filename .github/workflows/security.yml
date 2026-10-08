@@ -35,6 +35,14 @@ jobs:
       - name: Install Snyk
         if: matrix.tool == 'snyk'
         run: npm install --global snyk
+      - name: Install frontend dependencies for Snyk
+        if: matrix.tool == 'snyk'
+        run: npm ci
+        working-directory: CLOUDSCOPE/cloudscope-frontend
+      - name: Resolve backend dependencies for Snyk
+        if: matrix.tool == 'snyk'
+        run: mvn -B dependency:resolve -DskipTests
+        working-directory: CLOUDSCOPE/cloudscope-backend
       - name: Download previous same-branch evidence
         env:
           GH_TOKEN: ${{ github.token }}

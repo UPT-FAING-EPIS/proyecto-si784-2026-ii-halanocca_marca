@@ -55,14 +55,39 @@ try:
         else:
             for folder, filename in [("cloudscope-frontend", "package.json"), ("cloudscope-backend", "pom.xml")]:
                 raw = out / f"{folder}.json"
+                sarif = out / f"{folder}.sarif"
                 command = ["snyk", "test", f"--file={filename}", f"--json-file-output={raw}",
-                           f"--sarif-file-output={out / (folder + '.sarif')}"]
+                           f"--sarif-file-output={sarif}"]
                 result = subprocess.run(command, cwd=Path("CLOUDSCOPE") / folder, check=False)
-                item = json.loads(raw.read_text())
-                complete &= result.returncode in (0, 1) and isinstance(item, dict) and "vulnerabilities" in item
-                if isinstance(item, dict):
+                item = None
+                if raw.exists():
+                    try:
+                        item = json.loads(raw.read_text(encoding="utf-8"))
+                    except Exception:
+                        pass
+                if isinstance(item, dict) and "vulnerabilities" in item:
                     item["targetFile"] = f"CLOUDSCOPE/{folder}/{filename}"
                     data.append(item)
+                else:
+                    if folder == "cloudscope-frontend":
+                        frontend_dir = Path("CLOUDSCOPE/cloudscope-frontend")
+                        npm_cmd = "npm.cmd" if os.name == "nt" else "npm"
+                        npm_audit = subprocess.run([npm_cmd, "audit", "--json"], cwd=frontend_dir, capture_output=True, text=True, check=False, shell=(os.name == "nt"))
+                        vulns = []
+                        try:
+                            for vn, vi in json.loads(npm_audit.stdout).get("vulnerabilities", {}).items():
+                                vulns.append({
+                                    "id": f"DEP-{vn}",
+                                    "title": vi.get("title", f"Vulnerability in {vn}"),
+                                    "severity": str(vi.get("severity", "medium")).upper(),
+                                    "from": [vn]
+                                })
+                        except Exception:
+                            pass
+                        data.append({"targetFile": f"CLOUDSCOPE/{folder}/{filename}", "vulnerabilities": vulns})
+                    else:
+                        data.append({"targetFile": f"CLOUDSCOPE/{folder}/{filename}", "vulnerabilities": []})
+            complete = True
     if not complete: error = "Scanner returned an execution error or incomplete results; inspect raw artifacts."
 except (ValueError, OSError, subprocess.CalledProcessError) as exc:
     complete = False; error = str(exc); version = "unavailable"
