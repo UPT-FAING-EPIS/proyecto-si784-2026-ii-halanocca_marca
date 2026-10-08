@@ -1,0 +1,9 @@
+**/node_modules/
+**/target/
+**/dist/
+**/data/
+CLOUDSCOPE/Bd/
+reports/
+site/
+media/
+.automation-tools/

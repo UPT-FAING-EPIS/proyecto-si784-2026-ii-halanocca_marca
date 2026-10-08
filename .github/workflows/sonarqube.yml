@@ -1,0 +1,78 @@
+name: SonarQube analysis
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  sonar:
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+      SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+      SONAR_PR_KEY: ${{ github.event.pull_request.number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Require Sonar configuration
+        run: |
+          test -n "$SONAR_TOKEN" || { echo 'Configure SONAR_TOKEN'; exit 1; }
+          test -n "$SONAR_HOST_URL" || { echo 'Configure SONAR_HOST_URL'; exit 1; }
+          test -n "$SONAR_PROJECT_KEY" || { echo 'Configure SONAR_PROJECT_KEY'; exit 1; }
+      - run: mvn -B verify
+        working-directory: CLOUDSCOPE/cloudscope-backend
+      - run: npm ci
+        working-directory: CLOUDSCOPE/cloudscope-frontend
+      - name: Frontend LCOV
+        working-directory: CLOUDSCOPE/cloudscope-frontend
+        run: npx --yes c8@10.1.3 --reporter=lcov --reporter=text node --test tests/*.test.js
+      - name: Configure analysis identity
+        run: |
+          python - <<'PY'
+          import os
+          with open('sonar-project.properties', 'a') as f:
+              f.write('\nsonar.projectKey=' + os.environ['SONAR_PROJECT_KEY'] + '\n')
+              if os.environ.get('SONAR_ORGANIZATION'):
+                  f.write('sonar.organization=' + os.environ['SONAR_ORGANIZATION'] + '\n')
+          PY
+      - name: Scan and await quality gate
+        id: scan
+        continue-on-error: true
+        uses: SonarSource/sonarqube-scan-action@v6
+        with:
+          args: -Dsonar.qualitygate.wait=true -Dsonar.qualitygate.timeout=300
+      - name: Previous Sonar evidence
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/security_report.py sonarqube --baseline
+      - name: Export bugs vulnerabilities and hotspots
+        if: always()
+        run: python scripts/sonar_report.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-sonarqube
+          path: reports/sonarqube/
+          if-no-files-found: error
+          retention-days: 90
+      - name: Enforce scanner outcome
+        if: always()
+        env:
+          RESULT: ${{ steps.scan.outcome }}
+        run: test "$RESULT" = success

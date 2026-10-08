@@ -1,0 +1,54 @@
+name: Semgrep and Snyk
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        tool: [semgrep, snyk]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        if: matrix.tool == 'snyk'
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Install Semgrep
+        if: matrix.tool == 'semgrep'
+        run: python -m pip install 'semgrep>=1.100,<2'
+      - name: Install Snyk
+        if: matrix.tool == 'snyk'
+        run: npm install --global snyk
+      - name: Download previous same-branch evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TOOL: ${{ matrix.tool }}
+        run: python scripts/security_report.py "$TOOL" --baseline
+      - name: Scan and compare findings
+        env:
+          TOOL: ${{ matrix.tool }}
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: python scripts/security_scan.py "$TOOL"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-${{ matrix.tool }}
+          path: reports/${{ matrix.tool }}/
+          if-no-files-found: error
+          retention-days: 90

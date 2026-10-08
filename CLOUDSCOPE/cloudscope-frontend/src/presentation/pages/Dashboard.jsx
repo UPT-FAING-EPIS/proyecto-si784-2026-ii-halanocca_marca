@@ -512,8 +512,11 @@ export default function Dashboard() {
 
   const handleImport = async () => {
     try {
-      await importProjectJSON();
+      const project = await importProjectJSON();
+      if (!project) return;
       loadProjects();
+      loadProject(project.id);
+      navigate('/editor');
     } catch (err) {
       alert('Error al importar: ' + err.message);
     }

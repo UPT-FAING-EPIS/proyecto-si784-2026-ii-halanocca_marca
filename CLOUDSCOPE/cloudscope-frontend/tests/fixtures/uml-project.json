@@ -1,0 +1,472 @@
+{
+  "id": "proj_cloudscope_uml_classes",
+  "name": "CloudScope - Diagrama de clases",
+  "description": "Modelo de clases: atributos, métodos y relaciones. UserEntity no tiene relación persistida con ProjectEntity. Representación documental con nodos estándar; no corresponde a recursos cloud desplegables.",
+  "version": "1.0",
+  "createdAt": "2026-10-07T12:00:00-05:00",
+  "updatedAt": "2026-10-07T12:00:00-05:00",
+  "nodes": [
+    {
+      "id": "Project",
+      "type": "default",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "sourcePosition": "right",
+      "targetPosition": "left",
+      "data": {
+        "label": "Project\n────────────────────────────────────────\n- id: String\n- name: String\n- description: String\n- version: String\n- nodes: Object\n- edges: Object\n- createdAt: String\n- updatedAt: String\n────────────────────────────────────────\n+ getId(): String\n+ getNodes(): Object\n+ getEdges(): Object",
+        "cloudType": "block",
+        "config": {
+          "notes": "Project\n────────────────────────────────────────\n- id: String\n- name: String\n- description: String\n- version: String\n- nodes: Object\n- edges: Object\n- createdAt: String\n- updatedAt: String\n────────────────────────────────────────\n+ getId(): String\n+ getNodes(): Object\n+ getEdges(): Object"
+        },
+        "uml": {
+          "name": "Project",
+          "attributes": [
+            "- id: String",
+            "- name: String",
+            "- description: String",
+            "- version: String",
+            "- nodes: Object",
+            "- edges: Object",
+            "- createdAt: String",
+            "- updatedAt: String"
+          ],
+          "operations": [
+            "+ getId(): String",
+            "+ getNodes(): Object",
+            "+ getEdges(): Object"
+          ]
+        }
+      },
+      "style": {
+        "width": 470,
+        "padding": 18,
+        "background": "#e6e6e6",
+        "color": "#202020",
+        "border": "2px solid #202020",
+        "borderRadius": 4,
+        "fontFamily": "monospace",
+        "fontSize": 14,
+        "lineHeight": 1.6,
+        "whiteSpace": "pre-wrap",
+        "textAlign": "left"
+      }
+    },
+    {
+      "id": "ProjectEntity",
+      "type": "default",
+      "position": {
+        "x": 650,
+        "y": 0
+      },
+      "sourcePosition": "right",
+      "targetPosition": "left",
+      "data": {
+        "label": "ProjectEntity\n────────────────────────────────────────\n- id: String\n- name: String\n- description: String\n- version: String\n- nodesJson: String\n- edgesJson: String\n- createdAt: String\n- updatedAt: String\n────────────────────────────────────────\n+ getNodesJson(): String\n+ getEdgesJson(): String",
+        "cloudType": "block",
+        "config": {
+          "notes": "ProjectEntity\n────────────────────────────────────────\n- id: String\n- name: String\n- description: String\n- version: String\n- nodesJson: String\n- edgesJson: String\n- createdAt: String\n- updatedAt: String\n────────────────────────────────────────\n+ getNodesJson(): String\n+ getEdgesJson(): String"
+        },
+        "uml": {
+          "name": "ProjectEntity",
+          "attributes": [
+            "- id: String",
+            "- name: String",
+            "- description: String",
+            "- version: String",
+            "- nodesJson: String",
+            "- edgesJson: String",
+            "- createdAt: String",
+            "- updatedAt: String"
+          ],
+          "operations": [
+            "+ getNodesJson(): String",
+            "+ getEdgesJson(): String"
+          ]
+        }
+      },
+      "style": {
+        "width": 470,
+        "padding": 18,
+        "background": "#b3d8fa",
+        "color": "#202020",
+        "border": "2px solid #202020",
+        "borderRadius": 4,
+        "fontFamily": "monospace",
+        "fontSize": 14,
+        "lineHeight": 1.6,
+        "whiteSpace": "pre-wrap",
+        "textAlign": "left"
+      }
+    },
+    {
+      "id": "CloudNode",
+      "type": "default",
+      "position": {
+        "x": 650,
+        "y": 510
+      },
+      "sourcePosition": "right",
+      "targetPosition": "left",
+      "data": {
+        "label": "CloudNode (editor)\n────────────────────────────────────────\n+ id: string\n+ type: string\n+ position: { x: number, y: number }\n+ data.cloudType: CloudNodeType\n+ data.label: string\n+ data.config: object\n────────────────────────────────────────",
+        "cloudType": "block",
+        "config": {
+          "notes": "CloudNode (editor)\n────────────────────────────────────────\n+ id: string\n+ type: string\n+ position: { x: number, y: number }\n+ data.cloudType: CloudNodeType\n+ data.label: string\n+ data.config: object\n────────────────────────────────────────"
+        },
+        "uml": {
+          "name": "CloudNode (editor)",
+          "attributes": [
+            "+ id: string",
+            "+ type: string",
+            "+ position: { x: number, y: number }",
+            "+ data.cloudType: CloudNodeType",
+            "+ data.label: string",
+            "+ data.config: object"
+          ],
+          "operations": []
+        }
+      },
+      "style": {
+        "width": 470,
+        "padding": 18,
+        "background": "#b8f5b1",
+        "color": "#202020",
+        "border": "2px solid #202020",
+        "borderRadius": 4,
+        "fontFamily": "monospace",
+        "fontSize": 14,
+        "lineHeight": 1.6,
+        "whiteSpace": "pre-wrap",
+        "textAlign": "left"
+      }
+    },
+    {
+      "id": "Edge",
+      "type": "default",
+      "position": {
+        "x": 0,
+        "y": 510
+      },
+      "sourcePosition": "right",
+      "targetPosition": "left",
+      "data": {
+        "label": "Edge (editor)\n────────────────────────────────────────\n+ id: string\n+ source: string\n+ target: string\n────────────────────────────────────────",
+        "cloudType": "block",
+        "config": {
+          "notes": "Edge (editor)\n────────────────────────────────────────\n+ id: string\n+ source: string\n+ target: string\n────────────────────────────────────────"
+        },
+        "uml": {
+          "name": "Edge (editor)",
+          "attributes": [
+            "+ id: string",
+            "+ source: string",
+            "+ target: string"
+          ],
+          "operations": []
+        }
+      },
+      "style": {
+        "width": 470,
+        "padding": 18,
+        "background": "#b8f5b1",
+        "color": "#202020",
+        "border": "2px solid #202020",
+        "borderRadius": 4,
+        "fontFamily": "monospace",
+        "fontSize": 14,
+        "lineHeight": 1.6,
+        "whiteSpace": "pre-wrap",
+        "textAlign": "left"
+      }
+    },
+    {
+      "id": "SecurityRule",
+      "type": "default",
+      "position": {
+        "x": 0,
+        "y": 970
+      },
+      "sourcePosition": "right",
+      "targetPosition": "left",
+      "data": {
+        "label": "SecurityRule\n────────────────────────────────────────\n+ id: string\n+ title: string\n+ severity: Severity\n+ framework: string\n────────────────────────────────────────\n+ evaluate(nodes, edges): SecurityFinding[]",
+        "cloudType": "block",
+        "config": {
+          "notes": "SecurityRule\n────────────────────────────────────────\n+ id: string\n+ title: string\n+ severity: Severity\n+ framework: string\n────────────────────────────────────────\n+ evaluate(nodes, edges): SecurityFinding[]"
+        },
+        "uml": {
+          "name": "SecurityRule",
+          "attributes": [
+            "+ id: string",
+            "+ title: string",
+            "+ severity: Severity",
+            "+ framework: string"
+          ],
+          "operations": [
+            "+ evaluate(nodes, edges): SecurityFinding[]"
+          ]
+        }
+      },
+      "style": {
+        "width": 470,
+        "padding": 18,
+        "background": "#e6e6e6",
+        "color": "#202020",
+        "border": "2px solid #202020",
+        "borderRadius": 4,
+        "fontFamily": "monospace",
+        "fontSize": 14,
+        "lineHeight": 1.6,
+        "whiteSpace": "pre-wrap",
+        "textAlign": "left"
+      }
+    },
+    {
+      "id": "SecurityFinding",
+      "type": "default",
+      "position": {
+        "x": 650,
+        "y": 970
+      },
+      "sourcePosition": "right",
+      "targetPosition": "left",
+      "data": {
+        "label": "SecurityFinding\n────────────────────────────────────────\n+ ruleId: string\n+ nodeId: string [0..1]\n+ title: string\n+ severity: Severity\n+ framework: string\n+ description: string\n+ recommendation: string\n────────────────────────────────────────",
+        "cloudType": "block",
+        "config": {
+          "notes": "SecurityFinding\n────────────────────────────────────────\n+ ruleId: string\n+ nodeId: string [0..1]\n+ title: string\n+ severity: Severity\n+ framework: string\n+ description: string\n+ recommendation: string\n────────────────────────────────────────"
+        },
+        "uml": {
+          "name": "SecurityFinding",
+          "attributes": [
+            "+ ruleId: string",
+            "+ nodeId: string [0..1]",
+            "+ title: string",
+            "+ severity: Severity",
+            "+ framework: string",
+            "+ description: string",
+            "+ recommendation: string"
+          ],
+          "operations": []
+        }
+      },
+      "style": {
+        "width": 470,
+        "padding": 18,
+        "background": "#b8f5b1",
+        "color": "#202020",
+        "border": "2px solid #202020",
+        "borderRadius": 4,
+        "fontFamily": "monospace",
+        "fontSize": 14,
+        "lineHeight": 1.6,
+        "whiteSpace": "pre-wrap",
+        "textAlign": "left"
+      }
+    },
+    {
+      "id": "UserEntity",
+      "type": "default",
+      "position": {
+        "x": 1300,
+        "y": 0
+      },
+      "sourcePosition": "right",
+      "targetPosition": "left",
+      "data": {
+        "label": "UserEntity\n────────────────────────────────────────\n- id: String\n- firstName: String\n- lastName: String\n- email: String\n- password: String\n- region: String\n- phone: String\n- createdAt: String\n────────────────────────────────────────\n+ getId(): String\n+ getEmail(): String",
+        "cloudType": "block",
+        "config": {
+          "notes": "UserEntity\n────────────────────────────────────────\n- id: String\n- firstName: String\n- lastName: String\n- email: String\n- password: String\n- region: String\n- phone: String\n- createdAt: String\n────────────────────────────────────────\n+ getId(): String\n+ getEmail(): String"
+        },
+        "uml": {
+          "name": "UserEntity",
+          "attributes": [
+            "- id: String",
+            "- firstName: String",
+            "- lastName: String",
+            "- email: String",
+            "- password: String",
+            "- region: String",
+            "- phone: String",
+            "- createdAt: String"
+          ],
+          "operations": [
+            "+ getId(): String",
+            "+ getEmail(): String"
+          ]
+        }
+      },
+      "style": {
+        "width": 470,
+        "padding": 18,
+        "background": "#b3d8fa",
+        "color": "#202020",
+        "border": "2px solid #202020",
+        "borderRadius": 4,
+        "fontFamily": "monospace",
+        "fontSize": 14,
+        "lineHeight": 1.6,
+        "whiteSpace": "pre-wrap",
+        "textAlign": "left"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "uml_relation_1",
+      "source": "Project",
+      "target": "ProjectEntity",
+      "type": "smoothstep",
+      "label": "Persistencia / JSON",
+      "animated": false,
+      "pathOptions": {
+        "offset": 35
+      },
+      "style": {
+        "stroke": "#334155",
+        "strokeWidth": 2,
+        "strokeDasharray": "6 4"
+      },
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#334155"
+      },
+      "labelStyle": {
+        "fill": "#202020",
+        "fontSize": 12
+      },
+      "labelBgStyle": {
+        "fill": "#ffffff"
+      },
+      "labelBgPadding": [
+        8,
+        5
+      ]
+    },
+    {
+      "id": "uml_relation_2",
+      "source": "Project",
+      "target": "CloudNode",
+      "type": "smoothstep",
+      "label": "1 — contiene — 0..*",
+      "animated": false,
+      "pathOptions": {
+        "offset": 35
+      },
+      "style": {
+        "stroke": "#334155",
+        "strokeWidth": 2
+      },
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#334155"
+      },
+      "labelStyle": {
+        "fill": "#202020",
+        "fontSize": 12
+      },
+      "labelBgStyle": {
+        "fill": "#ffffff"
+      },
+      "labelBgPadding": [
+        8,
+        5
+      ]
+    },
+    {
+      "id": "uml_relation_3",
+      "source": "Project",
+      "target": "Edge",
+      "type": "smoothstep",
+      "label": "1 — contiene — 0..*",
+      "animated": false,
+      "pathOptions": {
+        "offset": 35
+      },
+      "style": {
+        "stroke": "#334155",
+        "strokeWidth": 2
+      },
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#334155"
+      },
+      "labelStyle": {
+        "fill": "#202020",
+        "fontSize": 12
+      },
+      "labelBgStyle": {
+        "fill": "#ffffff"
+      },
+      "labelBgPadding": [
+        8,
+        5
+      ]
+    },
+    {
+      "id": "uml_relation_4",
+      "source": "Edge",
+      "target": "CloudNode",
+      "type": "smoothstep",
+      "label": "origen y destino: 1 nodo por rol / 0..* conexiones",
+      "animated": false,
+      "pathOptions": {
+        "offset": 35
+      },
+      "style": {
+        "stroke": "#334155",
+        "strokeWidth": 2
+      },
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#334155"
+      },
+      "labelStyle": {
+        "fill": "#202020",
+        "fontSize": 12
+      },
+      "labelBgStyle": {
+        "fill": "#ffffff"
+      },
+      "labelBgPadding": [
+        8,
+        5
+      ]
+    },
+    {
+      "id": "uml_relation_6",
+      "source": "SecurityRule",
+      "target": "SecurityFinding",
+      "type": "smoothstep",
+      "label": "genera 0..* hallazgos",
+      "animated": false,
+      "pathOptions": {
+        "offset": 35
+      },
+      "style": {
+        "stroke": "#334155",
+        "strokeWidth": 2,
+        "strokeDasharray": "6 4"
+      },
+      "markerEnd": {
+        "type": "arrowclosed",
+        "color": "#334155"
+      },
+      "labelStyle": {
+        "fill": "#202020",
+        "fontSize": 12
+      },
+      "labelBgStyle": {
+        "fill": "#ffffff"
+      },
+      "labelBgPadding": [
+        8,
+        5
+      ]
+    }
+  ]
+}

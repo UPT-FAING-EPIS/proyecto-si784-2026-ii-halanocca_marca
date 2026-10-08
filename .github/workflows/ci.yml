@@ -1,0 +1,63 @@
+name: Application tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: CLOUDSCOPE/cloudscope-frontend/package-lock.json
+      - run: npm ci
+        working-directory: CLOUDSCOPE/cloudscope-frontend
+      - name: Test with JUnit report
+        working-directory: CLOUDSCOPE/cloudscope-frontend
+        run: |
+          mkdir -p ../../reports/frontend
+          node --test --experimental-test-coverage --test-reporter=junit --test-reporter-destination=../../reports/frontend/junit.xml --test-reporter=spec --test-reporter-destination=stdout tests/*.test.js
+      - run: npm run build
+        working-directory: CLOUDSCOPE/cloudscope-frontend
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-tests
+          path: reports/frontend/
+          if-no-files-found: error
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - run: mvn -B verify
+        working-directory: CLOUDSCOPE/cloudscope-backend
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-tests
+          path: |
+            CLOUDSCOPE/cloudscope-backend/target/surefire-reports/
+            CLOUDSCOPE/cloudscope-backend/target/site/jacoco/
+          if-no-files-found: error
+  automation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s scripts/tests -v
+      - name: Validate deployment script syntax
+        run: bash -n scripts/deploy-vps.sh

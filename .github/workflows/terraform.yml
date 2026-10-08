@@ -1,0 +1,43 @@
+name: Terraform tests and costs
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  infrastructure:
+    runs-on: ubuntu-latest
+    env:
+      VPS_MONTHLY_COST: ${{ vars.VPS_MONTHLY_COST }}
+      VPS_ALLOCATION_PERCENT: ${{ vars.VPS_ALLOCATION_PERCENT || '100' }}
+      VPS_CURRENCY: ${{ vars.VPS_CURRENCY }}
+      VPS_COST_SOURCE: ${{ vars.VPS_COST_SOURCE }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.13.5'
+          terraform_wrapper: false
+      - run: mkdir -p reports/terraform
+      - run: terraform -chdir=infra/terraform fmt -check
+      - run: terraform -chdir=infra/terraform init -backend=false
+      - run: terraform -chdir=infra/terraform validate -json > reports/terraform/validation.json
+      - name: Terraform mocked infrastructure tests
+        run: |
+          set -o pipefail
+          terraform -chdir=infra/terraform test -json | tee reports/terraform/tests.jsonl
+      - name: Monthly cost allocation
+        if: always()
+        run: python scripts/cost_report.py --require-config
+      - name: Add costs to job summary
+        if: always()
+        run: cat reports/terraform/costs.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: terraform-tests-and-costs
+          path: reports/terraform/
+          if-no-files-found: error

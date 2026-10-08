@@ -1,9 +1,8 @@
-169.58.156.169.nip.io {
-    # Obtain and renew a publicly trusted certificate automatically.
-    route /api/* {
+{$CLOUDSCOPE_DOMAIN} {
+    handle /api/* {
         reverse_proxy cloudscope-backend:8080
     }
-    route {
+    handle {
         root * /usr/share/caddy
         try_files {path} /index.html
         file_server

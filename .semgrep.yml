@@ -1,0 +1,18 @@
+rules:
+  - id: plaintext-password-comparison
+    languages: [java]
+    severity: ERROR
+    message: Passwords must be verified using an adaptive hash, not direct string comparison.
+    pattern: $USER.getPassword().equals($PASSWORD)
+  - id: unrestricted-cors
+    languages: [java]
+    severity: WARNING
+    message: Restrict CORS to the configured application origin.
+    pattern-regex: '@CrossOrigin\(origins\s*=\s*\{[^}]*"\*"[^}]*\}\)'
+  - id: unsigned-authentication-token
+    languages: [java]
+    severity: ERROR
+    message: Base64 encoding does not sign or authenticate a session token.
+    paths:
+      include: ["**/AuthController.java"]
+    pattern: Base64.getEncoder().encodeToString(...)

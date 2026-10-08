@@ -1,0 +1,61 @@
+services:
+  cloudscope-db:
+    image: postgres:16-alpine
+    container_name: cloudscope-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cloudscope_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD on the VPS}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [application]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U postgres -d cloudscope_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  cloudscope-backend:
+    image: ${BACKEND_IMAGE:?Release image digest required}
+    container_name: cloudscope-backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: cloudscope-db
+      DB_PORT: 5432
+      DB_NAME: cloudscope_db
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
+    networks: [application]
+    depends_on:
+      cloudscope-db:
+        condition: service_healthy
+  cloudscope-frontend:
+    image: ${FRONTEND_IMAGE:?Release image digest required}
+    container_name: cloudscope-frontend
+    restart: unless-stopped
+    environment:
+      CLOUDSCOPE_DOMAIN: ${CLOUDSCOPE_DOMAIN:?Set the public domain}
+    ports:
+      - "${CLOUDSCOPE_HTTP_BIND:-127.0.0.1:90}:80"
+      - "${CLOUDSCOPE_HTTPS_BIND:-443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [application]
+    depends_on: [cloudscope-backend]
+volumes:
+  pgdata:
+    external: true
+    name: ${TF_POSTGRES_VOLUME:?Terraform output required}
+  caddy_data:
+    external: true
+    name: ${TF_CADDY_DATA:?Terraform output required}
+  caddy_config:
+    external: true
+    name: ${TF_CADDY_CONFIG:?Terraform output required}
+networks:
+  application:
+    external: true
+    name: ${TF_NETWORK:?Terraform output required}

@@ -45,8 +45,12 @@ services:
     container_name: cloudscope-frontend
     restart: always
     ports:
-      - "90:80"
+      - "${CLOUDSCOPE_HTTP_BIND:-80}:80"
       - "443:443"
+    volumes:
+      - ./cloudscope-frontend/Caddyfile:/etc/caddy/Caddyfile:ro
+      - cloudscope_caddy_data:/data
+      - cloudscope_caddy_config:/config
     depends_on:
       - cloudscope-backend
     environment:
@@ -54,4 +58,6 @@ services:
 
 volumes:
   cloudscope_pgdata:
+  cloudscope_caddy_data:
+  cloudscope_caddy_config:
 

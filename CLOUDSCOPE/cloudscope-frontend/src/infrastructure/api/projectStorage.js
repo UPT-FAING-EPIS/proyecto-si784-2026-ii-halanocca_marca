@@ -4,6 +4,7 @@
  */
 
 import { ARCHITECTURE_PRESETS } from '../../domain/models/ArchitecturePresets.js';
+import { parseProjectJSON } from './parseProjectJSON.js';
 
 const VERSION = '1.0';
 
@@ -228,30 +229,60 @@ export function importProjectJSON() {
   return new Promise((resolve, reject) => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.json';
+    input.accept = '.json,application/json';
+    input.hidden = true;
+    let settled = false;
+    let reading = false;
+    let focusTimer;
+    const finish = (error, project = null) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(focusTimer);
+      window.removeEventListener('focus', onFocus);
+      input.remove();
+      if (error) reject(error);
+      else resolve(project);
+    };
+    const onFocus = () => {
+      // Fallback for browsers without the file input cancel event.
+      focusTimer = setTimeout(() => {
+        if (!reading && !input.files?.length) finish(null);
+      }, 500);
+    };
+    input.oncancel = () => finish(null);
     input.onchange = (e) => {
-      const file = e.target.files[0];
-      if (!file) return reject(new Error('No file selected'));
+      const file = e.target.files?.[0];
+      if (!file) return finish(null);
+      reading = true;
+      if (file.size > 10 * 1024 * 1024) {
+        return finish(new Error('El archivo supera el límite de 10 MB.'));
+      }
       const reader = new FileReader();
+      reader.onerror = () => finish(new Error('No se pudo leer el archivo seleccionado.'));
+      reader.onabort = () => finish(null);
       reader.onload = (ev) => {
         try {
-          const project = JSON.parse(ev.target.result);
-          // Validación básica
-          if (!project.nodes || !project.edges) throw new Error('Invalid project file');
-          // Nuevo ID para evitar colisiones
+          const project = parseProjectJSON(ev.target.result, file.name);
           project.id = generateProjectId();
-          project.name = `${project.name} (imported)`;
-          const projects = listProjects();
+          project.name = `${project.name} (importado)`;
+          // Never overwrite unreadable existing storage with an empty list.
+          const raw = localStorage.getItem(getStorageKey());
+          const projects = raw === null ? listProjects() : JSON.parse(raw);
+          if (!Array.isArray(projects)) {
+            throw new Error('No se pueden leer los proyectos guardados. No se modificó su contenido.');
+          }
           localStorage.setItem(getStorageKey(), JSON.stringify([...projects, project]));
-          resolve(project);
+          finish(null, project);
         } catch (err) {
-          reject(err);
+          finish(err?.name === 'QuotaExceededError'
+            ? new Error('No hay espacio disponible en el navegador para importar este proyecto.')
+            : err);
         }
       };
-      reader.readAsText(file);
+      try { reader.readAsText(file); } catch (err) { finish(err); }
     };
     document.body.appendChild(input);
-    input.click();
-    document.body.removeChild(input);
+    window.addEventListener('focus', onFocus);
+    try { input.click(); } catch (err) { finish(err); }
   });
 }

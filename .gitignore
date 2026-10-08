@@ -1,0 +1,22 @@
+# Automation outputs and credentials
+.automation-tools/
+reports/
+site/
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfplan
+**/*.auto.tfvars.json
+**/terraform.tfvars
+**/.scannerwork/
+**/coverage/
+**/target/
+**/node_modules/
+**/dist/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.codex-vps-known-hosts
+__pycache__/
